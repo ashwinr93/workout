@@ -75,14 +75,17 @@
     const ex = EX[st.key], must = [], first = st.set === 1 && st.side !== "Right side";
     if (st.type === "rest") return [SAY.rest(st.dur), ...(st.dur >= 20 ? [SAY.tenToGo()] : [])];
     if (st.side === "Right side") must.push(SAY.switchSides());
+    const n = ex.cues.length, every = ex.time && Math.max(7, Math.min(25, (ex.time - 13) / (n + 1)));
+    const fits = (slot) => !ex.time || 3 + slot * every < ex.time - 8;
     if (first) {
-      must.push(SAY.name(st.key), SAY.key(st.key));
-      ex.cues.forEach((_, c) => {
-        if (!ex.time) return must.push(SAY.cue(st.key, c));
-        const every = Math.max(7, Math.min(25, (ex.time - 13) / ex.cues.length));
-        if (3 + c * every < ex.time - 8) must.push(SAY.cue(st.key, c));
-      });
-    } else if (st.section !== "warm" && st.sets > 1 && st.side !== "Right side") must.push(SAY.setOf(st.set, st.sets));
+      must.push(SAY.name(st.key));
+      ex.cues.forEach((_, c) => { if (fits(c)) must.push(SAY.cue(st.key, c)); });
+      if (fits(n)) must.push(SAY.remember(), SAY.key(st.key));            // the Focus closes the coaching
+    } else {
+      if (st.section !== "warm" && st.sets > 1 && st.side !== "Right side") must.push(SAY.setOf(st.set, st.sets));
+      const secondVisit = (st.set === 2 && st.side !== "Right side") || (st.set === 1 && st.side === "Right side");
+      if (secondVisit && (!ex.time || ex.time >= 30)) must.push(SAY.remember(), SAY.key(st.key));   // Focus is the first reminder
+    }
     if (ex.time) { must.push(SAY.go()); if (ex.time >= 30) must.push(SAY.tenLeft()); }
     return must;
   }
@@ -122,7 +125,7 @@
       T.said = []; T.overlaps = [];
       Workout.startPreview(key);
       await until(() => Voice.idle(), 120);
-      const said = T.said.map((s) => s.text), want = [SAY.name(key), SAY.key(key), ...EX[key].cues.map((_, c) => SAY.cue(key, c))];
+      const said = T.said.map((s) => s.text), want = [SAY.name(key), ...EX[key].cues.map((_, c) => SAY.cue(key, c)), SAY.remember(), SAY.key(key)];
       if (JSON.stringify(said) !== JSON.stringify(want)) fails.push(`preview ${key}: said ${said.length}/${want.length} lines or wrong order`);
       T.overlaps.forEach((o) => fails.push(`preview ${key} overlap ${o}`));
       Workout.exit(); await settle(1);

@@ -28,7 +28,7 @@ Live: https://ashwinr93.github.io/workout/ — GitHub Pages from `ashwinr93/work
 - **Cues must match what the demo shows/says.** Where a demo contradicts the PDF's joint-safety guidance, the PDF wins.
 - **Wording:** every cue must read well *and* sound natural when the coach says it — no bracketed asides (name a position as a leading label instead: "Cow: breathe in…"), no ALL-CAPS emphasis, no "DB" prefix in names. The self-test's Wording check enforces this.
 - **Screen hierarchy:** exercise name > target pill (holds: big countdown) > Focus card > current cue (follows the voice) > quiet amber safety line; Done is the biggest button. Must fit an iPhone in landscape (~852×320 usable) and portrait.
-- **Coach pacing:** set 1 gets intro + all cues spread through the set; later sets get the set number + one reminder; holds spread cues and say "Ten seconds left"; rests say what's next and "Ten seconds. Get ready."
+- **Coach pacing:** set 1: name and target, the cues spread through the set, then the Focus last as "Remember, …" (never before the movement has been described). Cues never restate the Focus — each cue adds something new. Set 2 (or the second side): the Focus is the one reminder; later sets rotate other cues. Holds spread cues then the Focus, before "Ten seconds left". Rests say what's next and "Ten seconds. Get ready."
 - Polish and clean engineering matter to the owner: no patch-on-patch fixes; restructure when needed.
 
 ## Working agreements

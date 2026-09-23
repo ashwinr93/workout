@@ -307,23 +307,27 @@ const Sound = {
   sessionDefault() { if (this.mode === "video") { this.mode = "coach"; store.set("audioMode", "coach"); } },
 };
 
-/* ============================================================ Narration: what the coach says, and when */
+/* ============================================================ Narration: what the coach says, and when
+   Order on the first set: name and target, the form cues through the set, then the Focus
+   ("Remember, …") to close. Later sets get one reminder: the Focus on set 2, then other cues. */
 const Narration = {
   // Exercise step. Holds also get how long "get in position" lasts.
   work(st) {
     const ex = EX[st.key], n = ex.cues.length;
     const cue = (c, extra) => ({ texts: [SAY.cue(st.key, c)], cue: c, ...extra });
-    if (st.preview) return { lines: [{ texts: [SAY.name(st.key), SAY.key(st.key)] }, ...ex.cues.map((_, c) => cue(c, { gap: 1.2 }))] };
+    const focus = (extra) => ({ texts: [SAY.remember(), SAY.key(st.key)], ...extra });
+    if (st.preview) return { lines: [{ texts: [SAY.name(st.key)] }, ...ex.cues.map((_, c) => cue(c, { gap: 1.2 })), focus({ gap: 1.2 })] };
 
-    // Full coaching the first time you meet an exercise; later sets get one reminder, a different one each time
     const first = st.set === 1 && st.side !== "Right side";
-    const reminder = n > 1 ? 1 + (st.set - 2 + (st.side === "Right side" ? 1 : 0) + (n - 1)) % (n - 1) : 0;
+    const secondVisit = (st.set === 2 && st.side !== "Right side") || (st.set === 1 && st.side === "Right side");
+    const reminderCue = n > 1 ? 1 + (st.set - 3 + (st.side === "Right side" ? 1 : 0) + 2 * (n - 1)) % (n - 1) : 0;
+    const reminder = (extra) => (secondVisit ? focus(extra) : cue(reminderCue, extra));
     const setIntro = st.section === "warm" || st.sets < 2 ? [] : [SAY.setOf(st.set, st.sets), ...(st.set === st.sets ? [SAY.lastSet()] : [])];
 
     if (ex.time) {
       const hold = ex.time, side = st.side ? [SAY.side(st.side)] : [];
       const intro = st.side === "Right side" ? [SAY.switchSides(), SAY.side("Right side")]
-        : first ? [SAY.name(st.key), ...setIntro, SAY.target(st.key), ...side, SAY.key(st.key)]
+        : first ? [SAY.name(st.key), ...setIntro, SAY.target(st.key), ...side]
         : [...setIntro, ...side];
       // "Get in position" lasts at least 6 s (10 s the first time) and always outlasts the intro
       const introSec = intro.reduce((t, x) => t + (Voice.manifest[clipId(x)] || 2) + 0.25, 0.6);
@@ -331,19 +335,22 @@ const Narration = {
       const at = (sec) => Object.assign(() => Workout.timer.phase === "work" && Workout.timer.total - Workout.timer.left >= sec, { sec });
       const lines = [{ texts: intro, intro: true }, { texts: [SAY.go()], when: () => Workout.timer.phase === "work", late: 1.5, gap: 0, intro: true }];
       if (first) {
-        const every = Math.max(7, Math.min(25, (hold - 13) / n));  // spread cues over the hold, done before the last 10 s
+        // cues then the Focus, spread over the hold and finished before the last 10 s
+        const every = Math.max(7, Math.min(25, (hold - 13) / (n + 1)));
         ex.cues.forEach((_, c) => { const t = 3 + c * every; if (t < hold - 8) lines.push(cue(c, { when: at(t), gap: 1.5 })); });
-      } else if (hold >= 40) lines.push(cue(reminder, { when: at(12), gap: 1.5 }));
+        const t = 3 + n * every;
+        if (t < hold - 8) lines.push(focus({ when: at(t), gap: 1.5 }));
+      } else if (hold >= 30) lines.push(reminder({ when: at(10), gap: 1.5 }));
       if (hold >= 30) lines.push({ texts: [SAY.tenLeft()], when: at(hold - 10), late: 3, gap: 0.5 });
       return { lines, ready };
     }
-    if (st.section === "warm")   // warm-ups move quickly: intro, setup cue, then one every ~7 s
-      return { lines: [{ texts: [SAY.name(st.key), SAY.target(st.key), SAY.key(st.key)] },
-        cue(0, { gap: 0.8 }), ...ex.cues.slice(1).map((_, k) => cue(k + 1, { at: 8 + k * 7, gap: 2 }))] };
-    if (first)                   // setup while you pick up the weights, then one cue every ~9 s while you lift
-      return { lines: [{ texts: [SAY.name(st.key), ...setIntro, SAY.target(st.key), SAY.key(st.key)] },
-        cue(0, { gap: 0.8 }), ...ex.cues.slice(1).map((_, k) => cue(k + 1, { at: 12 + k * 9, gap: 2 }))] };
-    return { lines: [{ texts: [...setIntro, SAY.target(st.key)] }, cue(reminder, { at: 8, gap: 2 })] };
+    if (st.section === "warm")   // warm-ups move quickly: name and target, setup cue, one every ~7 s, then the Focus
+      return { lines: [{ texts: [SAY.name(st.key), SAY.target(st.key)] }, cue(0, { gap: 0.8 }),
+        ...ex.cues.slice(1).map((_, k) => cue(k + 1, { at: 8 + k * 7, gap: 2 })), focus({ at: 8 + (n - 1) * 7, gap: 2 })] };
+    if (first)                   // setup while you pick up the weights, a cue every ~9 s while you lift, then the Focus
+      return { lines: [{ texts: [SAY.name(st.key), ...setIntro, SAY.target(st.key)] }, cue(0, { gap: 0.8 }),
+        ...ex.cues.slice(1).map((_, k) => cue(k + 1, { at: 12 + k * 9, gap: 2 })), focus({ at: 12 + (n - 1) * 9, gap: 2 })] };
+    return { lines: [{ texts: [...setIntro, SAY.target(st.key)] }, reminder({ at: 8, gap: 2 })] };
   },
 
   rest(st, next) {

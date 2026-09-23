@@ -35,7 +35,6 @@ const EX = {
     why: "Warms up the shoulders without any load.",
     cues: [
       "Stand tall with your arms straight out at shoulder height, palms down",
-      "Start with small circles and gradually make them bigger",
       "After 10, reverse direction",
       "Keep your shoulders down, away from your ears"
     ],
@@ -83,7 +82,6 @@ const EX = {
     cues: [
       "If you like, hold a light plate or ball in front of you",
       "Step back and lower until both knees are near 90°",
-      "Keep the front knee behind your toes, over the ankle",
       "At the bottom, rotate your chest toward the front leg, then turn back and step forward"
     ],
     stop: "If your front knee hurts, take a shorter step and don't go as low.",
@@ -101,7 +99,7 @@ const EX = {
     cues: [
       "Set the bench to a low incline, 30–45°",
       "Start with the dumbbells on your knees, then lie back and kick them up",
-      "Palms face each other; pull your shoulder blades together. A slight natural arch is fine",
+      "Pull your shoulder blades together. A slight natural arch is fine",
       "Lower to chest level with elbows about 45° from your body",
       "Press up in a slight arc so the dumbbells finish over your shoulders"
     ],
@@ -117,7 +115,7 @@ const EX = {
     why: "Keep your back flat and pause for 1 second at the top.",
     cues: [
       "One hand and one knee on the bench, back flat like a table",
-      "Let the dumbbell hang, then drive your elbow back toward your hip",
+      "Let the dumbbell hang, then drive your elbow straight back",
       "Pause for 1 second at the top",
       "Lower slowly without twisting. Do all reps on one side, then switch"
     ],
@@ -133,7 +131,7 @@ const EX = {
     why: "Protects the front of the shoulder joint.",
     cues: [
       "Lie on the floor with knees bent and feet flat",
-      "Palms face each other, elbows about 45° from your body",
+      "Keep your elbows about 45° from your body",
       "Lower until your upper arms touch the floor. Pause, don't bounce",
       "Press straight up over your chest"
     ],
@@ -151,7 +149,7 @@ const EX = {
       "Set the bench to 30–45° and lie chest-down, arms hanging straight",
       "Let your shoulders stretch fully at the bottom",
       "Row the dumbbells toward your hips and squeeze your shoulder blades at the top",
-      "Lower slowly. Keep your chest on the pad and don't shrug"
+      "Lower slowly, and don't shrug"
     ],
     stop: "If your neck tenses up, tuck your chin and keep your shoulders down.",
     videos: [
@@ -164,7 +162,7 @@ const EX = {
     why: "Key for the rear shoulders and keeping the shoulder blades stable.",
     cues: [
       "Dumbbells: hinge forward with arms hanging, or lie chest-down on an incline bench",
-      "Pull the dumbbells up and out to about eye level, elbows high and wide",
+      "Pull the dumbbells up and out, elbows high and wide",
       "Don't pull further back; that turns it into a back exercise",
       "Band: arms straight at shoulder height; pull it apart, squeeze 2 seconds, return slowly"
     ],
@@ -182,7 +180,7 @@ const EX = {
     why: "Puts no shear on the knee and protects the kneecap tendon.",
     cues: [
       "Stand tall: chest up, shoulders back, core tight, pelvis tucked for a neutral back",
-      "Push your hips back as if touching a wall behind you, knees soft",
+      "Push your hips back as if touching a wall behind you",
       "Lower until you feel the hamstring stretch; stop before your back rounds",
       "Drive your hips forward to stand. Let your eyes follow down so your neck stays neutral"
     ],
@@ -197,8 +195,8 @@ const EX = {
     why: "Keeps the knees from pushing forward. Drive through your heels.",
     cues: [
       "Rest the dumbbells on your shoulders, or hold one at your chest",
-      "Push your hips back and lower until you just tap the bench",
-      "Don't relax onto it. Spread the floor with your feet so your knees stay out",
+      "Push your hips back and lower toward the bench",
+      "Spread the floor with your feet so your knees stay out",
       "Drive through your heels to stand"
     ],
     stop: "If your knees hurt, use a higher surface to sit to.",
@@ -214,7 +212,7 @@ const EX = {
       "Lie on your back and hug one knee to your chest. This keeps your lower back from arching",
       "Put the other foot flat, close to your hips",
       "Press through that foot and lift your hips, keeping them level",
-      "Hold 2 seconds at the top and lower slowly. Do all reps on one side, then switch"
+      "Lower slowly. Do all reps on one side, then switch"
     ],
     stop: "If your hamstring cramps, move your foot closer to your hips.",
     videos: [
@@ -229,7 +227,6 @@ const EX = {
     cues: [
       "Stand with the balls of your feet on a step about 5–8 cm high, heels hanging off",
       "Breathe out and rise as high as you can",
-      "Hold the top for 2 seconds",
       "Lower slowly until your heels are below the step or touch the floor"
     ],
     stop: "If your Achilles hurts, skip the step and use a smaller range.",
@@ -245,8 +242,7 @@ const EX = {
     cues: [
       "High plank: hands under shoulders, body braced in a straight line",
       "Set your feet wider for more stability",
-      "Slowly tap one hand to the opposite shoulder, alternating sides",
-      "Move as little as possible. No hip rocking"
+      "Slowly tap one hand to the opposite shoulder, alternating sides"
     ],
     stop: "If your wrists or lower back hurt, drop to your knees.",
     videos: [
@@ -262,7 +258,6 @@ const EX = {
     cues: [
       "Kneel with your back foot up on the couch or bench behind you and the knee on a pillow",
       "Step the other foot forward into a lunge",
-      "Squeeze the glute of the back leg; this deepens the stretch",
       "For more stretch, reach your arms up or lean back slightly"
     ],
     stop: "If your kneecap feels pressure, add padding or move the knee farther from the wall.",
@@ -292,7 +287,6 @@ const EX = {
     why: "Strengthens the shin muscles that slow you down, which helps protect the knees in football.",
     cues: [
       "Lean your hips and back against a wall with your legs straight",
-      "Pull your toes up toward your shins as high as you can",
       "Keep your knees straight and quads tight; don't hike your hips",
       "Feet farther from the wall makes it easier; closer makes it harder"
     ],
@@ -311,7 +305,6 @@ const EX = {
     cues: [
       "Sit upright with your back supported and kick the dumbbells up to shoulder height",
       "Palms face each other, elbows slightly in front of your body",
-      "Press up so the weights end slightly in front of your head",
       "Lower back to shoulder level. Keep your ribs down and don't arch"
     ],
     stop: "If your shoulder pinches, shorten the range or tilt the bench back a little.",
@@ -326,7 +319,7 @@ const EX = {
     cues: [
       "Lie on the floor or a bench, holding one dumbbell over your chest with both hands",
       "Keep a slight bend in your elbows and don't let it change",
-      "Lower the weight behind your head only as far as is comfortable",
+      "Lower the weight behind your head",
       "On the floor, stop when it touches. Pull back until it's over your chest, no further"
     ],
     stop: "The bench demo goes deep; you don't need to. If your shoulder feels uncomfortable, stop earlier.",
@@ -342,7 +335,7 @@ const EX = {
     cues: [
       "Set the bench to 45–60° and let your arms hang straight down",
       "Curl up with your thumbs pointing up",
-      "Keep your elbows back and still; don't swing",
+      "Don't swing or lean back",
       "Lower slowly all the way down"
     ],
     stop: "If the front of your shoulder strains at the bottom, raise the bench.",
@@ -359,7 +352,7 @@ const EX = {
       "Floor: lie back, dumbbells over your chest, palms facing each other",
       "Angle your arms slightly back toward your head, then bend only at the elbows",
       "Lower just past 90° and press back up; your upper arms stay still",
-      "Overhead: sit with one dumbbell in both hands, elbows tucked in and pointing forward"
+      "Overhead: sit with one dumbbell in both hands, elbows pointing forward"
     ],
     stop: "If your shoulder pinches, stop right away and use the floor version.",
     videos: [
@@ -372,7 +365,7 @@ const EX = {
     key: "Use 2–4 kg at most",
     why: "Rebuilds the small stabilizing muscles of the rotator cuff.",
     cues: [
-      "Lie chest-down on an incline bench, arms hanging, with light weights of 2–4 kg",
+      "Lie chest-down on an incline bench, arms hanging",
       "Y: raise your arms up and out at 45°, thumbs up",
       "T: raise your arms straight out to the sides, thumbs up",
       "W: elbows bent at your sides, squeeze your shoulder blades back and down"
@@ -438,7 +431,7 @@ const EX = {
     cues: [
       "Pick the dumbbell up with one hand the way you'd do a deadlift",
       "Stand tall with your shoulders level and ribs down",
-      "Walk slowly in a straight line; don't let the weight pull you sideways",
+      "Walk slowly in a straight line",
       "Switch hands halfway"
     ],
     stop: "If you can't stay upright, use a lighter weight.",
@@ -472,8 +465,7 @@ const EX = {
     cues: [
       "Bring one arm straight across your chest",
       "Hold it just above the elbow with your other hand",
-      "Gently pull until you feel the stretch at the back of the shoulder",
-      "Keep both shoulders relaxed and low"
+      "Gently pull until you feel the stretch at the back of the shoulder"
     ],
     stop: "If you feel pinching at the front of the shoulder, ease off.",
     videos: [
@@ -487,8 +479,7 @@ const EX = {
     cues: [
       "Reach one hand down between your shoulder blades",
       "With the other hand, gently push that elbow back",
-      "Keep your ribs down; don't arch your lower back",
-      "Aim for a gentle stretch, not pain"
+      "Don't arch your lower back"
     ],
     stop: "If your shoulder pinches, lower the elbow or ease the pressure.",
     videos: [
@@ -503,7 +494,7 @@ const EX = {
       "Lie on your back in a doorway",
       "Rest one leg straight up the door frame and keep the other flat through the doorway",
       "Scoot closer to the frame to make the stretch stronger",
-      "Keep your lower back flat and relax"
+      "Breathe slowly and let the leg relax"
     ],
     stop: "If you feel tingling down the leg, back off. That's a nerve, not the muscle.",
     videos: [
@@ -583,6 +574,7 @@ const SAY = {
   key: (key) => sentence(speakable(EX[key].key)),
   cue: (key, i) => sentence(speakable(EX[key].cues[i])),
   setOf: (s, n) => `Set ${NUM_WORDS[s]} of ${NUM_WORDS[n]}.`,
+  remember: () => "Remember,",               // leads into the Focus cue, said last
   lastSet: () => "Last set.",
   side: (side) => sentence(side),            // "Left side." / "Right side."
   switchSides: () => "Switch sides.",
@@ -611,7 +603,7 @@ function allPhrases() {
     for (let s = 1; s <= n; s++) out.add(SAY.setOf(s, n));
     if (ex.rest) out.add(SAY.rest(ex.rest));
   }
-  [SAY.side("Left side"), SAY.side("Right side"), SAY.lastSet(), SAY.switchSides(), SAY.go(), SAY.tenLeft(),
+  [SAY.side("Left side"), SAY.side("Right side"), SAY.remember(), SAY.lastSet(), SAY.switchSides(), SAY.go(), SAY.tenLeft(),
    SAY.nextUp(), SAY.tenToGo(), SAY.done()].forEach((t) => out.add(t));
   return [...out];
 }
