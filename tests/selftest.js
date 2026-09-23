@@ -72,19 +72,19 @@
 
   /* ---------- what each step must say */
   function expected(st) {
-    const ex = EX[st.key], must = [], first = st.set === 1 && st.side !== "Right side";
     if (st.type === "rest") return [SAY.rest(st.dur), ...(st.dur >= 20 ? [SAY.tenToGo()] : [])];
+    const ex = EX[st.key], vi = Workout.variantOf(st.key), must = [], first = st.set === 1 && st.side !== "Right side";
     if (st.side === "Right side") must.push(SAY.switchSides());
-    const n = ex.cues.length, every = ex.time && Math.max(7, Math.min(25, (ex.time - 13) / (n + 1)));
+    const n = variant(st.key, vi).cues.length, every = ex.time && Math.max(7, Math.min(25, (ex.time - 13) / (n + 1)));
     const fits = (slot) => !ex.time || 3 + slot * every < ex.time - 8;
     if (first) {
-      must.push(SAY.name(st.key));
-      ex.cues.forEach((_, c) => { if (fits(c)) must.push(SAY.cue(st.key, c)); });
-      if (fits(n)) must.push(SAY.remember(), SAY.key(st.key));            // the Focus closes the coaching
+      must.push(SAY.name(st.key, vi));
+      for (let c = 0; c < n; c++) if (fits(c)) must.push(SAY.cue(st.key, c, vi));
+      if (fits(n)) must.push(SAY.remember(), SAY.key(st.key, vi));        // the Focus closes the coaching
     } else {
       if (st.section !== "warm" && st.sets > 1 && st.side !== "Right side") must.push(SAY.setOf(st.set, st.sets));
       const secondVisit = (st.set === 2 && st.side !== "Right side") || (st.set === 1 && st.side === "Right side");
-      if (secondVisit && (!ex.time || ex.time >= 30)) must.push(SAY.remember(), SAY.key(st.key));   // Focus is the first reminder
+      if (secondVisit && (!ex.time || ex.time >= 30)) must.push(SAY.remember(), SAY.key(st.key, vi));   // Focus is the first reminder
     }
     if (ex.time) { must.push(SAY.go()); if (ex.time >= 30) must.push(SAY.tenLeft()); }
     return must;
@@ -94,7 +94,7 @@
   async function runSession(day, opts) {
     const fails = [];
     Object.assign(T, { said: [], overlaps: [], deviceSpeech: [], errors: [] });
-    FY.reset(); useSound("coach");
+    FY.reset(); useSound("coach"); store.set("demos", {});
     UI.openDay(day); Workout.start(opts);
     const W = Workout, n = W.steps.length;
     let lastCur = -1, stepStart = 0;
@@ -121,11 +121,12 @@
 
   async function runPreviews() {
     const fails = [];
+    store.set("demos", {});
     for (const key of Object.keys(EX)) {
       T.said = []; T.overlaps = [];
       Workout.startPreview(key);
       await until(() => Voice.idle(), 120);
-      const said = T.said.map((s) => s.text), want = [SAY.name(key), ...EX[key].cues.map((_, c) => SAY.cue(key, c)), SAY.remember(), SAY.key(key)];
+      const said = T.said.map((s) => s.text), want = [SAY.name(key, 0), ...variant(key, 0).cues.map((_, c) => SAY.cue(key, c, 0)), SAY.remember(), SAY.key(key, 0)];
       if (JSON.stringify(said) !== JSON.stringify(want)) fails.push(`preview ${key}: said ${said.length}/${want.length} lines or wrong order`);
       T.overlaps.forEach((o) => fails.push(`preview ${key} overlap ${o}`));
       Workout.exit(); await settle(1);
@@ -220,15 +221,31 @@
     check(!late.includes(SAY.name("planktaps")) && !late.includes(SAY.go()), "intro/Go replayed when coach switched on mid-hold");
     check(late.includes(SAY.tenLeft()), "coach switched on mid-hold missed 'Ten seconds left'");
 
+    // 10. Switching to a different variant (pigeon → figure-4): screen and coach follow, choice is remembered
+    await reset("coach"); store.set("demos", {});
+    Workout.startPreview("pigeon"); await settle(2);
+    n = T.said.length; $("vid-next").click(); await settle(30);
+    const fig = variant("pigeon", 1), pig = variant("pigeon", 0);
+    check($("panel").querySelector(".name").textContent === fig.name, "name didn't switch to the figure-4 variant");
+    check([...$("cues").children].map((li) => li.textContent).join("|") === fig.cues.join("|"), "cues on screen didn't switch to the figure-4 variant");
+    const after = saidSince(n);
+    check(after.includes(SAY.name("pigeon", 1)) && after.includes(SAY.cue("pigeon", 0, 1)), "coach didn't coach the figure-4 variant");
+    check(!pig.cues.some((c, i) => !fig.cues.includes(c) && after.includes(SAY.cue("pigeon", i, 0))), "coach still read pigeon-only cues after switching to figure-4");
+    Workout.exit(); await settle(0.5);
+    Workout.startPreview("pigeon"); await settle(1);
+    check(Video.idx === 1 && $("panel").querySelector(".name").textContent === fig.name, "the chosen variant wasn't remembered");
+    store.set("demos", {});
+
     await reset("coach");
-    return { name: "Sound buttons & video sound", steps: 9, lines: 0, fails };
+    return { name: "Sound buttons & video sound", steps: 10, lines: 0, fails };
   }
 
   /* ---------- cues and controls fit on screen at the current window size */
   function layoutCheck() {
     const fails = [];
     openDay(0); Workout.start({ warm: true, cool: true, label: "layout" });
-    for (const key of Object.keys(EX)) for (const set of [1, 2]) for (const side of [null, "Left side"]) {
+    for (const key of Object.keys(EX)) for (let vi = 0; vi < EX[key].videos.length; vi++) for (const set of [1, 2]) for (const side of [null, "Left side"]) {
+      store.set("demos", { [key]: vi }); Video.key = null;
       Workout.steps = [{ type: "work", key, set, sets: EX[key].sets || 1, side, section: "main" }]; Workout.cur = 0; Workout.render();
       const items = [...$("cues").children], oneAtATime = items.filter((li) => getComputedStyle(li).display !== "none").length === 1;
       const panel = $("panel").getBoundingClientRect(), name = $("panel").querySelector(".name");
@@ -239,6 +256,7 @@
         if (oneAtATime && li.scrollHeight > li.parentElement.clientHeight + 2) fails.push(`${key} cue ${i + 1} cut off`);
       });
     }
+    store.set("demos", {});
     // rest screens, with each exercise as "up next"
     for (const key of Object.keys(EX)) {
       Workout.steps = [{ type: "rest", dur: 90 }, { type: "work", key, set: 2, sets: 3, side: "Left side", section: "main" }]; Workout.cur = 0; Workout.render();
@@ -251,14 +269,16 @@
   /* ---------- wording: every line must read well AND sound natural when spoken */
   function wordingCheck() {
     const fails = [];
-    for (const [key, ex] of Object.entries(EX)) {
-      const texts = [["name", ex.name], ["key", ex.key], ["unit", ex.unit], ["stop", ex.stop], ...ex.cues.map((c, i) => [`cue ${i + 1}`, c])];
+    for (const [key, ex] of Object.entries(EX)) ex.videos.forEach((_, vi) => {
+      const v = variant(key, vi);
+      const texts = [["name", v.name], ["key", v.key], ["unit", ex.unit], ["stop", v.stop], ...v.cues.map((c, i) => [`cue ${i + 1}`, c])];
       for (const [field, t] of texts) {
         if (!t) continue;
         if (/[()]/.test(t)) fails.push(`${key} ${field}: bracketed aside (sounds odd when spoken): "${t}"`);
+        if (field.startsWith("cue") && /^[A-Z][\w'’ -]{0,24}:/.test(t)) fails.push(`${key} ${field}: starts with a label; give the instruction plainly: "${t}"`);
         if (/\b[A-Z]{2,}\b/.test(t.replace(/\b(Y-T-W)\b/g, ""))) fails.push(`${key} ${field}: ALL-CAPS word: "${t}"`);
       }
-    }
+    });
     return { name: "Wording", steps: 0, lines: 0, fails };
   }
 

@@ -18,15 +18,16 @@ Live: https://ashwinr93.github.io/workout/ — GitHub Pages from `ashwinr93/work
 | `tests/e2e/` | Playwright: `real-browsers.mjs` (real YouTube, real clicks), `ad-scan.mjs` (ads + which demos have a voice) |
 
 ### Exercise data (`EX` in `data.js`)
-`name`, `sets?`, `reps`+`unit` **or** `time` (seconds), `perSide?`, `rest`, `key` (the one cue that matters most → "Focus"), `cues` (in the order the demo shows them), `stop` (safety), `videos` (main first, then alternates: `{ id, label?, start?, end?, voice? }`). `voice: true` means someone talks in the demo.
+`name`, `sets?`, `reps`+`unit` **or** `time` (seconds), `perSide?`, `rest`, `key` (the one cue that matters most → "Focus"), `cues` (in the order the demo shows them), `stop` (safety), `videos` (main first, then alternates: `{ id, label?, start?, end?, voice?, name?, key?, cues?, stop? }`). `voice: true` means someone talks in the demo; `name`/`key`/`cues`/`stop` on a video make it a variant with its own text.
 
 ## Product rules (decided with the owner — keep them)
 - **One sound at a time.** `Sound.mode` is `coach` | `video` | `off`. Coach is the default at the start of every workout/preview; Video lasts only for that session. On a demo with no voice, the coach speaks even in Video mode. Unmuting with YouTube's own speaker switches to Video. The app never mutes a video on a guess.
 - **Ad-free demos only.** Any new or swapped video must pass `ad-scan.mjs` (no "AD"). No ad-blocker / cross-site-tracking workarounds.
 - **One movement per exercise.** Two movements → two exercises, or one demo showing both. Multiple demos on one exercise are either/or alternates behind ‹ › (never auto-cycled).
+- **Variants follow the demo.** When a demo is a different variant (pigeon vs figure-4, floor vs bench, sumo vs goblet…), give that video entry its own `name`/`key`/`cues`/`stop`; the screen and the coach then use the active demo's text (`variant(key, vi)`), switching demos restarts the coaching, and the choice is remembered per exercise (`store "demos"`). Plain alternates showing the same movement share the exercise's text.
 - **Trim intros/outros** (logos, title cards, "subscribe" endings) with `start`/`end`; check first/last seconds via YouTube storyboards.
 - **Cues must match what the demo shows/says.** Where a demo contradicts the PDF's joint-safety guidance, the PDF wins.
-- **Wording:** every cue must read well *and* sound natural when the coach says it — no bracketed asides (name a position as a leading label instead: "Cow: breathe in…"), no ALL-CAPS emphasis, no "DB" prefix in names. The self-test's Wording check enforces this.
+- **Wording:** every cue must read well *and* sound natural when the coach says it — no bracketed asides, no pose-name labels ("Cow: …", "Y: …") — just the instruction (use "First… / Next… / Finally…" for sequences), no ALL-CAPS emphasis, no "DB" prefix in names. The self-test's Wording check enforces this.
 - **Screen hierarchy:** exercise name > target pill (holds: big countdown) > Focus card > current cue (follows the voice) > quiet amber safety line; Done is the biggest button. Must fit an iPhone in landscape (~852×320 usable) and portrait.
 - **Coach pacing:** set 1: name and target, the cues spread through the set, then the Focus last as "Remember, …" (never before the movement has been described). Cues never restate the Focus — each cue adds something new. Set 2 (or the second side): the Focus is the one reminder; later sets rotate other cues. Holds spread cues then the Focus, before "Ten seconds left". Rests say what's next and "Ten seconds. Get ready."
 - Polish and clean engineering matter to the owner: no patch-on-patch fixes; restructure when needed.

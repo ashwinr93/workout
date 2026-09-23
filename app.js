@@ -208,11 +208,21 @@ const Video = {
   current() { return this.list[this.idx]; },
   talks() { return !!this.current()?.voice; },
 
-  // The exercise's main demo, kept running across its sets
+  // The demo you last chose for this exercise (remembered across sessions)
+  preferred(key) { const i = store.get("demos", {})[key] || 0; return i < EX[key].videos.length ? i : 0; },
+  // The exercise's demo, kept running across its sets
   showExercise(key) {
     if (this.key === key) return;
     this.key = key; this.list = EX[key].videos; this.tried = new Set();
-    this.show(0);
+    this.show(this.preferred(key));
+  },
+  // ‹ › : another demo; if it's a different variant, the screen and coach switch to it
+  choose(i) {
+    if (this.list.length < 2) return;
+    const before = this.idx;
+    this.show(i);
+    store.set("demos", { ...store.get("demos", {}), [this.key]: this.idx });
+    if (isVariant(this.list[before]) || isVariant(this.current())) Workout.variantChanged();
   },
   show(i) {
     this.idx = (i + this.list.length) % this.list.length;
@@ -313,10 +323,11 @@ const Sound = {
 const Narration = {
   // Exercise step. Holds also get how long "get in position" lasts.
   work(st) {
-    const ex = EX[st.key], n = ex.cues.length;
-    const cue = (c, extra) => ({ texts: [SAY.cue(st.key, c)], cue: c, ...extra });
-    const focus = (extra) => ({ texts: [SAY.remember(), SAY.key(st.key)], ...extra });
-    if (st.preview) return { lines: [{ texts: [SAY.name(st.key)] }, ...ex.cues.map((_, c) => cue(c, { gap: 1.2 })), focus({ gap: 1.2 })] };
+    const ex = EX[st.key], vi = Workout.variantOf(st.key), n = variant(st.key, vi).cues.length;
+    const cue = (c, extra) => ({ texts: [SAY.cue(st.key, c, vi)], cue: c, ...extra });
+    const focus = (extra) => ({ texts: [SAY.remember(), SAY.key(st.key, vi)], ...extra });
+    const name = SAY.name(st.key, vi), cues = [...Array(n).keys()];
+    if (st.preview) return { lines: [{ texts: [name] }, ...cues.map((c) => cue(c, { gap: 1.2 })), focus({ gap: 1.2 })] };
 
     const first = st.set === 1 && st.side !== "Right side";
     const secondVisit = (st.set === 2 && st.side !== "Right side") || (st.set === 1 && st.side === "Right side");
@@ -327,7 +338,7 @@ const Narration = {
     if (ex.time) {
       const hold = ex.time, side = st.side ? [SAY.side(st.side)] : [];
       const intro = st.side === "Right side" ? [SAY.switchSides(), SAY.side("Right side")]
-        : first ? [SAY.name(st.key), ...setIntro, SAY.target(st.key), ...side]
+        : first ? [name, ...setIntro, SAY.target(st.key), ...side]
         : [...setIntro, ...side];
       // "Get in position" lasts at least 6 s (10 s the first time) and always outlasts the intro
       const introSec = intro.reduce((t, x) => t + (Voice.manifest[clipId(x)] || 2) + 0.25, 0.6);
@@ -337,7 +348,7 @@ const Narration = {
       if (first) {
         // cues then the Focus, spread over the hold and finished before the last 10 s
         const every = Math.max(7, Math.min(25, (hold - 13) / (n + 1)));
-        ex.cues.forEach((_, c) => { const t = 3 + c * every; if (t < hold - 8) lines.push(cue(c, { when: at(t), gap: 1.5 })); });
+        cues.forEach((c) => { const t = 3 + c * every; if (t < hold - 8) lines.push(cue(c, { when: at(t), gap: 1.5 })); });
         const t = 3 + n * every;
         if (t < hold - 8) lines.push(focus({ when: at(t), gap: 1.5 }));
       } else if (hold >= 30) lines.push(reminder({ when: at(10), gap: 1.5 }));
@@ -345,18 +356,18 @@ const Narration = {
       return { lines, ready };
     }
     if (st.section === "warm")   // warm-ups move quickly: name and target, setup cue, one every ~7 s, then the Focus
-      return { lines: [{ texts: [SAY.name(st.key), SAY.target(st.key)] }, cue(0, { gap: 0.8 }),
-        ...ex.cues.slice(1).map((_, k) => cue(k + 1, { at: 8 + k * 7, gap: 2 })), focus({ at: 8 + (n - 1) * 7, gap: 2 })] };
+      return { lines: [{ texts: [name, SAY.target(st.key)] }, cue(0, { gap: 0.8 }),
+        ...cues.slice(1).map((c, k) => cue(c, { at: 8 + k * 7, gap: 2 })), focus({ at: 8 + (n - 1) * 7, gap: 2 })] };
     if (first)                   // setup while you pick up the weights, a cue every ~9 s while you lift, then the Focus
-      return { lines: [{ texts: [SAY.name(st.key), ...setIntro, SAY.target(st.key)] }, cue(0, { gap: 0.8 }),
-        ...ex.cues.slice(1).map((_, k) => cue(k + 1, { at: 12 + k * 9, gap: 2 })), focus({ at: 12 + (n - 1) * 9, gap: 2 })] };
+      return { lines: [{ texts: [name, ...setIntro, SAY.target(st.key)] }, cue(0, { gap: 0.8 }),
+        ...cues.slice(1).map((c, k) => cue(c, { at: 12 + k * 9, gap: 2 })), focus({ at: 12 + (n - 1) * 9, gap: 2 })] };
     return { lines: [{ texts: [...setIntro, SAY.target(st.key)] }, reminder({ at: 8, gap: 2 })] };
   },
 
   rest(st, next) {
     const nextSet = next && next.section !== "warm" && next.sets > 1 ? [SAY.setOf(next.set, next.sets)] : [];
     return [
-      { texts: [SAY.rest(st.dur), ...(next ? [SAY.nextUp(), SAY.name(next.key), ...nextSet] : [])], intro: true },
+      { texts: [SAY.rest(st.dur), ...(next ? [SAY.nextUp(), SAY.name(next.key, Workout.variantOf(next.key)), ...nextSet] : [])], intro: true },
       st.dur >= 20 ? { texts: [SAY.tenToGo()], when: () => Workout.timer.phase === "rest" && Workout.timer.left <= 10.5, late: 2 } : null,
     ];
   },
@@ -382,6 +393,15 @@ const Workout = {
   timer: { phase: null, left: 0, total: 0, paused: false, t0: 0 },
 
   step() { return this.steps[this.cur]; },
+  // Which demo (and so which variant's text) applies to an exercise right now
+  variantOf(key) { return Video.key === key ? Video.idx : Video.preferred(key); },
+  // The user switched to a different variant: redraw the panel and coach that variant from the top
+  variantChanged() {
+    const st = this.step();
+    if (!st) return;
+    if (st.type === "work") { UI.work(st); Voice.plan(Narration.work(st).lines); }
+    else UI.rest(st, this.nextWork());
+  },
   nextWork() { return this.steps.slice(this.cur + 1).find((s) => s.type === "work") || null; },
 
   // Cool-down stretches not already in the day (Wednesday already has the couch stretch)
@@ -606,18 +626,18 @@ const UI = {
     return m ? `<b>${esc(m[1])}</b> ${esc([m[2], ex.unit].filter(Boolean).join(" "))}` : `<b>${esc(ex.reps)}</b> ${esc(ex.unit)}`;
   },
   work(st) {
-    const ex = EX[st.key], hold = ex.time && !st.preview;
+    const ex = EX[st.key], v = variant(st.key, Workout.variantOf(st.key)), hold = ex.time && !st.preview;
     $("panel").innerHTML = `
       <div class="context">${this.context(st, ex)}</div>
-      <h2 class="name">${esc(ex.name)}</h2>
+      <h2 class="name">${esc(v.name)}</h2>
       ${hold ? `<div class="hold" id="hold"><span class="clock" id="clock"></span><span class="state" id="hold-state"></span></div>`
              : `<div class="target">${ex.time ? `<b>${fmt(ex.time)}</b> ${ex.perSide ? "each side" : "hold"}` : this.target(ex)}</div>`}
-      <div class="focus"><div class="label">Focus</div><p>${esc(ex.key)}</p></div>
+      <div class="focus"><div class="label">Focus</div><p>${esc(v.key)}</p></div>
       <div class="form">
-        <ul class="cues" id="cues">${ex.cues.map((c, i) => `<li${i ? "" : ' class="on"'}>${esc(c)}</li>`).join("")}</ul>
-        <div class="dots" id="dots">${ex.cues.map((_, i) => `<i${i ? "" : ' class="on"'}></i>`).join("")}</div>
+        <ul class="cues" id="cues">${v.cues.map((c, i) => `<li${i ? "" : ' class="on"'}>${esc(c)}</li>`).join("")}</ul>
+        <div class="dots" id="dots">${v.cues.map((_, i) => `<i${i ? "" : ' class="on"'}></i>`).join("")}</div>
       </div>
-      <p class="safety">${esc(ex.stop)}</p>
+      <p class="safety">${esc(v.stop)}</p>
       <div class="controls">
         ${st.preview ? `<button class="ctl primary" id="c-done">Close preview</button>`
           : `<button class="ctl" id="c-prev" aria-label="Back">‹</button>${hold ? `<button class="ctl" id="c-pause">Pause</button>` : ""}
@@ -659,7 +679,7 @@ const UI = {
   ringLength: 2 * Math.PI * 54,
   rest(st, next) {
     this.stopCues();
-    const nex = next && EX[next.key];
+    const nex = next && variant(next.key, Workout.variantOf(next.key));
     const detail = next ? [next.section === "warm" ? "" : `Set ${next.set} of ${next.sets}`, next.side].filter(Boolean).join(" · ") : "";
     $("panel").innerHTML = `
       <div class="context rest">Rest</div>
@@ -776,8 +796,8 @@ function debugBar() {
 /* ============================================================ boot */
 $("day-back").onclick = () => { Workout.day = null; UI.show("home"); };
 $("exit-btn").onclick = () => UI.exitButton();
-$("vid-prev").onclick = () => Video.show(Video.idx - 1);
-$("vid-next").onclick = () => Video.show(Video.idx + 1);
+$("vid-prev").onclick = () => Video.choose(Video.idx - 1);
+$("vid-next").onclick = () => Video.choose(Video.idx + 1);
 $("vid-restart").onclick = () => Video.restart();
 $("voice-btn").onclick = () => Sound.set(Sound.mode === "coach" ? "off" : "coach");
 $("sound-btn").onclick = () => Sound.set(Sound.mode === "video" ? "coach" : "video");

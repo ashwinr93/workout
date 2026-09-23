@@ -7,7 +7,9 @@
      stop   when to back off (joint safety)
      videos main demo first, then alternates:
             { id: YouTube id, label?, start?/end? (seconds, trims intros/outros),
-              voice?: true if someone talks in it (otherwise the coach speaks even in Video mode) }
+              voice?: true if someone talks in it (otherwise the coach speaks even in Video mode),
+              name?/key?/cues?/stop?: set when the demo is a different variant of the exercise
+                (e.g. figure-4 vs pigeon); the screen and the coach then follow that demo }
    Every demo is ad-free and checked by tests/e2e/ad-scan.mjs.
 */
 const EX = {
@@ -18,10 +20,10 @@ const EX = {
     key: "Move slowly, with your breath",
     why: "Loosens the spine and shoulders without putting load on the joints.",
     cues: [
-      "Get on all fours: hands under shoulders, knees under hips",
-      "Cow: breathe in, let your belly drop, and lift your chest and tailbone",
-      "Cat: breathe out, round your back up, and tuck your chin",
-      "Child's pose: sit your hips back toward your heels with arms long, then come back up"
+      "Start on all fours, hands under shoulders and knees under hips",
+      "Breathe in, let your belly drop, and lift your chest and tailbone",
+      "Breathe out, round your back up, and tuck your chin",
+      "Sit your hips back toward your heels with arms long, then come back up"
     ],
     stop: "Stop if you feel sharp back pain. If sitting back hurts your knees, put a cushion behind them.",
     videos: [
@@ -49,7 +51,7 @@ const EX = {
     key: "Twist from the upper back; keep your hips still",
     why: "Rotates the upper back and makes room at the top of the shoulder.",
     cues: [
-      "Get on all fours: hands under shoulders, knees under hips",
+      "Start on all fours, hands under shoulders and knees under hips",
       "Reach one arm under your body as far as it goes, shoulder toward the floor",
       "Then rotate open and reach that arm to the ceiling, eyes following your hand",
       "Breathe out as you rotate. Do all reps on one side, then switch"
@@ -161,15 +163,22 @@ const EX = {
     key: "Light weight; stop at eye level",
     why: "Key for the rear shoulders and keeping the shoulder blades stable.",
     cues: [
-      "Dumbbells: hinge forward with arms hanging, or lie chest-down on an incline bench",
+      "Hinge forward with arms hanging, or lie chest-down on an incline bench",
       "Pull the dumbbells up and out, elbows high and wide",
       "Don't pull further back; that turns it into a back exercise",
-      "Band: arms straight at shoulder height; pull it apart, squeeze 2 seconds, return slowly"
+      "Lower slowly, with control"
     ],
     stop: "If anything pinches, go lighter.",
     videos: [
-      { id: "nzTY7j9ocR8", label: "DB face pull", voice: true },
-      { id: "stwYTTPXubo", label: "Band pull-apart", start: 8, end: 44, voice: true }
+      { id: "nzTY7j9ocR8", name: "Face Pulls", label: "Dumbbells", voice: true },
+      { id: "stwYTTPXubo", name: "Band Pull-Aparts", label: "Band", start: 8, end: 44, voice: true,
+        key: "Light band; squeeze your shoulder blades",
+        cues: [
+          "Hold the band at shoulder height, arms straight, hands shoulder-width apart",
+          "Pull the band apart until it touches your chest",
+          "Squeeze your shoulder blades together for 2 seconds",
+          "Return slowly, with control"
+        ] }
     ]
   },
 
@@ -179,7 +188,7 @@ const EX = {
     key: "Hinge at the hips with soft knees",
     why: "Puts no shear on the knee and protects the kneecap tendon.",
     cues: [
-      "Stand tall: chest up, shoulders back, core tight, pelvis tucked for a neutral back",
+      "Stand tall with your chest up, shoulders back, core tight, and pelvis tucked",
       "Push your hips back as if touching a wall behind you",
       "Lower until you feel the hamstring stretch; stop before your back rounds",
       "Drive your hips forward to stand. Let your eyes follow down so your neck stays neutral"
@@ -240,7 +249,7 @@ const EX = {
     key: "Keep your hips square; no rocking",
     why: "Keeps the spine from twisting. Tap slowly.",
     cues: [
-      "High plank: hands under shoulders, body braced in a straight line",
+      "Start in a high plank, hands under shoulders, body braced in a straight line",
       "Set your feet wider for more stability",
       "Slowly tap one hand to the opposite shoulder, alternating sides"
     ],
@@ -317,15 +326,22 @@ const EX = {
     key: "Soft elbows; comfortable range only",
     why: "Only lower to a comfortable shoulder stretch.",
     cues: [
-      "Lie on the floor or a bench, holding one dumbbell over your chest with both hands",
+      "Lie on the floor with knees bent, one dumbbell held over your chest with both hands",
       "Keep a slight bend in your elbows and don't let it change",
-      "Lower the weight behind your head",
-      "On the floor, stop when it touches. Pull back until it's over your chest, no further"
+      "Lower the weight behind your head until it lightly touches the floor",
+      "Pull it back until it's over your chest, and no further"
     ],
-    stop: "The bench demo goes deep; you don't need to. If your shoulder feels uncomfortable, stop earlier.",
+    stop: "If your shoulder feels uncomfortable, stop earlier.",
     videos: [
-      { id: "qALakTR1nRI", label: "Floor (safer range)", start: 1, end: 19 },
-      { id: "FK4rHfWKEac", label: "Bench", start: 7, end: 55, voice: true }
+      { id: "qALakTR1nRI", name: "Floor Pullovers", label: "Floor", start: 1, end: 19 },
+      { id: "FK4rHfWKEac", name: "Bench Pullovers", label: "Bench", start: 7, end: 55, voice: true,
+        cues: [
+          "Lie on a bench with feet flat, one dumbbell held over your chest with both hands",
+          "Keep a slight bend in your elbows and don't let it change",
+          "Lower the weight behind your head only as far as is comfortable",
+          "Pull it back until it's over your chest, and no further"
+        ],
+        stop: "The demo goes deeper than you need to. If your shoulder feels uncomfortable, stop earlier." }
     ]
   },
   hammercurl: {
@@ -349,15 +365,22 @@ const EX = {
     key: "Keep your elbows tucked in",
     why: "Stop right away if your shoulder pinches.",
     cues: [
-      "Floor: lie back, dumbbells over your chest, palms facing each other",
-      "Angle your arms slightly back toward your head, then bend only at the elbows",
-      "Lower just past 90° and press back up; your upper arms stay still",
-      "Overhead: sit with one dumbbell in both hands, elbows pointing forward"
+      "Lie on your back, dumbbells over your chest, palms facing each other",
+      "Angle your arms slightly back toward your head",
+      "Bend only at the elbows and lower just past 90°",
+      "Press back up; your upper arms stay still"
     ],
-    stop: "If your shoulder pinches, stop right away and use the floor version.",
+    stop: "If your shoulder pinches, stop right away.",
     videos: [
-      { id: "Py4I0J6i2kY", label: "Floor version", voice: true },
-      { id: "HADoxgsslvw", label: "Overhead version", end: 8 }
+      { id: "Py4I0J6i2kY", name: "Floor Triceps Extensions", label: "Floor", voice: true },
+      { id: "HADoxgsslvw", name: "Overhead Triceps Extensions", label: "Overhead", end: 8,
+        cues: [
+          "Sit tall and hold one dumbbell overhead with both hands",
+          "Keep your elbows pointing forward, close to your head",
+          "Lower the dumbbell behind your head by bending your elbows",
+          "Straighten your arms fully; your upper arms stay still"
+        ],
+        stop: "If your shoulder pinches, stop right away and switch to the floor version." }
     ]
   },
   ytw: {
@@ -366,9 +389,9 @@ const EX = {
     why: "Rebuilds the small stabilizing muscles of the rotator cuff.",
     cues: [
       "Lie chest-down on an incline bench, arms hanging",
-      "Y: raise your arms up and out at 45°, thumbs up",
-      "T: raise your arms straight out to the sides, thumbs up",
-      "W: elbows bent at your sides, squeeze your shoulder blades back and down"
+      "First, raise your arms up and out at 45°, thumbs up",
+      "Next, raise your arms straight out to the sides, thumbs up",
+      "Finally, bend your elbows at your sides and squeeze your shoulder blades back and down"
     ],
     stop: "If anything hurts, use lighter dumbbells or none at all.",
     videos: [
@@ -405,8 +428,15 @@ const EX = {
     ],
     stop: "If your lower back rounds, shorten the range by starting the dumbbell on a block.",
     videos: [
-      { id: "xK4ED_yQcoU", label: "Sumo", voice: true },
-      { id: "TC2jOPCNYhU", label: "Goblet", end: 33 }
+      { id: "xK4ED_yQcoU", name: "Sumo Deadlift", label: "Sumo", voice: true },
+      { id: "TC2jOPCNYhU", name: "Goblet Deadlift", label: "Goblet", end: 33,
+        key: "Chest up, back flat; knees follow your toes",
+        cues: [
+          "Stand with feet a little wider than your hips, one dumbbell on the floor between them",
+          "Push your hips back and bend your knees to grab the top of the dumbbell",
+          "Keep your chest up and stand by driving through your whole foot",
+          "Squeeze your glutes at the top"
+        ] }
     ]
   },
   stepup: {
@@ -447,15 +477,23 @@ const EX = {
     key: "Gentle stretch; no knee pain",
     why: "Stretches the glutes and the deep hip rotators.",
     cues: [
-      "Pigeon: from all fours, bring the leg you're stretching forward and across under your body",
-      "Slide the other leg straight back, then sit back into the stretch",
-      "Figure-4, easier on the knees: on your back, ankle over the other knee, pull that thigh in",
-      "Keep your hips square; breathe slowly and relax into it"
+      "From all fours, bring the leg you're stretching forward and across under your body",
+      "Slide the other leg straight back",
+      "Sit back into the stretch, keeping your hips square",
+      "Breathe slowly and relax into it"
     ],
-    stop: "If your front knee hurts in pigeon, switch to the lying figure-4.",
+    stop: "If your front knee hurts, switch to the figure-4 demo.",
     videos: [
-      { id: "1o7awuDGzag", label: "Pigeon", start: 1, end: 20, voice: true },
-      { id: "xVq2-g_leTI", label: "Figure-4", start: 11, voice: true }
+      { id: "1o7awuDGzag", name: "Pigeon Pose", label: "Pigeon", start: 1, end: 20, voice: true },
+      { id: "xVq2-g_leTI", name: "Figure-4 Stretch", label: "Figure-4", start: 11, voice: true,
+        key: "Gentle stretch; keep your lower back down",
+        cues: [
+          "Lie on your back with both knees bent",
+          "Cross one ankle over the other knee",
+          "Pull the bottom thigh toward your chest",
+          "Breathe slowly and relax into it"
+        ],
+        stop: "If you feel it in the knee rather than the hip, ease off." }
     ]
   },
   crossbody: {
@@ -564,15 +602,25 @@ const NUM_WORDS = ["zero", "one", "two", "three", "four", "five"];
 const sentence = (t) => (/[.!?]$/.test(t.trim()) ? t.trim() : t.trim() + ".");
 const durationWords = (sec) => sec % 60 ? `${sec} seconds` : sec === 60 ? "one minute" : `${NUM_WORDS[sec / 60]} minutes`;
 
+// An exercise as done with demo `vi`. A demo can be a different variant of the exercise
+// (figure-4 instead of pigeon) with its own name, Focus, cues and safety note; otherwise
+// it shows the same movement and the exercise's own text applies.
+function variant(key, vi = 0) {
+  const ex = EX[key], v = ex.videos[vi] || {};
+  return { name: v.name || ex.name, key: v.key || ex.key, cues: v.cues || ex.cues, stop: v.stop || ex.stop,
+    spoken: v.name ? speakable(v.name) : SPOKEN_NAMES[key] || ex.name };
+}
+const isVariant = (v) => !!(v.name || v.cues || v.key);
+
 const SAY = {
-  name: (key) => sentence(SPOKEN_NAMES[key] || EX[key].name),
+  name: (key, vi) => sentence(variant(key, vi).spoken),
   target: (key) => {
     const ex = EX[key];
     return ex.time ? sentence(`Hold for ${durationWords(ex.time)}${ex.perSide ? " each side" : ""}`)
                    : sentence(speakable(`${ex.reps} ${ex.unit}`));
   },
-  key: (key) => sentence(speakable(EX[key].key)),
-  cue: (key, i) => sentence(speakable(EX[key].cues[i])),
+  key: (key, vi) => sentence(speakable(variant(key, vi).key)),
+  cue: (key, i, vi) => sentence(speakable(variant(key, vi).cues[i])),
   setOf: (s, n) => `Set ${NUM_WORDS[s]} of ${NUM_WORDS[n]}.`,
   remember: () => "Remember,",               // leads into the Focus cue, said last
   lastSet: () => "Last set.",
@@ -597,8 +645,11 @@ function clipId(text) {
 function allPhrases() {
   const out = new Set();
   for (const [key, ex] of Object.entries(EX)) {
-    out.add(SAY.name(key)); out.add(SAY.target(key)); out.add(SAY.key(key));
-    ex.cues.forEach((_, i) => out.add(SAY.cue(key, i)));
+    out.add(SAY.target(key));
+    ex.videos.forEach((_, vi) => {
+      out.add(SAY.name(key, vi)); out.add(SAY.key(key, vi));
+      variant(key, vi).cues.forEach((_, i) => out.add(SAY.cue(key, i, vi)));
+    });
     const n = ex.sets || 1;
     for (let s = 1; s <= n; s++) out.add(SAY.setOf(s, n));
     if (ex.rest) out.add(SAY.rest(ex.rest));
@@ -608,4 +659,4 @@ function allPhrases() {
   return [...out];
 }
 
-if (typeof module !== "undefined") module.exports = { EX, WARMUP, COOLDOWN, DAYS, SAY, clipId, allPhrases };
+if (typeof module !== "undefined") module.exports = { EX, WARMUP, COOLDOWN, DAYS, SAY, variant, isVariant, clipId, allPhrases };
