@@ -1,10 +1,17 @@
-/* =====================================================================
-   EXERCISE LIBRARY
-   videos: YouTube demo clips (id). Optional start/end in seconds to trim
-   a clip; the clip loops. `backup` is offered as an extra demo (‹ › buttons)
-   and is tried automatically if a video fails.
-   ===================================================================== */
+/* Workout data: exercises, weekly plan, and everything the coach says.
+
+   Exercise fields
+     name, sets?, reps + unit (rep-based) or time (seconds, a hold), perSide?, rest (seconds)
+     key    the one form cue that matters most (shown prominently, spoken first)
+     cues   step-by-step form cues, in the order the demo shows them
+     stop   when to back off (joint safety)
+     videos main demo first, then alternates:
+            { id: YouTube id, label?, start?/end? (seconds, trims intros/outros),
+              voice?: true if someone talks in it (otherwise the coach speaks even in Video mode) }
+   Every demo is ad-free and checked by tests/e2e/ad-scan.mjs.
+*/
 const EX = {
+
   // ---------- Warm-up ----------
   catcow: {
     name: "Cat-Cow → Child's Pose", reps: "8", unit: "slow reps",
@@ -17,20 +24,41 @@ const EX = {
       "Sit your hips back toward your heels, arms long (Child's Pose), then return"
     ],
     stop: "Stop if you feel sharp back pain. If sitting back hurts your knees, put a cushion behind them.",
-    videos: [{ id: "Kegpy6v-NfA" }], backup: "vuyUwtHl694", backupStart: 14
+    videos: [
+      { id: "Kegpy6v-NfA" },
+      { id: "vuyUwtHl694", label: "Alternate", start: 14, end: 72, voice: true }
+    ]
   },
-  armthread: {
-    name: "Arm Circles + Thread the Needle", reps: "10", unit: "each side",
+  armcircles: {
+    name: "Arm Circles", reps: "10", unit: "each direction",
+    key: "Palms down; start small, finish big",
+    why: "Warms up the shoulders without any load.",
+    cues: [
+      "Stand tall with your arms straight out at shoulder height, palms down",
+      "Start with small circles and gradually make them bigger",
+      "After 10, reverse direction",
+      "Keep your shoulders down, away from your ears"
+    ],
+    stop: "If you feel a pinch at the top or front of the shoulder, make the circles smaller.",
+    videos: [
+      { id: "ndmSvkEdNQQ", voice: true },
+      { id: "UVMEnIaY8aU", label: "Alternate", start: 8, end: 21, voice: true }
+    ]
+  },
+  threadneedle: {
+    name: "Thread the Needle", reps: "10", unit: "each side",
     key: "Twist from the upper back; keep your hips still",
     why: "Rotates the upper back and makes room at the top of the shoulder.",
     cues: [
-      "Arm circles: arms straight out at shoulder height, palms down",
-      "Go from small to big circles, then reverse direction",
-      "Thread the needle: on all fours, reach one arm under your body as far as it goes",
-      "Then rotate open and reach that arm to the ceiling, eyes following your hand, breathing out"
+      "Get on all fours: hands under shoulders, knees under hips",
+      "Reach one arm under your body as far as it goes, shoulder toward the floor",
+      "Then rotate open and reach that arm to the ceiling, eyes following your hand",
+      "Breathe out as you rotate. Do all reps on one side, then switch"
     ],
-    stop: "If you feel a pinch at the top or front of the shoulder, make the circles smaller.",
-    videos: [{ id: "140RTNMciH8", label: "Arm circles", start: 3, end: 22 }, { id: "YuAJ1i76Hek", label: "Thread the needle", start: 1 }]
+    stop: "If your lower back twists or your shoulder pinches, make the movement smaller.",
+    videos: [
+      { id: "YuAJ1i76Hek", start: 5, voice: true }
+    ]
   },
   hip9090: {
     name: "90/90 Hip Swivels", reps: "8", unit: "each side",
@@ -43,11 +71,14 @@ const EX = {
       "Finish with both legs at 90° again. That's 1 rep"
     ],
     stop: "If the inside or outside of your knee hurts, set your feet wider and don't go as far.",
-    videos: [{ id: "m51AZSXMvEA", start: 1, end: 30 }], backup: "YxECcOkUCEY"
+    videos: [
+      { id: "YxECcOkUCEY", end: 38, voice: true },
+      { id: "F1XdXdCjERk", label: "Alternate", start: 4, end: 16 }
+    ]
   },
   revlungetwist: {
     name: "Reverse Lunge + Twist", reps: "6", unit: "each side",
-    key: "Step BACK and keep the front shin vertical",
+    key: "Step back, and keep the front shin vertical",
     why: "Stepping backward keeps the front shin vertical, which protects the front knee.",
     cues: [
       "Hold a light plate or ball in front of you (optional)",
@@ -56,12 +87,15 @@ const EX = {
       "At the bottom, rotate your chest toward the front leg, then turn back and step forward"
     ],
     stop: "If your front knee hurts, take a shorter step and don't go as low.",
-    videos: [{ id: "LrIE5onzj68", start: 9 }], backup: "UuBs5AqO3JY"
+    videos: [
+      { id: "LrIE5onzj68", start: 9, end: 45, voice: true },
+      { id: "UuBs5AqO3JY", label: "Alternate" }
+    ]
   },
 
   // ---------- Monday: Upper A ----------
   inclinepress: {
-    name: "Neutral-Grip Incline DB Press", sets: 3, reps: "8–10", unit: "reps", rest: 90,
+    name: "Neutral-Grip Incline Press", sets: 3, reps: "8–10", unit: "reps", rest: 90,
     key: "Bench at 30°–45°, palms facing each other",
     why: "Avoids pinching the shoulder. Keep your elbows at 45°.",
     cues: [
@@ -72,11 +106,14 @@ const EX = {
       "Press up in a slight arc so the dumbbells finish over your shoulders"
     ],
     stop: "If you feel a pinch at the front of the shoulder, don't lower as far, or use a lighter weight.",
-    videos: [{ id: "2SU_K4-knrc", start: 4 }], backup: "g4tj2lnUgpM", backupEnd: 11
+    videos: [
+      { id: "2SU_K4-knrc", start: 4, voice: true },
+      { id: "g4tj2lnUgpM", label: "Alternate", end: 11 }
+    ]
   },
   sarow: {
-    name: "Single-Arm DB Row", sets: 3, reps: "10–12", unit: "reps each side", rest: 60,
-    key: "Pull toward your HIP, not your chest",
+    name: "Single-Arm Row", sets: 3, reps: "10–12", unit: "reps each side", rest: 60,
+    key: "Pull toward your hip, not your chest",
     why: "Keep your back flat and pause for 1 second at the top.",
     cues: [
       "One hand and one knee on the bench, back flat like a table",
@@ -85,10 +122,13 @@ const EX = {
       "Lower slowly without twisting. Do all reps on one side, then switch"
     ],
     stop: "If your lower back strains, brace your core harder or use a lighter weight.",
-    videos: [{ id: "ZRSGpBUVcNw" }], backup: "DMo3HJoawrU"
+    videos: [
+      { id: "ZRSGpBUVcNw" },
+      { id: "DMo3HJoawrU", label: "Alternate" }
+    ]
   },
   floorpress: {
-    name: "DB Floor Press", sets: 3, reps: "10–12", unit: "reps", rest: 90,
+    name: "Floor Press", sets: 3, reps: "10–12", unit: "reps", rest: 90,
     key: "Palms facing each other; the floor limits the range",
     why: "Protects the front of the shoulder joint.",
     cues: [
@@ -98,7 +138,10 @@ const EX = {
       "Press straight up over your chest"
     ],
     stop: "If your elbow or shoulder hurts at the bottom, use a lighter weight and slow the lowering down.",
-    videos: [{ id: "oqnNivBhveM", end: 12 }], backup: "rs05AtccEhg"
+    videos: [
+      { id: "oqnNivBhveM", end: 11, voice: true },
+      { id: "IaY4EncHDHU", label: "Alternate", start: 4, end: 20, voice: true }
+    ]
   },
   csrow: {
     name: "Chest-Supported Incline Row", sets: 3, reps: "12–15", unit: "reps", rest: 60,
@@ -111,25 +154,30 @@ const EX = {
       "Lower slowly. Keep your chest on the pad and don't shrug"
     ],
     stop: "If your neck tenses up, tuck your chin and keep your shoulders down.",
-    videos: [{ id: "tZUYS7X50so" }], backup: "vmX58YYK3-8", backupStart: 3
+    videos: [
+      { id: "ym-Mp8tCF00", start: 8, end: 76, voice: true }
+    ]
   },
   facepull: {
-    name: "DB Face Pulls / Band Pull-Aparts", sets: 3, reps: "15–20", unit: "reps", rest: 60,
-    key: "LIGHT weight; stop at eye level",
+    name: "Face Pulls / Band Pull-Aparts", sets: 3, reps: "15–20", unit: "reps", rest: 60,
+    key: "Light weight; stop at eye level",
     why: "Key for the rear shoulders and keeping the shoulder blades stable.",
     cues: [
       "Dumbbells: hinge forward (or lie chest-down on an incline bench), arms hanging",
       "Pull the dumbbells up and out to about eye level, elbows high and wide",
       "Don't pull further back; that turns it into a back exercise",
-      "Band: arms straight at shoulder height, pull the band apart, squeeze your shoulder blades for 2 seconds, return slowly"
+      "Band: arms straight at shoulder height; pull it apart, squeeze 2 seconds, return slowly"
     ],
     stop: "If anything pinches, go lighter.",
-    videos: [{ id: "nzTY7j9ocR8", label: "DB face pull" }, { id: "stwYTTPXubo", label: "Band pull-apart", start: 8, end: 44 }]
+    videos: [
+      { id: "nzTY7j9ocR8", label: "DB face pull", voice: true },
+      { id: "stwYTTPXubo", label: "Band pull-apart", start: 8, end: 44, voice: true }
+    ]
   },
 
   // ---------- Tuesday: Lower A ----------
   rdl: {
-    name: "DB Romanian Deadlift (RDL)", sets: 3, reps: "8–10", unit: "reps", rest: 90,
+    name: "Romanian Deadlift", sets: 3, reps: "8–10", unit: "reps", rest: 90,
     key: "Hinge at the hips with soft knees",
     why: "Puts no shear on the knee and protects the kneecap tendon.",
     cues: [
@@ -139,10 +187,12 @@ const EX = {
       "Drive your hips forward to stand. Let your eyes follow down so your neck stays neutral"
     ],
     stop: "If your lower back rounds or hurts, stop higher up the shin.",
-    videos: [{ id: "5WxMW-Fu5KU", end: 46 }], backup: "hQgFixeXdZo"
+    videos: [
+      { id: "xAL7lHwj30E" }
+    ]
   },
   boxsquat: {
-    name: "DB Box Squat (to Bench)", sets: 3, reps: "10–12", unit: "reps", rest: 90,
+    name: "Box Squat to Bench", sets: 3, reps: "10–12", unit: "reps", rest: 90,
     key: "Tap the bench, don't sit down; shins stay vertical",
     why: "Keeps the knees from pushing forward. Drive through your heels.",
     cues: [
@@ -152,7 +202,9 @@ const EX = {
       "Drive through your heels to stand"
     ],
     stop: "If your knees hurt, use a higher surface to sit to.",
-    videos: [{ id: "o8R9B1t-Kv0" }], backup: "DqWrOnzZ5No"
+    videos: [
+      { id: "DqWrOnzZ5No", voice: true }
+    ]
   },
   slbridge: {
     name: "Single-Leg Glute Bridge", sets: 3, reps: "12", unit: "reps each side", rest: 60,
@@ -165,10 +217,13 @@ const EX = {
       "Hold 2 seconds at the top and lower slowly. Do all reps on one side, then switch"
     ],
     stop: "If your hamstring cramps, move your foot closer to your hips.",
-    videos: [{ id: "vdmlNaXSjd4", start: 4 }], backup: "AVAXhy6pl7o", backupStart: 2
+    videos: [
+      { id: "vdmlNaXSjd4", start: 4 },
+      { id: "AVAXhy6pl7o", label: "Alternate", start: 2, voice: true }
+    ]
   },
   calfraise: {
-    name: "Standing DB Calf Raises", sets: 3, reps: "15", unit: "reps", rest: 45,
+    name: "Standing Calf Raises", sets: 3, reps: "15", unit: "reps", rest: 45,
     key: "Go slowly and hold the top for 2 seconds",
     why: "Builds ankle and Achilles stability.",
     cues: [
@@ -178,7 +233,10 @@ const EX = {
       "Lower slowly until your heels are below the step or touch the floor"
     ],
     stop: "If your Achilles hurts, skip the step and use a smaller range.",
-    videos: [{ id: "wxwY7GXxL4k", start: 3, end: 34 }], backup: "ADIDoYt_ko4", backupEnd: 11
+    videos: [
+      { id: "SRUtMJ0tE2A", start: 2, end: 23, voice: true },
+      { id: "ADIDoYt_ko4", label: "Alternate", end: 11 }
+    ]
   },
   planktaps: {
     name: "Plank with Shoulder Taps", sets: 3, time: 45, rest: 60,
@@ -191,7 +249,9 @@ const EX = {
       "Move as little as possible. No hip rocking"
     ],
     stop: "If your wrists or lower back hurt, drop to your knees.",
-    videos: [{ id: "8rgurWd-PB8" }], backup: "0PrTUpElJ44", backupStart: 3, backupEnd: 13
+    videos: [
+      { id: "0PrTUpElJ44", start: 3, end: 13 }
+    ]
   },
 
   // ---------- Wednesday: Active recovery ----------
@@ -206,7 +266,10 @@ const EX = {
       "For more stretch, reach your arms up or lean back slightly"
     ],
     stop: "If your kneecap feels pressure, add padding or move the knee farther from the wall.",
-    videos: [{ id: "fHKndvWwenc", start: 16, end: 57 }], backup: "Fg-lwNBzVV8", backupStart: 4
+    videos: [
+      { id: "fHKndvWwenc", start: 16, end: 57, voice: true },
+      { id: "Fg-lwNBzVV8", label: "Alternate", start: 4, end: 50, voice: true }
+    ]
   },
   doorway: {
     name: "Doorway Chest Stretch", sets: 2, time: 120, rest: 20,
@@ -219,7 +282,9 @@ const EX = {
       "Lean through gently until you feel the stretch across your chest"
     ],
     stop: "If you feel pinching or tingling down the arm, lower your elbows.",
-    videos: [{ id: "CEQMx4zFwYs", start: 4, end: 30 }], backup: "M850sCj9LHQ", backupStart: 5
+    videos: [
+      { id: "CEQMx4zFwYs", start: 4, end: 30, voice: true }
+    ]
   },
   tibraise: {
     name: "Tibialis Raises", sets: 2, reps: "20", unit: "reps", rest: 30,
@@ -232,7 +297,10 @@ const EX = {
       "Feet farther from the wall makes it easier; closer makes it harder"
     ],
     stop: "If your shins cramp, shorten the set and shake it out.",
-    videos: [{ id: "VzIcGAgBiaM", end: 22 }], backup: "OPEuhclsTUQ"
+    videos: [
+      { id: "OPEuhclsTUQ", voice: true },
+      { id: "nQKgHwi8W9E", label: "Alternate", end: 21 }
+    ]
   },
 
   // ---------- Friday: Upper B ----------
@@ -247,10 +315,12 @@ const EX = {
       "Lower back to shoulder level. Keep your ribs down and don't arch"
     ],
     stop: "If your shoulder pinches, shorten the range or tilt the bench back a little.",
-    videos: [{ id: "7oH0algsdww" }], backup: "LED1bhzkfLU"
+    videos: [
+      { id: "7oH0algsdww", start: 4, voice: true }
+    ]
   },
   pullover: {
-    name: "DB Lat Pullovers", sets: 3, reps: "12", unit: "reps", rest: 60,
+    name: "Pullovers", sets: 3, reps: "12", unit: "reps", rest: 60,
     key: "Soft elbows; comfortable range only",
     why: "Only lower to a comfortable shoulder stretch.",
     cues: [
@@ -260,10 +330,13 @@ const EX = {
       "On the floor, stop when it touches. Pull back until it's over your chest, no further"
     ],
     stop: "The bench demo goes deep; you don't need to. If your shoulder feels uncomfortable, stop earlier.",
-    videos: [{ id: "ieFKuQAGYIA", label: "Floor (safer range)" }, { id: "jQjWlIwG4sI", label: "Bench" }]
+    videos: [
+      { id: "qALakTR1nRI", label: "Floor (safer range)", start: 1, end: 19 },
+      { id: "FK4rHfWKEac", label: "Bench", start: 7, end: 55, voice: true }
+    ]
   },
   hammercurl: {
-    name: "Incline DB Hammer Curls", sets: 3, reps: "12", unit: "reps", rest: 60,
+    name: "Incline Hammer Curls", sets: 3, reps: "12", unit: "reps", rest: 60,
     key: "Palms facing in; keep your upper arms still",
     why: "The neutral grip protects the elbow and shoulder tendons.",
     cues: [
@@ -273,7 +346,10 @@ const EX = {
       "Lower slowly all the way down"
     ],
     stop: "If the front of your shoulder strains at the bottom, raise the bench.",
-    videos: [{ id: "1Z6XiaBxwHQ", end: 12 }], backup: "9XWLM49qZvM", backupStart: 11
+    videos: [
+      { id: "1Z6XiaBxwHQ", end: 11 },
+      { id: "cbRSu8Ws_hs", label: "Alternate", end: 48, voice: true }
+    ]
   },
   triceps: {
     name: "Overhead / Floor Triceps Extension", sets: 3, reps: "12–15", unit: "reps", rest: 60,
@@ -286,10 +362,13 @@ const EX = {
       "Overhead: sit with one dumbbell in both hands, elbows tucked in and pointing forward"
     ],
     stop: "If your shoulder pinches, stop right away and use the floor version.",
-    videos: [{ id: "Py4I0J6i2kY", label: "Floor version" }, { id: "HADoxgsslvw", label: "Overhead version", end: 8 }]
+    videos: [
+      { id: "Py4I0J6i2kY", label: "Floor version", voice: true },
+      { id: "HADoxgsslvw", label: "Overhead version", end: 8 }
+    ]
   },
   ytw: {
-    name: "Light DB Y-T-W Raises", sets: 2, reps: "10", unit: "reps of each letter", rest: 60,
+    name: "Y-T-W Raises", sets: 2, reps: "10", unit: "reps of each letter", rest: 60,
     key: "Use 2–4 kg at most",
     why: "Rebuilds the small stabilizing muscles of the rotator cuff.",
     cues: [
@@ -298,14 +377,17 @@ const EX = {
       "T: raise your arms straight out to the sides, thumbs up",
       "W: elbows bent at your sides, squeeze your shoulder blades back and down"
     ],
-    stop: "If anything hurts, drop the weights, or do them lying on the floor (Demo 2).",
-    videos: [{ id: "OFQduBFpDrY", label: "Incline bench" }, { id: "QdGTI4Lshg4", label: "Floor, no weights", start: 1 }]
+    stop: "If anything hurts, use lighter dumbbells or none at all.",
+    videos: [
+      { id: "OFQduBFpDrY", label: "Incline bench" },
+      { id: "WAnSCSJbQYw", label: "Incline, with A" }
+    ]
   },
 
   // ---------- Saturday: Lower B ----------
   dbrevlunge: {
-    name: "DB Reverse Lunges", sets: 3, reps: "10", unit: "reps each side", rest: 90,
-    key: "Step BACKWARD",
+    name: "Reverse Lunges", sets: 3, reps: "10", unit: "reps each side", rest: 90,
+    key: "Always step backward, never forward",
     why: "Keeps the front shin vertical so there's no twisting force on the knee.",
     cues: [
       "Stand with feet hip-width apart, dumbbells at your sides, palms facing in",
@@ -314,10 +396,12 @@ const EX = {
       "Keep your chest upright and push through the front foot to return"
     ],
     stop: "If your front knee hurts, take a shorter step, don't go as deep, or use lighter weights.",
-    videos: [{ id: "UoQcIFYTN_o", start: 3, end: 31 }], backup: "RZKXLMxPF_I", backupStart: 9
+    videos: [
+      { id: "RZKXLMxPF_I", start: 9, end: 54, voice: true }
+    ]
   },
   sumodl: {
-    name: "DB Sumo / Goblet Deadlift", sets: 3, reps: "10–12", unit: "reps", rest: 90,
+    name: "Sumo / Goblet Deadlift", sets: 3, reps: "10–12", unit: "reps", rest: 90,
     key: "Wide stance; knees follow your toes",
     why: "Less compression on the knees while still loading the glutes.",
     cues: [
@@ -327,10 +411,13 @@ const EX = {
       "Squeeze your glutes at the top"
     ],
     stop: "If your lower back rounds, shorten the range (put the dumbbell on a block).",
-    videos: [{ id: "De9OUZz5W_I", label: "Sumo" }, { id: "TC2jOPCNYhU", label: "Goblet", end: 33 }]
+    videos: [
+      { id: "xK4ED_yQcoU", label: "Sumo", voice: true },
+      { id: "TC2jOPCNYhU", label: "Goblet", end: 33 }
+    ]
   },
   stepup: {
-    name: "DB Step-Ups (Low Bench)", sets: 3, reps: "10", unit: "reps each side", rest: 60,
+    name: "Step-Ups", sets: 3, reps: "10", unit: "reps each side", rest: 60,
     key: "Use a step low enough that your knee is at 90° or less",
     why: "Push through the heel of your leading leg.",
     cues: [
@@ -340,7 +427,9 @@ const EX = {
       "Step down slowly. Do all reps on one side, then switch"
     ],
     stop: "If your knee hurts, use a lower step.",
-    videos: [{ id: "DxUNi119Qzs" }], backup: "7AtIjR-QqVA", backupStart: 3
+    videos: [
+      { id: "DxUNi119Qzs" }
+    ]
   },
   suitcase: {
     name: "Suitcase Carries", sets: 3, reps: "40 m", unit: "(switch hands at 20 m)", rest: 60,
@@ -353,10 +442,13 @@ const EX = {
       "Switch hands halfway"
     ],
     stop: "If you can't stay upright, use a lighter weight.",
-    videos: [{ id: "3RKKnZhhelE" }], backup: "bAnCoDrvXc4"
+    videos: [
+      { id: "3RKKnZhhelE", voice: true },
+      { id: "bAnCoDrvXc4", label: "Alternate", start: 4 }
+    ]
   },
 
-  // ---------- Sunday: Static flexibility ----------
+  // ---------- Post-workout flexibility (and Sunday) ----------
   pigeon: {
     name: "Pigeon Pose / Figure-4", sets: 1, time: 120, perSide: true, rest: 10,
     key: "Gentle stretch; no knee pain",
@@ -368,22 +460,40 @@ const EX = {
       "Keep your hips square; breathe slowly and relax into it"
     ],
     stop: "If your front knee hurts in pigeon, switch to the lying figure-4.",
-    videos: [{ id: "op-eDU9eNqM", label: "Pigeon", start: 5 }, { id: "-g0nuyTHMrI", label: "Figure-4", start: 5 }]
+    videos: [
+      { id: "1o7awuDGzag", label: "Pigeon", start: 1, end: 20, voice: true },
+      { id: "xVq2-g_leTI", label: "Figure-4", start: 11, voice: true }
+    ]
   },
-  couchSun: null, // filled below (same as couch, 1 set)
-  shoulderstretch: {
-    name: "Cross-Body & Overhead Triceps Stretch", sets: 2, time: 30, perSide: true, rest: 10,
-    setNotes: ["Cross-body stretch", "Overhead triceps stretch"],
-    key: "Keep your shoulder down, away from your ear",
+  crossbody: {
+    name: "Cross-Body Shoulder Stretch", sets: 1, time: 30, perSide: true, rest: 10,
+    key: "Keep the shoulder down, away from your ear",
     why: "Stretches the back of the shoulder capsule.",
     cues: [
-      "Cross-body: pull one arm across your chest by holding just above the elbow",
-      "Overhead: reach one hand down your back and gently push that elbow with the other hand",
-      "Keep your shoulders relaxed and low",
-      "Aim for a gentle stretch, not pain"
+      "Bring one arm straight across your chest",
+      "Hold it just above the elbow with your other hand",
+      "Gently pull until you feel the stretch at the back of the shoulder",
+      "Keep both shoulders relaxed and low"
     ],
     stop: "If you feel pinching at the front of the shoulder, ease off.",
-    videos: [{ id: "aIq0fLi8iak", label: "Cross-body" }, { id: "_IOHtPSYGbk", label: "Overhead triceps" }]
+    videos: [
+      { id: "aIq0fLi8iak", start: 4, voice: true }
+    ]
+  },
+  tricepsstretch: {
+    name: "Overhead Triceps Stretch", sets: 1, time: 30, perSide: true, rest: 10,
+    key: "Gentle pressure; keep your ribs down",
+    why: "Stretches the triceps and the back of the shoulder.",
+    cues: [
+      "Reach one hand down between your shoulder blades",
+      "With the other hand, gently push that elbow back",
+      "Keep your ribs down; don't arch your lower back",
+      "Aim for a gentle stretch, not pain"
+    ],
+    stop: "If your shoulder pinches, lower the elbow or ease the pressure.",
+    videos: [
+      { id: "_IOHtPSYGbk", start: 4, voice: true }
+    ]
   },
   hamstring: {
     name: "Hamstring Doorway Stretch", sets: 1, time: 60, perSide: true, rest: 10,
@@ -396,16 +506,20 @@ const EX = {
       "Keep your lower back flat and relax"
     ],
     stop: "If you feel tingling down the leg, back off. That's a nerve, not the muscle.",
-    videos: [{ id: "VWk9QD10Xjg" }], backup: "b7k-9CZVYbA"
+    videos: [
+      { id: "VWk9QD10Xjg", start: 1, voice: true },
+      { id: "b7k-9CZVYbA", label: "Alternate", end: 49, voice: true }
+    ]
   }
 };
-EX.couchSun = Object.assign({}, EX.couch, { sets: 1, rest: 10 });
 
-const WARMUP = ["catcow", "armthread", "hip9090", "revlungetwist"];
-// Post-workout flexibility (the PDF's Sunday static-stretch list), appended to every session
-const COOLDOWN = ["pigeon", "couchSun", "shoulderstretch", "hamstring"];
+EX.couchSun = { ...EX.couch, sets: 1, rest: 10 }; // Sunday / cool-down: one round each side
 
-// Day index follows JS getDay(): 0 = Sunday
+const WARMUP = ["catcow", "armcircles", "threadneedle", "hip9090", "revlungetwist"];
+// Post-workout flexibility (the PDF's Sunday static-stretch list), offered after every session
+const COOLDOWN = ["pigeon", "couchSun", "crossbody", "tricepsstretch", "hamstring"];
+
+// d follows Date.getDay(): 0 = Sunday
 const DAYS = [
   { d: 1, name: "Monday", focus: "Upper Body A", goal: "Chest/back strength + shoulder stability",
     items: ["inclinepress", "sarow", "floorpress", "csrow", "facepull"] },
@@ -419,17 +533,15 @@ const DAYS = [
   { d: 6, name: "Saturday", focus: "Lower Body B", goal: "Single-leg balance, hips & knee prehab",
     items: ["dbrevlunge", "sumodl", "stepup", "suitcase"] },
   { d: 0, name: "Sunday", focus: "Rest & Recovery", goal: "Full-body static stretching",
-    items: COOLDOWN, isCooldown: true }
+    items: COOLDOWN, isCooldown: true },
 ];
 
-/* =====================================================================
-   NARRATION TEXT
-   Everything the coach says is built here, so the app and the audio
-   generator (tools/make_audio.py) always agree on the exact wording.
-   Each phrase is pre-recorded as audio/<clipId>.m4a.
-   ===================================================================== */
+/* ---------------------------------------------------------------------
+   Narration. Every phrase is pre-recorded as audio/<clipId>.m4a by
+   tools/make_audio.py, which reads allPhrases() from this file.
+   --------------------------------------------------------------------- */
 const SPOKEN_NAMES = {
-  catcow: "Cat cow, into child's pose", armthread: "Arm circles, and thread the needle",
+  catcow: "Cat cow, into child's pose", armcircles: "Arm circles", threadneedle: "Thread the needle",
   hip9090: "Ninety ninety hip swivels", revlungetwist: "Reverse lunge with a twist",
   inclinepress: "Neutral grip incline press", sarow: "Single arm dumbbell row",
   floorpress: "Dumbbell floor press", csrow: "Chest supported incline row",
@@ -441,8 +553,8 @@ const SPOKEN_NAMES = {
   pullover: "Dumbbell pullovers", hammercurl: "Incline hammer curls",
   triceps: "Triceps extensions", ytw: "Y, T, W raises", dbrevlunge: "Dumbbell reverse lunges",
   sumodl: "Sumo deadlift", stepup: "Step ups", suitcase: "Suitcase carries",
-  pigeon: "Pigeon pose, or figure four", shoulderstretch: "Cross body and overhead triceps stretch",
-  hamstring: "Hamstring doorway stretch"
+  pigeon: "Pigeon pose, or figure four", crossbody: "Cross body shoulder stretch",
+  tricepsstretch: "Overhead triceps stretch", hamstring: "Hamstring doorway stretch",
 };
 
 // Written text → words that read naturally aloud
@@ -456,31 +568,25 @@ function speakable(t) {
     .replace(/(\d)\s*m\b/g, "$1 meters")
     .replace(/Figure-4/g, "Figure four")
     .replace(/\s*\(/g, ", ").replace(/\)/g, "")
-    .replace(/\b([A-Z]{2,})\b/g, (w) => w.toLowerCase()) // "BACK" would be spelled out
     .replace(/[–—;]/g, ",");
 }
 const NUM_WORDS = ["zero", "one", "two", "three", "four", "five"];
-function sentence(t) { t = t.trim(); return /[.!?]$/.test(t) ? t : t + "."; }
-function durationWords(sec) {
-  if (sec % 60 === 0) return sec === 60 ? "one minute" : `${NUM_WORDS[sec / 60]} minutes`;
-  return `${sec} seconds`;
-}
+const sentence = (t) => (/[.!?]$/.test(t.trim()) ? t.trim() : t.trim() + ".");
+const durationWords = (sec) => sec % 60 ? `${sec} seconds` : sec === 60 ? "one minute" : `${NUM_WORDS[sec / 60]} minutes`;
 
 const SAY = {
   name: (key) => sentence(SPOKEN_NAMES[key] || EX[key].name),
   target: (key) => {
     const ex = EX[key];
-    if (ex.time) return sentence(`Hold for ${durationWords(ex.time)}${ex.perSide ? " each side" : ""}`);
-    return sentence(speakable(`${ex.reps} ${ex.unit}`));
+    return ex.time ? sentence(`Hold for ${durationWords(ex.time)}${ex.perSide ? " each side" : ""}`)
+                   : sentence(speakable(`${ex.reps} ${ex.unit}`));
   },
   key: (key) => sentence(speakable(EX[key].key)),
   cue: (key, i) => sentence(speakable(EX[key].cues[i])),
-  setNote: (key, set) => sentence(EX[key].setNotes[set - 1]),
   setOf: (s, n) => `Set ${NUM_WORDS[s]} of ${NUM_WORDS[n]}.`,
   lastSet: () => "Last set.",
   side: (side) => sentence(side),            // "Left side." / "Right side."
   switchSides: () => "Switch sides.",
-  getReady: () => "Get in position.",
   go: () => "Go.",
   tenLeft: () => "Ten seconds left.",
   rest: (sec) => `Rest ${durationWords(sec)}.`,
@@ -496,21 +602,19 @@ function clipId(text) {
   return h.toString(16).padStart(8, "0");
 }
 
-// Every phrase the app can say (used by the audio generator)
+// Every phrase the app can say
 function allPhrases() {
   const out = new Set();
-  for (const key of Object.keys(EX)) {
-    const ex = EX[key];
+  for (const [key, ex] of Object.entries(EX)) {
     out.add(SAY.name(key)); out.add(SAY.target(key)); out.add(SAY.key(key));
     ex.cues.forEach((_, i) => out.add(SAY.cue(key, i)));
-    if (ex.setNotes) ex.setNotes.forEach((_, i) => out.add(SAY.setNote(key, i + 1)));
     const n = ex.sets || 1;
     for (let s = 1; s <= n; s++) out.add(SAY.setOf(s, n));
     if (ex.rest) out.add(SAY.rest(ex.rest));
   }
-  ["Left side", "Right side"].forEach((s) => out.add(SAY.side(s)));
-  [SAY.lastSet(), SAY.switchSides(), SAY.getReady(), SAY.go(), SAY.tenLeft(), SAY.nextUp(), SAY.tenToGo(), SAY.done()]
-    .forEach((t) => out.add(t));
+  [SAY.side("Left side"), SAY.side("Right side"), SAY.lastSet(), SAY.switchSides(), SAY.go(), SAY.tenLeft(),
+   SAY.nextUp(), SAY.tenToGo(), SAY.done()].forEach((t) => out.add(t));
   return [...out];
 }
+
 if (typeof module !== "undefined") module.exports = { EX, WARMUP, COOLDOWN, DAYS, SAY, clipId, allPhrases };

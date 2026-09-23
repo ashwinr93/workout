@@ -23,10 +23,10 @@ const BASE = `http://localhost:${server.address().port}/index.html`;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const player = (page) => page.evaluate(() => ({
-  muted: yt && yt.isMuted ? yt.isMuted() : null, state: yt && yt.getPlayerState ? yt.getPlayerState() : null,
-  id: yt && yt.getVideoData ? yt.getVideoData().video_id : null, mode: audioMode, hint: !$("video-hint").hidden,
+  muted: Video.yt.isMuted(), state: Video.yt.getPlayerState(), id: Video.yt.getVideoData().video_id,
+  mode: Sound.mode, hint: !$("video-hint").hidden,
 }));
-const diag = (page) => page.evaluate(() => DIAG.slice());
+const diag = (page) => page.evaluate(() => Diag.lines.slice());
 async function waitFor(page, fn, ms) {
   const end = Date.now() + ms;
   while (Date.now() < end) { if (await page.evaluate(fn).catch(() => false)) return true; await sleep(250); }
@@ -45,7 +45,7 @@ async function runBrowser(name, launcher, opts) {
     await page.goto(BASE);
     await page.evaluate(() => { localStorage.clear(); localStorage.setItem("audioMode", '"coach"'); });
     await page.goto(BASE);
-    if (!(await waitFor(page, () => window.YT && YT.Player && ytReady, 20000))) throw new Error("YouTube player never loaded");
+    if (!(await waitFor(page, () => Video.ready, 20000))) throw new Error("YouTube player never loaded");
     let aac = true; // set after the first voice clip is tried
 
     // 1. How long each demo takes to start playing (muted autoplay)
@@ -54,27 +54,30 @@ async function runBrowser(name, launcher, opts) {
     const slow = [], dead = [];
     for (const key of sample) {
       const t = Date.now();
-      await page.evaluate((k) => { exitPlayer(); startPreview(k); }, key);
-      const ok = await waitFor(page, () => yt.getPlayerState() === 1, 15000);
+      await page.evaluate((k) => { Workout.exit(); Workout.startPreview(k); }, key);
+      const ok = await waitFor(page, () => Video.yt.getPlayerState() === 1, 15000);
       const ms = Date.now() - t;
       if (!ok) dead.push(key); else if (ms > 6000) slow.push(`${key} ${(ms / 1000).toFixed(1)}s`);
     }
-    await page.evaluate(() => exitPlayer());
+    await page.evaluate(() => Workout.exit());
     if (dead.length) fail(`demos never started: ${dead.join(", ")}`);
     if (slow.length) fail(`slow demos (>6 s): ${slow.join(", ")}`);
     if (!dead.length && !slow.length) pass(`${sample.length} demos start within 6 s`);
 
-    // 2. A real workout with real clicks
-    await page.click("text=Tuesday");
+    // 2. A real workout with real clicks (Monday: its first demo has a voice)
+    await page.evaluate(() => { Sound.mode = "video"; });                 // left in Video last time…
+    await page.click("text=Monday");
+    await page.click("#wu-toggle");                                         // skip the warm-up: start on the incline press
     await page.click("#start-btn");
-    await waitFor(page, () => yt.getPlayerState() === 1, 15000);
+    await waitFor(page, () => Video.yt.getPlayerState() === 1, 15000);
     await sleep(4000);
     let p = await player(page), d = await diag(page);
     // Playwright's WebKit build has no AAC decoder (real Safari does): skip voice checks there
     aac = !d.some((l) => l.includes("NotSupportedError"));
     if (!aac) lines.push("  – this build can't play AAC voice files (real Safari can); voice checks skipped");
     !aac ? (p.muted ? pass("Coach mode: video muted") : fail("Coach mode: video not muted")) :
-    p.muted && d.some((l) => l.includes("said:")) ? pass("Coach mode: coach talks, video muted") : fail(`Coach mode: muted=${p.muted}, coach spoke=${d.some((l) => l.includes("said:"))}`);
+    p.mode !== "coach" ? fail(`didn't start in Coach mode (${p.mode})`) :
+    p.muted && d.some((l) => l.includes("said:")) ? pass("starts in Coach mode: coach talks, video muted") : fail(`Coach mode: muted=${p.muted}, coach spoke=${d.some((l) => l.includes("said:"))}`);
 
     await page.click("#sound-btn");
     await sleep(3500);
@@ -82,20 +85,32 @@ async function runBrowser(name, launcher, opts) {
     !p.muted && p.state === 1 ? pass("tap Video: video plays with sound") : fail(`tap Video: muted=${p.muted} state=${p.state} hint=${p.hint}`);
     const saidBefore = (await diag(page)).filter((l) => l.includes("said:")).length;
 
-    // advance with Done / Skip rest until a different exercise's demo loads
-    const firstKey = await page.evaluate(() => steps[cur].key);
-    for (let i = 0; i < 12; i++) {
-      const k = await page.evaluate(() => steps[cur].type === "work" && steps[cur].key);
-      if (k && k !== firstKey) break;
+    // advance with Done / Skip rest until another exercise whose demo has a voice
+    const firstKey = await page.evaluate(() => Workout.step().key);
+    let passedSilent = false;
+    for (let i = 0; i < 30; i++) {
+      const k = await page.evaluate(() => Workout.step().type === "work" && Workout.step().key);
+      const talks = await page.evaluate(() => !!EX[Workout.step().key || Workout.nextWork().key].videos[0].voice);
+      if (k && k !== firstKey && !talks && !passedSilent) {
+        passedSilent = true;
+        await sleep(3000);
+        p = await player(page);
+        const spoke = (await diag(page)).filter((l) => l.includes("said:")).length > saidBefore;
+        !aac ? (p.muted ? pass("silent demo in Video mode: video stays muted") : fail("silent demo got unmuted")) :
+        p.muted && spoke ? pass("silent demo in Video mode: coach fills in") : fail(`silent demo in Video mode: muted=${p.muted} mode=${p.mode}`);
+      }
+      if (k && k !== firstKey && talks) break;
       await page.click(await page.$("#c-done") ? "#c-done" : "#c-skip");
       await sleep(400);
     }
-    await waitFor(page, () => yt.getPlayerState() === 1, 15000);
+    await waitFor(page, () => Video.yt.getPlayerState() === 1, 15000);
     await sleep(3500);
     p = await player(page);
     !p.muted && p.mode === "video" ? pass("video sound carries over to the next exercise") : fail(`carry-over: muted=${p.muted} mode=${p.mode} hint=${p.hint}`);
     const saidAfter = (await diag(page)).filter((l) => l.includes("said:")).length;
-    saidAfter === saidBefore ? pass("coach silent in Video mode") : fail(`coach spoke ${saidAfter - saidBefore} lines in Video mode`);
+    await sleep(5000);
+    const saidLater = (await diag(page)).filter((l) => l.includes("said:")).length;
+    saidLater === saidAfter ? pass("coach silent on a talking demo in Video mode") : fail(`coach spoke ${saidLater - saidAfter} lines over a talking demo`);
 
     await page.click("#voice-btn");
     await sleep(4000);
