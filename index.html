@@ -49,6 +49,8 @@
   .rules ul { margin: 0; padding-left: 18px; }
   .rules li { margin: 4px 0; }
   .tip { margin-top: 14px; color: var(--muted); font-size: 13px; }
+  .link-btn { color: var(--muted); text-decoration: underline; font-size: 13px; padding: 0; }
+  #diag-text { max-height: 50vh; overflow: auto; font-size: 11px; line-height: 1.35; white-space: pre-wrap; word-break: break-word; background: var(--bg); padding: 8px; border-radius: 8px; margin: 0; user-select: text; -webkit-user-select: text; }
 
   /* ---------- Day overview ---------- */
   .topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
@@ -157,6 +159,12 @@
     .video-pane { aspect-ratio: 16/9; }
     .p-head .lbl { display: none; }
     .vid-count, #vid-restart { display: none; }
+    .cues { list-style: none; padding: 0; min-height: 2.6em; overflow: hidden; cursor: pointer; }
+    .cues li { display: none; margin: 0; }
+    .cues li.on { display: block; }
+    .cue-dots { display: flex; gap: 5px; }
+    .cue-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
+    .cue-dots i.on { background: var(--text); }
     .rotate-hint { display: block; font-size: 12px; color: var(--muted); text-align: center; padding: 4px; background: var(--panel); }
     .ex-name { font-size: 24px; }
     .target .big { font-size: 44px; }
@@ -185,6 +193,17 @@
       </ul>
     </div>
     <p class="tip">For the TV: turn off Rotation Lock, hold the phone sideways, then open Control Center → Screen Mirroring.</p>
+    <p class="tip"><button class="link-btn" id="diag-open">Diagnostics</button></p>
+    <div class="rules" id="diag" hidden>
+      <h3>Diagnostics log</h3>
+      <p class="tip" style="margin-top:0">If something misbehaves, tap Copy and paste this to Claude.</p>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button class="icon-btn" id="diag-copy">Copy log</button>
+        <button class="icon-btn" id="diag-clear">Clear</button>
+        <span class="tip" id="diag-status" style="margin:0;align-self:center"></span>
+      </div>
+      <pre id="diag-text"></pre>
+    </div>
   </div>
 </section>
 
@@ -232,433 +251,20 @@
   <div class="done-wrap" id="p-done" hidden></div>
 </section>
 
+<script src="data.js"></script>
 <script>
-/* =====================================================================
-   EXERCISE LIBRARY
-   videos: YouTube demo clips (id). Optional start/end in seconds to trim
-   a clip; the clip loops. `backup` is offered as an extra demo (‹ › buttons)
-   and is tried automatically if a video fails.
-   ===================================================================== */
-const EX = {
-  // ---------- Warm-up ----------
-  catcow: {
-    name: "Cat-Cow → Child's Pose", reps: "8", unit: "slow reps",
-    key: "Move slowly, with your breath",
-    why: "Loosens the spine and shoulders without putting load on the joints.",
-    cues: [
-      "Get on all fours: hands under shoulders, knees under hips",
-      "Breathe in: let the belly drop, lift the chest and tailbone (Cow)",
-      "Breathe out: round the back up and tuck the chin (Cat)",
-      "Sit your hips back toward your heels, arms long (Child's Pose), then return"
-    ],
-    stop: "Stop if you feel sharp back pain. If sitting back hurts your knees, put a cushion behind them.",
-    videos: [{ id: "Kegpy6v-NfA" }], backup: "vuyUwtHl694", backupStart: 14
-  },
-  armthread: {
-    name: "Arm Circles + Thread the Needle", reps: "10", unit: "each side",
-    key: "Twist from the upper back; keep your hips still",
-    why: "Rotates the upper back and makes room at the top of the shoulder.",
-    cues: [
-      "Arm circles: arms straight out at shoulder height, palms down",
-      "Go from small to big circles, then reverse direction",
-      "Thread the needle: on all fours, reach one arm under your body as far as it goes",
-      "Then rotate open and reach that arm to the ceiling, eyes following your hand, breathing out"
-    ],
-    stop: "If you feel a pinch at the top or front of the shoulder, make the circles smaller.",
-    videos: [{ id: "140RTNMciH8", label: "Arm circles", start: 3, end: 22 }, { id: "YuAJ1i76Hek", label: "Thread the needle", start: 1 }]
-  },
-  hip9090: {
-    name: "90/90 Hip Swivels", reps: "8", unit: "each side",
-    key: "Your knees move; your feet stay planted",
-    why: "Rotates the hips in both directions without twisting the knee.",
-    cues: [
-      "Sit with both legs bent to 90°: front leg and back leg",
-      "Sit tall; put your hands behind you only if you need support",
-      "Lift the back knee first and rotate both knees to the other side",
-      "Finish with both legs at 90° again. That's 1 rep"
-    ],
-    stop: "If the inside or outside of your knee hurts, set your feet wider and don't go as far.",
-    videos: [{ id: "m51AZSXMvEA", start: 1, end: 30 }], backup: "YxECcOkUCEY"
-  },
-  revlungetwist: {
-    name: "Reverse Lunge + Twist", reps: "6", unit: "each side",
-    key: "Step BACK and keep the front shin vertical",
-    why: "Stepping backward keeps the front shin vertical, which protects the front knee.",
-    cues: [
-      "Hold a light plate or ball in front of you (optional)",
-      "Step back and lower until both knees are near 90°",
-      "Keep the front knee behind your toes, over the ankle",
-      "At the bottom, rotate your chest toward the front leg, then turn back and step forward"
-    ],
-    stop: "If your front knee hurts, take a shorter step and don't go as low.",
-    videos: [{ id: "LrIE5onzj68", start: 9 }], backup: "UuBs5AqO3JY"
-  },
-
-  // ---------- Monday: Upper A ----------
-  inclinepress: {
-    name: "Neutral-Grip Incline DB Press", sets: 3, reps: "8–10", unit: "reps", rest: 90,
-    key: "Bench at 30°–45°, palms facing each other",
-    why: "Avoids pinching the shoulder. Keep your elbows at 45°.",
-    cues: [
-      "Set the bench to a low incline (30–45°)",
-      "Start with the dumbbells on your knees, then lie back and kick them up",
-      "Palms face each other; pull your shoulder blades together. A slight natural arch is fine",
-      "Lower to chest level with elbows about 45° from your body",
-      "Press up in a slight arc so the dumbbells finish over your shoulders"
-    ],
-    stop: "If you feel a pinch at the front of the shoulder, don't lower as far, or use a lighter weight.",
-    videos: [{ id: "2SU_K4-knrc", start: 4 }], backup: "g4tj2lnUgpM", backupEnd: 11
-  },
-  sarow: {
-    name: "Single-Arm DB Row", sets: 3, reps: "10–12", unit: "reps each side", rest: 60,
-    key: "Pull toward your HIP, not your chest",
-    why: "Keep your back flat and pause for 1 second at the top.",
-    cues: [
-      "One hand and one knee on the bench, back flat like a table",
-      "Let the dumbbell hang, then drive your elbow back toward your hip",
-      "Pause for 1 second at the top",
-      "Lower slowly without twisting. Do all reps on one side, then switch"
-    ],
-    stop: "If your lower back strains, brace your core harder or use a lighter weight.",
-    videos: [{ id: "ZRSGpBUVcNw" }], backup: "DMo3HJoawrU"
-  },
-  floorpress: {
-    name: "DB Floor Press", sets: 3, reps: "10–12", unit: "reps", rest: 90,
-    key: "Palms facing each other; the floor limits the range",
-    why: "Protects the front of the shoulder joint.",
-    cues: [
-      "Lie on the floor with knees bent and feet flat",
-      "Palms face each other, elbows about 45° from your body",
-      "Lower until your upper arms touch the floor. Pause, don't bounce",
-      "Press straight up over your chest"
-    ],
-    stop: "If your elbow or shoulder hurts at the bottom, use a lighter weight and slow the lowering down.",
-    videos: [{ id: "oqnNivBhveM", end: 12 }], backup: "rs05AtccEhg"
-  },
-  csrow: {
-    name: "Chest-Supported Incline Row", sets: 3, reps: "12–15", unit: "reps", rest: 60,
-    key: "Keep your chest glued to the bench",
-    why: "Resting your chest on the bench takes strain off the lower back.",
-    cues: [
-      "Set the bench to 30–45° and lie chest-down, arms hanging straight",
-      "Let your shoulders stretch fully at the bottom",
-      "Row the dumbbells toward your hips and squeeze your shoulder blades at the top",
-      "Lower slowly. Keep your chest on the pad and don't shrug"
-    ],
-    stop: "If your neck tenses up, tuck your chin and keep your shoulders down.",
-    videos: [{ id: "tZUYS7X50so" }], backup: "vmX58YYK3-8", backupStart: 3
-  },
-  facepull: {
-    name: "DB Face Pulls / Band Pull-Aparts", sets: 3, reps: "15–20", unit: "reps", rest: 60,
-    key: "LIGHT weight; stop at eye level",
-    why: "Key for the rear shoulders and keeping the shoulder blades stable.",
-    cues: [
-      "Dumbbells: hinge forward (or lie chest-down on an incline bench), arms hanging",
-      "Pull the dumbbells up and out to about eye level, elbows high and wide",
-      "Don't pull further back; that turns it into a back exercise",
-      "Band: arms straight at shoulder height, pull the band apart, squeeze your shoulder blades for 2 seconds, return slowly"
-    ],
-    stop: "If anything pinches, go lighter.",
-    videos: [{ id: "nzTY7j9ocR8", label: "DB face pull" }, { id: "stwYTTPXubo", label: "Band pull-apart", start: 8, end: 44 }]
-  },
-
-  // ---------- Tuesday: Lower A ----------
-  rdl: {
-    name: "DB Romanian Deadlift (RDL)", sets: 3, reps: "8–10", unit: "reps", rest: 90,
-    key: "Hinge at the hips with soft knees",
-    why: "Puts no shear on the knee and protects the kneecap tendon.",
-    cues: [
-      "Stand tall: chest up, shoulders back, core tight, pelvis tucked for a neutral back",
-      "Push your hips back as if touching a wall behind you, knees soft",
-      "Lower until you feel the hamstring stretch; stop before your back rounds",
-      "Drive your hips forward to stand. Let your eyes follow down so your neck stays neutral"
-    ],
-    stop: "If your lower back rounds or hurts, stop higher up the shin.",
-    videos: [{ id: "5WxMW-Fu5KU", end: 46 }], backup: "hQgFixeXdZo"
-  },
-  boxsquat: {
-    name: "DB Box Squat (to Bench)", sets: 3, reps: "10–12", unit: "reps", rest: 90,
-    key: "Tap the bench, don't sit down; shins stay vertical",
-    why: "Keeps the knees from pushing forward. Drive through your heels.",
-    cues: [
-      "Rest the dumbbells on your shoulders (or hold one at your chest)",
-      "Push your hips back and lower until you just tap the bench",
-      "Don't relax onto it. Spread the floor with your feet so your knees stay out",
-      "Drive through your heels to stand"
-    ],
-    stop: "If your knees hurt, use a higher surface to sit to.",
-    videos: [{ id: "o8R9B1t-Kv0" }], backup: "DqWrOnzZ5No"
-  },
-  slbridge: {
-    name: "Single-Leg Glute Bridge", sets: 3, reps: "12", unit: "reps each side", rest: 60,
-    key: "Squeeze for 2 seconds at the top",
-    why: "Lying flat takes load off the spine and isolates the glutes.",
-    cues: [
-      "Lie on your back and hug one knee to your chest. This keeps your lower back from arching",
-      "Put the other foot flat, close to your hips",
-      "Press through that foot and lift your hips, keeping them level",
-      "Hold 2 seconds at the top and lower slowly. Do all reps on one side, then switch"
-    ],
-    stop: "If your hamstring cramps, move your foot closer to your hips.",
-    videos: [{ id: "vdmlNaXSjd4", start: 4 }], backup: "AVAXhy6pl7o", backupStart: 2
-  },
-  calfraise: {
-    name: "Standing DB Calf Raises", sets: 3, reps: "15", unit: "reps", rest: 45,
-    key: "Go slowly and hold the top for 2 seconds",
-    why: "Builds ankle and Achilles stability.",
-    cues: [
-      "Balls of your feet on a 5–8 cm board or step, heels hanging off",
-      "Breathe out and rise as high as you can",
-      "Hold the top for 2 seconds",
-      "Lower slowly until your heels are below the step or touch the floor"
-    ],
-    stop: "If your Achilles hurts, skip the step and use a smaller range.",
-    videos: [{ id: "wxwY7GXxL4k", start: 3, end: 34 }], backup: "ADIDoYt_ko4", backupEnd: 11
-  },
-  planktaps: {
-    name: "Plank with Shoulder Taps", sets: 3, time: 45, rest: 60,
-    key: "Keep your hips square; no rocking",
-    why: "Keeps the spine from twisting. Tap slowly.",
-    cues: [
-      "High plank: hands under shoulders, body braced in a straight line",
-      "Set your feet wider for more stability",
-      "Slowly tap one hand to the opposite shoulder, alternating sides",
-      "Move as little as possible. No hip rocking"
-    ],
-    stop: "If your wrists or lower back hurt, drop to your knees.",
-    videos: [{ id: "8rgurWd-PB8" }], backup: "0PrTUpElJ44", backupStart: 3, backupEnd: 13
-  },
-
-  // ---------- Wednesday: Active recovery ----------
-  couch: {
-    name: "Couch Stretch", sets: 2, time: 120, perSide: true, rest: 20,
-    key: "Squeeze the glute of your back leg",
-    why: "Releases tight quads and hip flexors that pull on the kneecap tendon.",
-    cues: [
-      "Kneel with your back foot up on the couch or bench behind you and the knee on a pillow",
-      "Step the other foot forward into a lunge",
-      "Squeeze the glute of the back leg; this deepens the stretch",
-      "For more stretch, reach your arms up or lean back slightly"
-    ],
-    stop: "If your kneecap feels pressure, add padding or move the knee farther from the wall.",
-    videos: [{ id: "fHKndvWwenc", start: 16, end: 57 }], backup: "Fg-lwNBzVV8", backupStart: 4
-  },
-  doorway: {
-    name: "Doorway Chest Stretch", sets: 2, time: 120, rest: 20,
-    key: "Gentle stretch; there should be no shoulder pain",
-    why: "Opens the chest without straining the front of the shoulder.",
-    cues: [
-      "Use a doorway narrow enough to rest both forearms on the frame",
-      "Keep your elbows at or just below shoulder height",
-      "Put one foot in front of the other to protect your lower back",
-      "Lean through gently until you feel the stretch across your chest"
-    ],
-    stop: "If you feel pinching or tingling down the arm, lower your elbows.",
-    videos: [{ id: "CEQMx4zFwYs", start: 4, end: 30 }], backup: "M850sCj9LHQ", backupStart: 5
-  },
-  tibraise: {
-    name: "Tibialis Raises", sets: 2, reps: "20", unit: "reps", rest: 30,
-    key: "Lift your toes high and lower them slowly",
-    why: "Strengthens the shin muscles that slow you down, which helps protect the knees in football.",
-    cues: [
-      "Lean your hips and back against a wall with your legs straight",
-      "Pull your toes up toward your shins as high as you can",
-      "Keep your knees straight and quads tight; don't hike your hips",
-      "Feet farther from the wall makes it easier; closer makes it harder"
-    ],
-    stop: "If your shins cramp, shorten the set and shake it out.",
-    videos: [{ id: "VzIcGAgBiaM", end: 22 }], backup: "OPEuhclsTUQ"
-  },
-
-  // ---------- Friday: Upper B ----------
-  seatedohp: {
-    name: "Seated Neutral Overhead Press", sets: 3, reps: "10–12", unit: "reps", rest: 90,
-    key: "Press slightly in front of you, not straight out to the sides",
-    why: "Palms facing in, elbows slightly forward, core braced.",
-    cues: [
-      "Sit upright with your back supported and kick the dumbbells up to shoulder height",
-      "Palms face each other, elbows slightly in front of your body",
-      "Press up so the weights end slightly in front of your head",
-      "Lower back to shoulder level. Keep your ribs down and don't arch"
-    ],
-    stop: "If your shoulder pinches, shorten the range or tilt the bench back a little.",
-    videos: [{ id: "7oH0algsdww" }], backup: "LED1bhzkfLU"
-  },
-  pullover: {
-    name: "DB Lat Pullovers", sets: 3, reps: "12", unit: "reps", rest: 60,
-    key: "Soft elbows; comfortable range only",
-    why: "Only lower to a comfortable shoulder stretch.",
-    cues: [
-      "Lie on the floor (or on a bench), holding one dumbbell with both hands over your chest",
-      "Keep a slight bend in your elbows and don't let it change",
-      "Lower the weight behind your head only as far as is comfortable",
-      "On the floor, stop when it touches. Pull back until it's over your chest, no further"
-    ],
-    stop: "The bench demo goes deep; you don't need to. If your shoulder feels uncomfortable, stop earlier.",
-    videos: [{ id: "ieFKuQAGYIA", label: "Floor (safer range)" }, { id: "jQjWlIwG4sI", label: "Bench" }]
-  },
-  hammercurl: {
-    name: "Incline DB Hammer Curls", sets: 3, reps: "12", unit: "reps", rest: 60,
-    key: "Palms facing in; keep your upper arms still",
-    why: "The neutral grip protects the elbow and shoulder tendons.",
-    cues: [
-      "Set the bench to 45–60° and let your arms hang straight down",
-      "Curl up with your thumbs pointing up",
-      "Keep your elbows back and still; don't swing",
-      "Lower slowly all the way down"
-    ],
-    stop: "If the front of your shoulder strains at the bottom, raise the bench.",
-    videos: [{ id: "1Z6XiaBxwHQ", end: 12 }], backup: "9XWLM49qZvM", backupStart: 11
-  },
-  triceps: {
-    name: "Overhead / Floor Triceps Extension", sets: 3, reps: "12–15", unit: "reps", rest: 60,
-    key: "Keep your elbows tucked in",
-    why: "Stop right away if your shoulder pinches.",
-    cues: [
-      "Floor: lie back, dumbbells over your chest, palms facing each other",
-      "Angle your arms slightly back toward your head, then bend only at the elbows",
-      "Lower just past 90° and press back up; your upper arms stay still",
-      "Overhead: sit with one dumbbell in both hands, elbows tucked in and pointing forward"
-    ],
-    stop: "If your shoulder pinches, stop right away and use the floor version.",
-    videos: [{ id: "Py4I0J6i2kY", label: "Floor version" }, { id: "HADoxgsslvw", label: "Overhead version", end: 8 }]
-  },
-  ytw: {
-    name: "Light DB Y-T-W Raises", sets: 2, reps: "10", unit: "reps of each letter", rest: 60,
-    key: "Use 2–4 kg at most",
-    why: "Rebuilds the small stabilizing muscles of the rotator cuff.",
-    cues: [
-      "Lie chest-down on an incline bench, arms hanging, light weights (2–4 kg)",
-      "Y: raise your arms up and out at 45°, thumbs up",
-      "T: raise your arms straight out to the sides, thumbs up",
-      "W: elbows bent at your sides, squeeze your shoulder blades back and down"
-    ],
-    stop: "If anything hurts, drop the weights, or do them lying on the floor (Demo 2).",
-    videos: [{ id: "OFQduBFpDrY", label: "Incline bench" }, { id: "QdGTI4Lshg4", label: "Floor, no weights", start: 1 }]
-  },
-
-  // ---------- Saturday: Lower B ----------
-  dbrevlunge: {
-    name: "DB Reverse Lunges", sets: 3, reps: "10", unit: "reps each side", rest: 90,
-    key: "Step BACKWARD",
-    why: "Keeps the front shin vertical so there's no twisting force on the knee.",
-    cues: [
-      "Stand with feet hip-width apart, dumbbells at your sides, palms facing in",
-      "Brace your core and step one leg back",
-      "Lower until your back knee hovers just above the floor, both knees near 90°",
-      "Keep your chest upright and push through the front foot to return"
-    ],
-    stop: "If your front knee hurts, take a shorter step, don't go as deep, or use lighter weights.",
-    videos: [{ id: "UoQcIFYTN_o", start: 3, end: 31 }], backup: "RZKXLMxPF_I", backupStart: 9
-  },
-  sumodl: {
-    name: "DB Sumo / Goblet Deadlift", sets: 3, reps: "10–12", unit: "reps", rest: 90,
-    key: "Wide stance; knees follow your toes",
-    why: "Less compression on the knees while still loading the glutes.",
-    cues: [
-      "Feet wide, toes turned out 30–45°",
-      "Brace your abs, then push your hips back and your knees out",
-      "Keep your chest up, grab the dumbbell, and stand by driving through your whole foot",
-      "Squeeze your glutes at the top"
-    ],
-    stop: "If your lower back rounds, shorten the range (put the dumbbell on a block).",
-    videos: [{ id: "De9OUZz5W_I", label: "Sumo" }, { id: "TC2jOPCNYhU", label: "Goblet", end: 33 }]
-  },
-  stepup: {
-    name: "DB Step-Ups (Low Bench)", sets: 3, reps: "10", unit: "reps each side", rest: 60,
-    key: "Use a step low enough that your knee is at 90° or less",
-    why: "Push through the heel of your leading leg.",
-    cues: [
-      "Use a step low enough that your knee is at 90° or less (the demo box is high)",
-      "Place your whole foot on the step",
-      "Push through that heel to stand tall; don't push off the back foot",
-      "Step down slowly. Do all reps on one side, then switch"
-    ],
-    stop: "If your knee hurts, use a lower step.",
-    videos: [{ id: "DxUNi119Qzs" }], backup: "7AtIjR-QqVA", backupStart: 3
-  },
-  suitcase: {
-    name: "Suitcase Carries", sets: 3, reps: "40 m", unit: "(switch hands at 20 m)", rest: 60,
-    key: "Walk tall without leaning",
-    why: "Trains core and side-to-side hip stability.",
-    cues: [
-      "Pick the dumbbell up with one hand the way you'd do a deadlift",
-      "Stand tall with your shoulders level and ribs down",
-      "Walk slowly in a straight line; don't let the weight pull you sideways",
-      "Switch hands halfway"
-    ],
-    stop: "If you can't stay upright, use a lighter weight.",
-    videos: [{ id: "3RKKnZhhelE" }], backup: "bAnCoDrvXc4"
-  },
-
-  // ---------- Sunday: Static flexibility ----------
-  pigeon: {
-    name: "Pigeon Pose / Figure-4", sets: 1, time: 120, perSide: true, rest: 10,
-    key: "Gentle stretch; no knee pain",
-    why: "Stretches the glutes and the deep hip rotators.",
-    cues: [
-      "Pigeon: from all fours, bring the leg you're stretching forward and across under your body",
-      "Slide the other leg straight back, then sit back into the stretch",
-      "Figure-4 (easier on the knee): on your back, ankle over the other knee, pull that thigh in",
-      "Keep your hips square; breathe slowly and relax into it"
-    ],
-    stop: "If your front knee hurts in pigeon, switch to the lying figure-4.",
-    videos: [{ id: "op-eDU9eNqM", label: "Pigeon", start: 5 }, { id: "-g0nuyTHMrI", label: "Figure-4", start: 5 }]
-  },
-  couchSun: null, // filled below (same as couch, 1 set)
-  shoulderstretch: {
-    name: "Cross-Body & Overhead Triceps Stretch", sets: 2, time: 30, perSide: true, rest: 10,
-    setNotes: ["Cross-body stretch", "Overhead triceps stretch"],
-    key: "Keep your shoulder down, away from your ear",
-    why: "Stretches the back of the shoulder capsule.",
-    cues: [
-      "Cross-body: pull one arm across your chest by holding just above the elbow",
-      "Overhead: reach one hand down your back and gently push that elbow with the other hand",
-      "Keep your shoulders relaxed and low",
-      "Aim for a gentle stretch, not pain"
-    ],
-    stop: "If you feel pinching at the front of the shoulder, ease off.",
-    videos: [{ id: "aIq0fLi8iak", label: "Cross-body" }, { id: "_IOHtPSYGbk", label: "Overhead triceps" }]
-  },
-  hamstring: {
-    name: "Hamstring Doorway Stretch", sets: 1, time: 60, perSide: true, rest: 10,
-    key: "Keep your lower back flat on the floor",
-    why: "Stretches the hamstrings without stressing the lower back.",
-    cues: [
-      "Lie on your back in a doorway",
-      "Rest one leg straight up the door frame and keep the other flat through the doorway",
-      "Scoot closer to the frame to make the stretch stronger",
-      "Keep your lower back flat and relax"
-    ],
-    stop: "If you feel tingling down the leg, back off. That's a nerve, not the muscle.",
-    videos: [{ id: "VWk9QD10Xjg" }], backup: "b7k-9CZVYbA"
-  }
-};
-EX.couchSun = Object.assign({}, EX.couch, { sets: 1, rest: 10 });
-
-const WARMUP = ["catcow", "armthread", "hip9090", "revlungetwist"];
-// Post-workout flexibility (the PDF's Sunday static-stretch list), appended to every session
-const COOLDOWN = ["pigeon", "couchSun", "shoulderstretch", "hamstring"];
-
-// Day index follows JS getDay(): 0 = Sunday
-const DAYS = [
-  { d: 1, name: "Monday", focus: "Upper Body A", goal: "Chest/back strength + shoulder stability",
-    items: ["inclinepress", "sarow", "floorpress", "csrow", "facepull"] },
-  { d: 2, name: "Tuesday", focus: "Lower Body A", goal: "Posterior chain & knee-friendly quads",
-    items: ["rdl", "boxsquat", "slbridge", "calfraise", "planktaps"] },
-  { d: 3, name: "Wednesday", focus: "Active Recovery", goal: "Thoracic spine & hip mobility",
-    items: ["couch", "doorway", "tibraise"] },
-  { d: 4, name: "Thursday", focus: "Football Match", goal: "High-intensity cardio & agility", items: [], match: true },
-  { d: 5, name: "Friday", focus: "Upper Body B", goal: "Hypertrophy & rotator cuff care",
-    items: ["seatedohp", "pullover", "hammercurl", "triceps", "ytw"] },
-  { d: 6, name: "Saturday", focus: "Lower Body B", goal: "Single-leg balance, hips & knee prehab",
-    items: ["dbrevlunge", "sumodl", "stepup", "suitcase"] },
-  { d: 0, name: "Sunday", focus: "Rest & Recovery", goal: "Full-body static stretching",
-    items: COOLDOWN, isCooldown: true }
-];
 
 /* ===================================================================== */
 const $ = (id) => document.getElementById(id);
+// Diagnostics: a rolling log you can copy from the home screen and paste to Claude
+const DIAG = (() => { try { return JSON.parse(localStorage.getItem("diag") || "[]"); } catch { return []; } })();
+function log(...parts) {
+  const line = new Date().toTimeString().slice(0, 8) + " " + parts.map((p) => typeof p === "string" ? p : JSON.stringify(p)).join(" ");
+  DIAG.push(line); if (DIAG.length > 500) DIAG.splice(0, DIAG.length - 500);
+  try { localStorage.setItem("diag", JSON.stringify(DIAG)); } catch {}
+}
+window.addEventListener("error", (e) => log("JS error:", e.message, (e.filename || "").split("/").pop() + ":" + e.lineno));
+log("--- page loaded", navigator.userAgent.replace(/^Mozilla\/5.0 /, ""), "standalone:", !!navigator.standalone);
 const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
@@ -782,58 +388,127 @@ function buildSteps(day, warm, cool) {
 /* ---------------- Audio / voice / wake lock ---------------- */
 let audioCtx = null;
 let voiceOn = store.get("voiceOn", true);
-function beep(freq = 880, dur = 0.12, vol = 0.25) {
+function beep(freq = 880, dur = 0.14, vol = 0.18) {
   try {
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
     const o = audioCtx.createOscillator(), g = audioCtx.createGain();
     o.frequency.value = freq; o.type = "sine";
-    g.gain.setValueAtTime(vol, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+    const t = audioCtx.currentTime;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(vol, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     o.connect(g).connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + dur);
   } catch {}
 }
-let sayTimer = null;
-const speakable = (t) => t.replace(/\s*–\s*(?=\d)/g, " to ").replace(/°/g, " degrees").replace(/≤/g, "at most ").replace(/[–—]/g, ", ");
-// Adds to the speech queue without cutting off what's playing; onDone fires when it finishes
-function speakQueued(text, onDone) {
-  if (!voiceOn || !("speechSynthesis" in window)) { onDone && setTimeout(onDone, 5000); return; }
-  setTimeout(() => {
-    try {
-      const u = new SpeechSynthesisUtterance(speakable(text)); u.rate = 1.02;
-      if (onDone) { u.onend = onDone; u.onerror = onDone; }
-      speechSynthesis.speak(u);
-    } catch { onDone && onDone(); }
-  }, 150);
-}
-function say(text) {
-  if (!voiceOn || !("speechSynthesis" in window)) return;
-  try {
-    // iOS Safari can drop an utterance queued straight after cancel(), so give it a beat.
-    // Only the latest announcement is kept, so skipping ahead never queues up stale ones.
-    clearTimeout(sayTimer);
-    if (speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
-    sayTimer = setTimeout(() => { const u = new SpeechSynthesisUtterance(speakable(text)); u.rate = 1.02; u.volume = 1; speechSynthesis.speak(u); }, 60);
-  } catch {}
-}
-function hush() { clearTimeout(sayTimer); try { speechSynthesis.cancel(); } catch {} }
+/* ---------------- Coach voice ----------------
+   Every phrase is pre-recorded (audio/<clipId>.m4a, see tools/make_audio.py) and
+   played through one <audio> element, which iPhones allow once it has been started
+   by a tap. If a clip is missing or refuses to play we fall back to the device voice. */
+let clipManifest = {};
+fetch("audio/manifest.json").then((r) => r.json())
+  .then((m) => { clipManifest = m; log("voice clips loaded:", Object.keys(m).length); })
+  .catch((e) => log("voice clips NOT loaded:", e.message));
+const voiceEl = new Audio();
+voiceEl.preload = "auto";
+const SILENCE = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+let voiceUnlocked = false;
+
 function unlockAudio() {
-  // Let beeps play even when the iPhone's silent switch is on (Safari 16.4+)
+  // Let audio play even when the iPhone's silent switch is on (Safari 16.4+)
   try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch {}
   try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); } catch {}
-  try { if ("speechSynthesis" in window) { const u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); } } catch {}
+  // Must run inside a tap: starting the element once lets later clips play on their own
+  try {
+    // Mid-sentence, just resume the current clip instead of swapping in silence
+    if (!coach.playing) voiceEl.src = SILENCE;
+    voiceEl.play().then(() => { voiceUnlocked = true; log("voice unlocked"); })
+      .catch((e) => {
+        // AbortError only means a real clip replaced the silence, so playback is allowed
+        voiceUnlocked = e.name === "AbortError";
+        log(voiceUnlocked ? "voice unlocked" : "voice unlock failed: " + e.name);
+      });
+  } catch (e) { log("voice unlock error:", e.message); }
 }
+// If the phone ever revokes playback (e.g. after leaving the app), the next tap re-enables it
+document.addEventListener("click", () => { if (!voiceUnlocked) unlockAudio(); }, true);
+
+const coach = { gen: 0, queue: [], playing: false, lastEnd: 0, stepT0: 0, safety: null };
+function coachReset() {
+  coach.gen++; coach.queue = []; coach.playing = false; clearTimeout(coach.safety);
+  try { voiceEl.pause(); } catch {}
+  try { speechSynthesis.cancel(); } catch {}
+}
+// A plan is a list of lines: { texts, cue?, at? (s after step start), when? (fn), gap? (s after previous line), late? (s it may run late before being dropped) }
+function coachPlan(lines) {
+  coachReset();
+  coach.stepT0 = Date.now(); coach.lastEnd = Date.now();
+  coach.queue = lines.filter((l) => l && l.texts && l.texts.length);
+}
+function coachTick() {
+  if (!voiceOn || !coach.queue.length) return;
+  const line = coach.queue[0], now = Date.now();
+  const due = line.when ? line.when() : (now - coach.stepT0) / 1000 >= (line.at || 0);
+  if (due && !line.dueAt) line.dueAt = now;
+  if (!due || coach.playing || now - coach.lastEnd < (line.gap ?? 0.6) * 1000) return;
+  coach.queue.shift();
+  // Time-critical lines ("Go", "Ten seconds left") are dropped rather than said late
+  if (line.late != null && (now - line.dueAt) / 1000 > line.late) { log("skipped late:", line.texts[0]); return; }
+  speakLine(line);
+}
+function speakLine(line) {
+  const gen = coach.gen;
+  coach.playing = true;
+  if (line.cue != null) showCue(line.cue, true);
+  let i = 0;
+  const next = () => {
+    if (gen !== coach.gen) return;
+    if (i >= line.texts.length) { coach.playing = false; coach.lastEnd = Date.now(); return; }
+    const text = line.texts[i++];
+    playVoiceClip(text, () => setTimeout(next, i < line.texts.length ? 250 : 0), gen);
+  };
+  next();
+}
+function playVoiceClip(text, done, gen) {
+  let finished = false;
+  const finish = () => { if (finished || gen !== coach.gen) return; finished = true; clearTimeout(coach.safety); done(); };
+  const id = clipId(text), dur = clipManifest[id];
+  if (!dur) { log("no clip, device voice:", text); return deviceSpeak(text, finish); }
+  voiceEl.onended = finish;
+  voiceEl.onerror = () => { log("clip error:", id); deviceSpeak(text, finish); };
+  voiceEl.src = `audio/${id}.m4a`;
+  const p = voiceEl.play();
+  if (p && p.then) p.then(() => { voiceUnlocked = true; log("said:", text.slice(0, 50)); });
+  if (p && p.catch) p.catch((e) => {
+    log("clip blocked:", e.name, text.slice(0, 30));
+    if (e.name === "NotAllowedError") voiceUnlocked = false;
+    finish();
+  });
+  coach.safety = setTimeout(finish, (dur + 4) * 1000); // never let one clip stall the coach
+}
+function deviceSpeak(text, done) {
+  try {
+    const u = new SpeechSynthesisUtterance(text);
+    u.onend = done; u.onerror = done;
+    speechSynthesis.speak(u);
+    coach.safety = setTimeout(done, 12000);
+  } catch { done(); }
+}
+function playNow(texts) { coachPlan([{ texts }]); coachTick(); }
+
 let wakeLock = null;
 async function keepAwake() {
   try { if ("wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen"); } catch {}
 }
 document.addEventListener("visibilitychange", () => {
+  log(document.hidden ? "app hidden" : "app visible");
   if (document.hidden || $("player-screen").hidden) return;
+  if (coach.playing && voiceEl.paused) { voiceEl.play().catch((e) => log("voice resume failed:", e.name)); }
   keepAwake();
   // iOS pauses video when you leave the app; pick it back up when you return
   if (videoActive && ytReady) setTimeout(() => { if (videoActive) { yt.playVideo(); watchStall(); } }, 300);
 });
 function updateVoiceBtn() { $("voice-btn").innerHTML = (voiceOn ? "🔊" : "🔇") + '<span class="lbl"> Voice</span>'; }
-$("voice-btn").onclick = () => { voiceOn = !voiceOn; store.set("voiceOn", voiceOn); updateVoiceBtn(); if (!voiceOn) hush() };
+$("voice-btn").onclick = () => { voiceOn = !voiceOn; store.set("voiceOn", voiceOn); updateVoiceBtn(); if (!voiceOn) coachReset(); };
 
 /* ---------------- YouTube player ---------------- */
 let demoSound = store.get("demoSound", false);
@@ -848,6 +523,7 @@ function applyDemoSound() {
 function hint(msg) { $("video-hint").textContent = msg || ""; $("video-hint").hidden = !msg; }
 const SOUND_HINT = "Tap the video's 🔇 icon to hear it";
 function blockSound() {
+  log("demo sound blocked by browser");
   soundBlocked = true; yt.mute(); yt.playVideo(); hint(SOUND_HINT);
 }
 // Nudge a clip that hasn't started; if it still won't, ask for a tap
@@ -859,7 +535,7 @@ function watchStall() {
     if (st === YT.PlayerState.PLAYING || st === YT.PlayerState.BUFFERING) return;
     if (demoSound && !soundBlocked) blockSound(); else yt.playVideo();
     stallTimer = setTimeout(() => {
-      if (videoActive && yt.getPlayerState() !== YT.PlayerState.PLAYING) hint("Tap the video to play it");
+      if (videoActive && yt.getPlayerState() !== YT.PlayerState.PLAYING) { hint("Tap the video to play it"); log("video stalled, asked for tap"); }
     }, 2500);
   }, 3000);
 }
@@ -879,6 +555,7 @@ window.onYouTubeIframeAPIReady = function () {
     events: {
       onReady: () => { ytReady = true; applyDemoSound(); if (pendingVideo && videoActive) { playClip(pendingVideo); pendingVideo = null; } },
       onStateChange: (e) => {
+        log("video", vidList[vidIdx] ? vidList[vidIdx].id : "?", ["unstarted","ended","playing","paused","buffering","","cued"][e.data + 1] || e.data, "muted:", yt.isMuted());
         if (!videoActive) { if (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.BUFFERING) yt.pauseVideo(); return; }
         if (e.data === YT.PlayerState.ENDED) nextClipOrLoop();
         if (e.data === YT.PlayerState.CUED) yt.playVideo();
@@ -890,14 +567,14 @@ window.onYouTubeIframeAPIReady = function () {
         // A pause right after we unmuted means the browser refused sound
         if (e.data === YT.PlayerState.PAUSED && demoSound && !soundBlocked && Date.now() - unmuteAt < 1500) blockSound();
       },
-      onError: () => handleVideoError()
+      onError: (e) => { log("video error", e.data, vidList[vidIdx] && vidList[vidIdx].id); handleVideoError(); }
     }
   });
 };
 (function loadYT() { const s = document.createElement("script"); s.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(s); })();
 
 function stopVideo() {
-  cueGen++; coaching = false; clearInterval(cueTimer); clearTimeout(cueTimer); clearTimeout(stallTimer); hint(null);
+  clearInterval(cueTimer); clearTimeout(stallTimer); hint(null);
   videoActive = false; pendingVideo = null; vidEx = null;
   try { if (ytReady) { yt.pauseVideo(); yt.stopVideo(); yt.mute(); } } catch {}
 }
@@ -952,6 +629,7 @@ let steps = [], cur = 0, tick = null, startedAt = 0, previewMode = false;
 let timer = { phase: null, left: 0, total: 0, paused: false, t0: 0 };
 
 function startWorkout({ warm, cool, label }) {
+  log("start workout:", label, "voice:", voiceOn, "demo sound:", demoSound);
   unlockAudio();
   previewMode = false;
   steps = buildSteps(currentDay, warm, cool);
@@ -959,7 +637,6 @@ function startWorkout({ warm, cool, label }) {
   sessionLabel = label;
   $("p-day").textContent = label;
   enterPlayer();
-  say(`Let's go. ${currentDay.match ? label : currentDay.focus}.`);
   renderStep();
 }
 function startPreview(key) {
@@ -980,7 +657,7 @@ function enterPlayer() {
 }
 function exitPlayer() {
   clearInterval(tick); tick = null;
-  hush();
+  coachReset();
   stopVideo();
   try { wakeLock && wakeLock.release(); } catch {}
   show(currentDay ? "day" : "home");
@@ -1003,6 +680,7 @@ function go(delta) {
 
 function renderStep() {
   const st = steps[cur];
+  log("step", cur + 1 + "/" + steps.length, st.type, st.key || "", st.set ? "set " + st.set : "", st.side || "");
   const workCount = steps.filter((s) => s.type === "work").length;
   const workDone = steps.slice(0, cur).filter((s) => s.type === "work").length;
   $("p-step").textContent = `${Math.min(workDone + 1, workCount)}/${workCount}`;
@@ -1040,63 +718,77 @@ function renderWork(st) {
       ${timed ? `<button class="ctl" id="c-pause">Pause</button>` : ""}
       <button class="ctl primary" id="c-done">${st.preview ? "Close preview" : timed ? "Skip ›" : "Done ✓"}</button>
     </div>`;
-  // Read the form cues aloud the first time you meet an exercise (not on every set)
-  const coach = voiceOn && st.set === 1 && st.side !== "Right side";
+  const n = ex.cues.length;
+  // The full coaching (every cue) the first time you meet an exercise; later sets get one reminder
+  const first = st.set === 1 && st.side !== "Right side";
+  const reminder = n > 1 ? 1 + ((st.set - 2 + (st.side === "Right side" ? 1 : 0)) % (n - 1) + (n - 1)) % (n - 1) : 0;
+  const cueLine = (c, extra) => Object.assign({ texts: [SAY.cue(st.key, c)], cue: c }, extra);
+  startCueRotation();
   if (st.preview) {
     $("c-done").onclick = exitPlayer; timer.phase = null;
-    say(`${ex.name}. ${ex.key}.`); startCueRotation(coach); return;
+    coachPlan([{ texts: [SAY.name(st.key), SAY.key(st.key)] }, ...ex.cues.map((_, c) => cueLine(c, { gap: 1.2 }))]);
+    return;
   }
   $("c-prev").onclick = () => go(-1);
   $("c-done").onclick = () => { beep(1320, 0.1); go(1); };
-  startCueRotation(coach);
+  const setIntro = st.warm || st.sets < 2 ? [] : [SAY.setOf(st.set, st.sets), ...(st.set === st.sets ? [SAY.lastSet()] : [])];
+  const noteLine = ex.setNotes ? [SAY.setNote(st.key, st.set)] : [];
+
   if (timed) {
-    timer = { phase: "ready", left: 5, total: ex.time, paused: false, t0: Date.now() };
+    const hold = ex.time;
+    const ready = first ? 10 : 6; // time to get into position (longer when there's an intro to hear)
+    timer = { phase: "ready", left: ready, total: hold, paused: false, t0: Date.now() };
     $("c-pause").onclick = togglePause;
     $("t-state").textContent = "get in position…";
-    $("t-clock").textContent = "0:05";
-    say(`${st.side ? st.side + ". " : ""}${ex.name}. Get in position.${coach ? " " + ex.key + "." : ""}`);
+    $("t-clock").textContent = fmt(ready);
+    const workAt = (sec) => () => timer.phase === "work" && timer.total - timer.left >= sec;
+    const lines = [];
+    if (st.side === "Right side") lines.push({ texts: [SAY.switchSides(), SAY.side("Right side"), ...noteLine] });
+    else if (first) lines.push({ texts: [SAY.name(st.key), ...setIntro, SAY.target(st.key), ...(st.side ? [SAY.side(st.side)] : []), ...noteLine, SAY.key(st.key)] });
+    else lines.push({ texts: [...setIntro, ...(st.side ? [SAY.side(st.side)] : []), ...noteLine] });
+    lines.push({ texts: [SAY.go()], when: () => timer.phase === "work", late: 1.5, gap: 0 });
+    if (first) {
+      // Spread the cues across the hold, finishing before the last 10 seconds
+      const every = Math.max(7, Math.min(25, (hold - 13) / n));
+      ex.cues.forEach((_, c) => { const t = 3 + c * every; if (t < hold - 8) lines.push(cueLine(c, { when: workAt(t), gap: 1.5 })); });
+    } else if (hold >= 40) lines.push(cueLine(reminder, { when: workAt(12), gap: 1.5 }));
+    if (hold >= 30) lines.push({ texts: [SAY.tenLeft()], when: workAt(hold - 10), late: 3, gap: 0.5 });
+    coachPlan(lines);
   } else {
     timer = { phase: null };
-    const spoken = st.warm ? `${ex.name}. ${ex.reps} ${ex.unit}.` : `${ex.name}. Set ${st.set} of ${st.sets}. ${ex.reps} ${ex.unit}.`;
-    say(spoken + (coach ? " " + ex.key + "." : ""));
+    if (st.warm) {
+      // Warm-ups move quickly: intro, setup cue, then the rest every ~7 seconds
+      coachPlan([{ texts: [SAY.name(st.key), SAY.target(st.key), SAY.key(st.key)] },
+        cueLine(0, { gap: 0.8 }), ...ex.cues.slice(1).map((_, k) => cueLine(k + 1, { at: 8 + k * 7, gap: 2 }))]);
+    } else if (first) {
+      // Setup while you pick up the weights, then one cue every ~9 seconds while you lift
+      coachPlan([{ texts: [SAY.name(st.key), ...setIntro, SAY.target(st.key), SAY.key(st.key)] },
+        cueLine(0, { gap: 0.8 }), ...ex.cues.slice(1).map((_, k) => cueLine(k + 1, { at: 12 + k * 9, gap: 2 }))]);
+    } else {
+      coachPlan([{ texts: [...setIntro, SAY.target(st.key)] }, cueLine(reminder, { at: 8, gap: 2 })]);
+    }
   }
 }
 
 // On short (landscape phone) screens only one cue shows at a time; rotate through them
 let cueTimer = null, cueIdx = 0;
-function showCue(i) {
+function showCue(i, fromVoice) {
+  if (fromVoice) restartCueTimer(); // keep the spoken cue on screen for a while
   const items = document.querySelectorAll("#cues li"), dots = document.querySelectorAll("#cue-dots i");
   if (!items.length) return;
   cueIdx = (i + items.length) % items.length;
   items.forEach((li, j) => li.classList.toggle("on", j === cueIdx));
   dots.forEach((d, j) => d.classList.toggle("on", j === cueIdx));
 }
-let cueGen = 0, coaching = false;
-function startCueRotation(coach) {
-  const gen = ++cueGen;
-  const restart = () => { coaching = false; clearTimeout(cueTimer); clearInterval(cueTimer); cueTimer = setInterval(() => showCue(cueIdx + 1), 7000); };
-  cueIdx = 0;
-  const items = [...document.querySelectorAll("#cues li")];
-  if (coach && items.length) {
-    // Speak each cue in turn (queued after the announcement), then keep rotating silently
-    coaching = true;
-    const readCue = (i) => {
-      if (gen !== cueGen) return;
-      if (i >= items.length) { showCue(0); restart(); return; }
-      showCue(i);
-      let moved = false;
-      const next = () => { if (moved || gen !== cueGen) return; moved = true; cueTimer = setTimeout(() => readCue(i + 1), 1500); };
-      speakQueued(items[i].textContent, next);
-      cueTimer = setTimeout(next, 16000); // in case the browser never reports the speech ending
-    };
-    readCue(0);
-  } else restart();
+function startCueRotation() {
+  cueIdx = 0; restartCueTimer();
   const ul = $("cues");
-  if (ul) ul.onclick = () => { cueGen++; hush(); showCue(cueIdx + 1); restart(); }; // tap to skip ahead (stops the reading)
+  if (ul) ul.onclick = () => { showCue(cueIdx + 1, true); }; // tap to skip ahead
 }
+function restartCueTimer() { clearInterval(cueTimer); cueTimer = setInterval(() => showCue(cueIdx + 1), 9000); }
 
 function renderRest(st) {
-  cueGen++; coaching = false; clearTimeout(cueTimer); clearInterval(cueTimer);
+  clearInterval(cueTimer);
   const ni = nextWorkIndex(cur + 1);
   const nx = ni >= 0 ? steps[ni] : null;
   const nex = nx ? EX[nx.key] : null;
@@ -1121,7 +813,11 @@ function renderRest(st) {
   $("c-prev").onclick = () => go(-1);
   $("c-add").onclick = () => { timer.total += 15; timer.left += 15; };
   $("c-skip").onclick = () => go(1);
-  say(`Rest ${st.dur} seconds.${nex ? " Next: " + nex.name + "." : ""}`);
+  const nextSet = nx && !nx.warm && nx.sets > 1 ? [SAY.setOf(nx.set, nx.sets)] : [];
+  coachPlan([
+    { texts: [SAY.rest(st.dur), ...(nx ? [SAY.nextUp(), SAY.name(nx.key), ...nextSet] : [])] },
+    st.dur >= 20 ? { texts: [SAY.tenToGo()], when: () => timer.phase === "rest" && timer.left <= 10.5, late: 2 } : null,
+  ]);
 }
 
 function togglePause() {
@@ -1134,6 +830,7 @@ function onTick() {
   if (soundBlocked && ytReady && videoActive && !yt.isMuted()) { soundBlocked = false; hint(null); }
   const secs = Math.floor((Date.now() - startedAt) / 1000);
   $("p-elapsed").textContent = fmt(secs);
+  coachTick();
   if (!timer.phase || timer.paused) { timer.t0 = Date.now(); return; }
   const now = Date.now();
   timer.left -= (now - timer.t0) / 1000; timer.t0 = now;
@@ -1145,11 +842,9 @@ function onTick() {
     if (timer.left <= 0) {
       timer.phase = "work"; timer.left = timer.total; beep(1320, 0.25);
       const s = $("t-state"); if (s) s.textContent = steps[cur].side || "go!";
-      if (!coaching) say("Go"); // the beep is enough while cues are being read
     }
   } else if (timer.phase === "work") {
     const c = $("t-clock"); if (c) c.textContent = fmt(whole);
-    if (whole !== lastSec && whole === Math.floor(timer.total / 2) && timer.total >= 60) say("Halfway");
     if (whole !== lastSec && whole <= 3 && whole > 0) beep(660);
     if (timer.left <= 0) { timer.phase = null; beep(1320, 0.3); go(1); }
   } else if (timer.phase === "rest") {
@@ -1172,9 +867,24 @@ function finish() {
     <p class="sub">${esc(sessionLabel)} · ${mins} min</p>
     <button class="big-btn" id="done-close">Back to days</button>`;
   $("done-close").onclick = () => { currentDay = null; exitPlayer(); show("home"); };
-  say("Workout complete. Nice work.");
-  const log = store.get("log", []); log.push({ day: currentDay.name, at: Date.now(), mins }); store.set("log", log.slice(-60));
+  playNow([SAY.done()]);
+  const history = store.get("log", []); history.push({ day: currentDay.name, at: Date.now(), mins }); store.set("log", history.slice(-60));
 }
+
+/* ---------------- Diagnostics panel ---------------- */
+function renderDiag() { $("diag-text").textContent = DIAG.slice(-250).join("\n"); }
+$("diag-open").onclick = () => { $("diag").hidden = !$("diag").hidden; renderDiag(); };
+$("diag-clear").onclick = () => { DIAG.length = 0; try { localStorage.removeItem("diag"); } catch {} renderDiag(); };
+$("diag-copy").onclick = async () => {
+  const text = DIAG.join("\n");
+  try { await navigator.clipboard.writeText(text); $("diag-status").textContent = "Copied ✓"; }
+  catch {
+    // Fallback: select the text so it can be copied by hand
+    const r = document.createRange(); r.selectNodeContents($("diag-text"));
+    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    $("diag-status").textContent = "Selected; use Copy from the menu";
+  }
+};
 
 /* ---------------- Wire up ---------------- */
 $("day-back").onclick = () => { currentDay = null; show("home"); };
