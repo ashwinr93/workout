@@ -19,9 +19,9 @@ const EX = {
     why: "Loosens the spine and shoulders without putting load on the joints.",
     cues: [
       "Get on all fours: hands under shoulders, knees under hips",
-      "Breathe in: let the belly drop, lift the chest and tailbone (Cow)",
-      "Breathe out: round the back up and tuck the chin (Cat)",
-      "Sit your hips back toward your heels, arms long (Child's Pose), then return"
+      "Cow: breathe in, let your belly drop, and lift your chest and tailbone",
+      "Cat: breathe out, round your back up, and tuck your chin",
+      "Child's pose: sit your hips back toward your heels with arms long, then come back up"
     ],
     stop: "Stop if you feel sharp back pain. If sitting back hurts your knees, put a cushion behind them.",
     videos: [
@@ -81,7 +81,7 @@ const EX = {
     key: "Step back, and keep the front shin vertical",
     why: "Stepping backward keeps the front shin vertical, which protects the front knee.",
     cues: [
-      "Hold a light plate or ball in front of you (optional)",
+      "If you like, hold a light plate or ball in front of you",
       "Step back and lower until both knees are near 90°",
       "Keep the front knee behind your toes, over the ankle",
       "At the bottom, rotate your chest toward the front leg, then turn back and step forward"
@@ -99,7 +99,7 @@ const EX = {
     key: "Bench at 30°–45°, palms facing each other",
     why: "Avoids pinching the shoulder. Keep your elbows at 45°.",
     cues: [
-      "Set the bench to a low incline (30–45°)",
+      "Set the bench to a low incline, 30–45°",
       "Start with the dumbbells on your knees, then lie back and kick them up",
       "Palms face each other; pull your shoulder blades together. A slight natural arch is fine",
       "Lower to chest level with elbows about 45° from your body",
@@ -163,7 +163,7 @@ const EX = {
     key: "Light weight; stop at eye level",
     why: "Key for the rear shoulders and keeping the shoulder blades stable.",
     cues: [
-      "Dumbbells: hinge forward (or lie chest-down on an incline bench), arms hanging",
+      "Dumbbells: hinge forward with arms hanging, or lie chest-down on an incline bench",
       "Pull the dumbbells up and out to about eye level, elbows high and wide",
       "Don't pull further back; that turns it into a back exercise",
       "Band: arms straight at shoulder height; pull it apart, squeeze 2 seconds, return slowly"
@@ -196,7 +196,7 @@ const EX = {
     key: "Tap the bench, don't sit down; shins stay vertical",
     why: "Keeps the knees from pushing forward. Drive through your heels.",
     cues: [
-      "Rest the dumbbells on your shoulders (or hold one at your chest)",
+      "Rest the dumbbells on your shoulders, or hold one at your chest",
       "Push your hips back and lower until you just tap the bench",
       "Don't relax onto it. Spread the floor with your feet so your knees stay out",
       "Drive through your heels to stand"
@@ -227,7 +227,7 @@ const EX = {
     key: "Go slowly and hold the top for 2 seconds",
     why: "Builds ankle and Achilles stability.",
     cues: [
-      "Balls of your feet on a step or board (about 5–8 cm high), heels hanging off",
+      "Stand with the balls of your feet on a step about 5–8 cm high, heels hanging off",
       "Breathe out and rise as high as you can",
       "Hold the top for 2 seconds",
       "Lower slowly until your heels are below the step or touch the floor"
@@ -324,7 +324,7 @@ const EX = {
     key: "Soft elbows; comfortable range only",
     why: "Only lower to a comfortable shoulder stretch.",
     cues: [
-      "Lie on the floor (or on a bench), holding one dumbbell with both hands over your chest",
+      "Lie on the floor or a bench, holding one dumbbell over your chest with both hands",
       "Keep a slight bend in your elbows and don't let it change",
       "Lower the weight behind your head only as far as is comfortable",
       "On the floor, stop when it touches. Pull back until it's over your chest, no further"
@@ -372,7 +372,7 @@ const EX = {
     key: "Use 2–4 kg at most",
     why: "Rebuilds the small stabilizing muscles of the rotator cuff.",
     cues: [
-      "Lie chest-down on an incline bench, arms hanging, light weights (2–4 kg)",
+      "Lie chest-down on an incline bench, arms hanging, with light weights of 2–4 kg",
       "Y: raise your arms up and out at 45°, thumbs up",
       "T: raise your arms straight out to the sides, thumbs up",
       "W: elbows bent at your sides, squeeze your shoulder blades back and down"
@@ -410,7 +410,7 @@ const EX = {
       "Keep your chest up, grab the dumbbell, and stand by driving through your whole foot",
       "Squeeze your glutes at the top"
     ],
-    stop: "If your lower back rounds, shorten the range (put the dumbbell on a block).",
+    stop: "If your lower back rounds, shorten the range by starting the dumbbell on a block.",
     videos: [
       { id: "xK4ED_yQcoU", label: "Sumo", voice: true },
       { id: "TC2jOPCNYhU", label: "Goblet", end: 33 }
@@ -421,7 +421,7 @@ const EX = {
     key: "Use a step low enough that your knee is at 90° or less",
     why: "Push through the heel of your leading leg.",
     cues: [
-      "Stand facing a low step, dumbbells at your sides (the demo box is higher than you need)",
+      "Stand facing a low step, dumbbells at your sides. The box in the demo is higher than you need",
       "Place your whole foot on the step",
       "Push through that heel to stand tall; don't push off the back foot",
       "Step down slowly. Do all reps on one side, then switch"
@@ -432,7 +432,7 @@ const EX = {
     ]
   },
   suitcase: {
-    name: "Suitcase Carries", sets: 3, reps: "40 m", unit: "(switch hands at 20 m)", rest: 60,
+    name: "Suitcase Carries", sets: 3, reps: "40 m", unit: "carry, switching hands halfway", rest: 60,
     key: "Walk tall without leaning",
     why: "Trains core and side-to-side hip stability.",
     cues: [
@@ -456,7 +456,7 @@ const EX = {
     cues: [
       "Pigeon: from all fours, bring the leg you're stretching forward and across under your body",
       "Slide the other leg straight back, then sit back into the stretch",
-      "Figure-4 (easier on the knee): on your back, ankle over the other knee, pull that thigh in",
+      "Figure-4, easier on the knees: on your back, ankle over the other knee, pull that thigh in",
       "Keep your hips square; breathe slowly and relax into it"
     ],
     stop: "If your front knee hurts in pigeon, switch to the lying figure-4.",
@@ -567,7 +567,6 @@ function speakable(t) {
     .replace(/(\d)\s*cm\b/g, "$1 centimeters")
     .replace(/(\d)\s*m\b/g, "$1 meters")
     .replace(/Figure-4/g, "Figure four")
-    .replace(/\s*\(/g, ", ").replace(/\)/g, "")
     .replace(/[–—;]/g, ",");
 }
 const NUM_WORDS = ["zero", "one", "two", "three", "four", "five"];

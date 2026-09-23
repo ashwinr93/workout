@@ -245,10 +245,25 @@
     return { name: `Layout ${innerWidth}×${innerHeight}`, steps: 0, lines: 0, fails: [...new Set(fails)] };
   }
 
+  /* ---------- wording: every line must read well AND sound natural when spoken */
+  function wordingCheck() {
+    const fails = [];
+    for (const [key, ex] of Object.entries(EX)) {
+      const texts = [["name", ex.name], ["key", ex.key], ["unit", ex.unit], ["stop", ex.stop], ...ex.cues.map((c, i) => [`cue ${i + 1}`, c])];
+      for (const [field, t] of texts) {
+        if (!t) continue;
+        if (/[()]/.test(t)) fails.push(`${key} ${field}: bracketed aside (sounds odd when spoken): "${t}"`);
+        if (/\b[A-Z]{2,}\b/.test(t.replace(/\b(Y-T-W)\b/g, ""))) fails.push(`${key} ${field}: ALL-CAPS word: "${t}"`);
+      }
+    }
+    return { name: "Wording", steps: 0, lines: 0, fails };
+  }
+
   async function run({ days = DAYS.map((_, i) => i), previews = true, layout = true } = {}) {
     SELFTEST.done = false;
     const results = [];
     const safely = async (name, f) => { try { return await f(); } catch (e) { return { name, steps: 0, lines: 0, fails: ["test crashed: " + e.message] }; } };
+    results.push(wordingCheck());
     for (const i of days) {
       const day = DAYS[i];
       if (day.match) {
@@ -280,6 +295,6 @@
     return SELFTEST.report;
   }
 
-  window.SELFTEST = { run, layoutCheck, done: false, report: "", timers };
+  window.SELFTEST = { run, layoutCheck, wordingCheck, done: false, report: "", timers };
   if (QUERY.get("selftest") !== "manual") rawTimeout(() => run(), 300);
 })();

@@ -26,7 +26,7 @@ Live: https://ashwinr93.github.io/workout/ — GitHub Pages from `ashwinr93/work
 - **One movement per exercise.** Two movements → two exercises, or one demo showing both. Multiple demos on one exercise are either/or alternates behind ‹ › (never auto-cycled).
 - **Trim intros/outros** (logos, title cards, "subscribe" endings) with `start`/`end`; check first/last seconds via YouTube storyboards.
 - **Cues must match what the demo shows/says.** Where a demo contradicts the PDF's joint-safety guidance, the PDF wins.
-- **Wording:** no ALL-CAPS emphasis; no "DB" prefix in names.
+- **Wording:** every cue must read well *and* sound natural when the coach says it — no bracketed asides (name a position as a leading label instead: "Cow: breathe in…"), no ALL-CAPS emphasis, no "DB" prefix in names. The self-test's Wording check enforces this.
 - **Screen hierarchy:** exercise name > target pill (holds: big countdown) > Focus card > current cue (follows the voice) > quiet amber safety line; Done is the biggest button. Must fit an iPhone in landscape (~852×320 usable) and portrait.
 - **Coach pacing:** set 1 gets intro + all cues spread through the set; later sets get the set number + one reminder; holds spread cues and say "Ten seconds left"; rests say what's next and "Ten seconds. Get ready."
 - Polish and clean engineering matter to the owner: no patch-on-patch fixes; restructure when needed.
