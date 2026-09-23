@@ -55,11 +55,26 @@
   speechSynthesis.speak = (u) => { T.deviceSpeech.push(u.text); setTimeout(() => u.onend && u.onend(), 1500); };
   window.beep = () => {};
   window.addEventListener("error", (e) => T.errors.push(e.message));
-  // YouTube: a player that always "plays"
-  yt = { loadVideoById() {}, mute() {}, unMute() {}, setVolume() {}, playVideo() {}, pauseVideo() {}, stopVideo() {},
-         seekTo() {}, isMuted: () => true, getPlayerState: () => 1 };
-  ytReady = true;
+  // YouTube stand-in that behaves like a browser-embedded player:
+  //  - clips take FY.delay ms to start
+  //  - FY.policy "block": unMute() is ignored (like iPhones / Firefox) until the user taps the
+  //    video's own speaker (FY.userUnmute), after which the iframe may play sound for later clips
   window.YT = { PlayerState: { UNSTARTED: -1, ENDED: 0, PLAYING: 1, PAUSED: 2, BUFFERING: 3, CUED: 5 } };
+  const FY = { policy: "allow", delay: 300, state: -1, muted: true, activated: false, timer: null };
+  const setState = (d) => { FY.state = d; onVideoState({ data: d }); };
+  FY.userUnmute = () => { FY.activated = true; FY.muted = false; };
+  FY.userMute = () => { FY.muted = true; };
+  FY.reset = (o = {}) => Object.assign(FY, { policy: "allow", delay: 300, muted: true, activated: false }, o);
+  yt = {
+    loadVideoById() { clearTimeout(FY.timer); setState(-1); FY.timer = setTimeout(() => setState(1), FY.delay); },
+    mute() { FY.muted = true; },
+    unMute() { if (FY.policy === "allow" || FY.activated) FY.muted = false; },
+    isMuted: () => FY.muted, getPlayerState: () => FY.state,
+    playVideo() { if (FY.state !== 1) { clearTimeout(FY.timer); FY.timer = setTimeout(() => setState(1), FY.delay); } },
+    pauseVideo() { FY.state = 2; }, stopVideo() { clearTimeout(FY.timer); FY.state = 5; },
+    setVolume() {}, seekTo() {},
+  };
+  ytReady = true;
 
   // ---- expectations ------------------------------------------------------------
   function expected(st, i) {
@@ -87,6 +102,7 @@
   async function runSession(day, opts) {
     const fails = [];
     T.said = []; T.overlaps = []; T.deviceSpeech = []; T.errors = [];
+    FY.reset(); audioMode = "coach"; voiceOn = true; demoSound = false;
     openDay(DAYS.indexOf(day));
     startWorkout(opts);
     const n = steps.length;
@@ -131,20 +147,81 @@
     return { name: "Previews", steps: Object.keys(EX).length, lines: 0, fails };
   }
 
-  // With the demo video's sound on, the coach must stay silent
-  async function runVideoSoundRule() {
-    const fails = [];
-    demoSound = true; soundBlocked = false;
-    T.said = [];
-    openDay(1); startWorkout({ warm: false, cool: false, label: "video-sound" });
-    await until(() => cur >= 4, 600);
-    if (T.said.length) fails.push(`coach spoke ${T.said.length} lines while video sound was on`);
-    // phone refused the video's sound -> video is silent -> coach should talk again
-    soundBlocked = true; T.said = []; go(1);
-    await until(() => T.said.length > 0, 60);
-    if (!T.said.length) fails.push("coach stayed silent after the phone blocked video sound");
-    demoSound = false; soundBlocked = false; exitPlayer();
-    return { name: "Coach pauses for video sound", steps: 0, lines: 0, fails };
+  // The Coach / Video buttons and the video's own speaker, the way a person uses them
+  async function runAudioScenarios() {
+    const fails = [], check = (ok, msg) => { if (!ok) fails.push(msg); };
+    const saidSince = (n) => T.said.slice(n).map((x) => x.text);
+    const btnOn = (id) => $(id).classList.contains("on");
+    const settle = (sec) => until(() => false, sec);
+    const clickBtn = (id) => $(id).click();
+    const reset = async (mode, fy) => {
+      exitPlayer(); FY.reset(fy); audioMode = mode; voiceOn = mode === "coach"; demoSound = mode === "video"; soundBlocked = false;
+      T.said = []; await settle(0.5);
+    };
+
+    // 1. Coach mode: a preview speaks straight away and the video stays muted
+    await reset("coach");
+    startPreview("catcow"); await settle(6);
+    check(saidSince(0).includes(SAY.name("catcow")), "coach silent on cat-cow preview in Coach mode");
+    check(FY.muted, "video not muted in Coach mode");
+    check(btnOn("voice-btn") && !btnOn("sound-btn"), "buttons don't show Coach on / Video off");
+
+    // 2. Tap Video: coach stops at once, video unmutes, buttons swap
+    let n = T.said.length;
+    clickBtn("sound-btn"); await settle(8);
+    check(audioMode === "video", "tapping Video didn't switch to video");
+    check(!FY.muted, "video still muted after tapping Video");
+    check(T.said.length === n && !T.playingUntil, "coach kept talking after tapping Video");
+    check(!btnOn("voice-btn") && btnOn("sound-btn"), "buttons don't show Video on / Coach off");
+
+    // 3. Tap Coach while video is on: video mutes and the coach restarts this exercise right away
+    n = T.said.length;
+    clickBtn("voice-btn"); await settle(6);
+    check(audioMode === "coach" && FY.muted, "tapping Coach didn't mute the video / switch to coach");
+    check(saidSince(n).includes(SAY.name("catcow")), "coach didn't restart the current exercise when switched back on");
+
+    // 4. Tap Coach again: silence; tap once more: talks again immediately
+    clickBtn("voice-btn"); n = T.said.length; await settle(20);
+    check(audioMode === "off" && T.said.length === n, "coach still talking after switching it off");
+    check(!btnOn("voice-btn") && !btnOn("sound-btn"), "a button still shows on in Off mode");
+    clickBtn("voice-btn"); await settle(6);
+    check(saidSince(n).length > 0, "coach didn't talk after switching back on mid-exercise");
+
+    // 5. Unmuting with the video's own speaker counts as choosing Video; coach goes quiet
+    n = T.said.length;
+    FY.userUnmute(); await settle(4);
+    check(audioMode === "video", "unmuting on the video didn't switch the app to Video");
+    check(!T.playingUntil && T.said.length === n, "coach talked over a video unmuted from its own controls");
+
+    // 6. Phone blocks video sound: app says so, never mutes on its own, coach stays quiet
+    await reset("video", { policy: "block" });
+    openDay(1); startWorkout({ warm: false, cool: false, label: "t" }); await settle(6);
+    check(!$("video-hint").hidden, "no hint when the phone blocked the video's sound");
+    check(audioMode === "video" && T.said.length === 0, "coach talked in Video mode while video sound was blocked");
+    // ...the user taps the video's speaker; the next exercise keeps its sound
+    FY.userUnmute(); await settle(2);
+    check($("video-hint").hidden, "hint stayed after the user unmuted the video");
+    go(1); go(1); await settle(3);
+    check(!FY.muted && audioMode === "video", "video sound didn't carry over to the next exercise");
+
+    // 7. Slow-starting clip in Video mode: the app must not mute it
+    await reset("video", { delay: 7000 });
+    startPreview("armthread"); await settle(12);
+    check(!FY.muted, "slow-loading clip got muted by the app");
+    check(FY.state === 1, "slow clip never started");
+
+    // 8. Coach switched on during a hold: no intro or "Go", only what's still ahead
+    await reset("off");
+    openDay(1); startWorkout({ warm: false, cool: false, label: "t" });
+    cur = steps.findIndex((x) => x.key === "planktaps"); renderStep();
+    await until(() => timer.phase === "work" && timer.total - timer.left > 20, 60);
+    n = T.said.length; clickBtn("voice-btn"); await settle(25);
+    const late = saidSince(n);
+    check(!late.includes(SAY.name("planktaps")) && !late.includes(SAY.go()), "intro/Go replayed when coach switched on mid-hold");
+    check(late.includes(SAY.tenLeft()), "coach switched on mid-hold missed 'Ten seconds left'");
+
+    await reset("coach");
+    return { name: "Sound buttons & video sound", steps: 8, lines: 0, fails };
   }
 
   // Cues and controls must fit on screen at the current window size
@@ -177,8 +254,9 @@
         results.push(await runSession(day, { warm: false, cool: true, label: "Thu post-match" }));
       } else results.push(await runSession(day, { warm: true, cool: true, label: day.name.slice(0, 3) + " " + day.focus }));
     }
-    if (previews) results.push(await runPreviews());
-    if (previews) results.push(await runVideoSoundRule());
+    const safely = async (name, f) => { try { return await f(); } catch (e) { return { name, steps: 0, lines: 0, fails: ["test crashed: " + e.message] }; } };
+    if (previews) results.push(await safely("Previews", runPreviews));
+    if (previews) results.push(await safely("Sound buttons & video sound", runAudioScenarios));
     if (layout) results.push(layoutCheck());
     const bad = results.filter((r) => r.fails.length);
     SELFTEST.report = [
@@ -187,6 +265,12 @@
         (r.fails.length ? "\n    " + r.fails.slice(0, 8).join("\n    ") + (r.fails.length > 8 ? `\n    …and ${r.fails.length - 8} more` : "") : "")),
     ].join("\n");
     SELFTEST.done = true;
+    // show the report on the page too (for devices where there's no console, e.g. the iPhone simulator)
+    let box = document.getElementById("selftest-report");
+    if (!box) { box = document.createElement("pre"); box.id = "selftest-report"; box.setAttribute("aria-label", "selftest report");
+      box.style.cssText = "position:fixed;inset:0;z-index:9999;margin:0;padding:16px;overflow:auto;background:#000;color:#fff;font:13px/1.4 monospace;white-space:pre-wrap";
+      document.body.appendChild(box); }
+    box.textContent = SELFTEST.report;
     return SELFTEST.report;
   }
 

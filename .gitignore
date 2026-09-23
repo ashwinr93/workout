@@ -3,3 +3,4 @@ voice-samples/
 .DS_Store
 __pycache__/
 .venv/
+tests/e2e/node_modules/

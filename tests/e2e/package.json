@@ -1,0 +1,3 @@
+{ "name": "workout-e2e", "private": true, "type": "module",
+  "scripts": { "test": "node real-browsers.mjs" },
+  "devDependencies": { "playwright": "^1.55.0" } }

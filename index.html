@@ -393,7 +393,9 @@ function buildSteps(day, warm, cool) {
 
 /* ---------------- Audio / voice / wake lock ---------------- */
 let audioCtx = null;
-let voiceOn = store.get("voiceOn", true);
+// Exactly one thing talks: the coach, the demo video, or nothing
+let audioMode = store.get("audioMode", store.get("demoSound", false) ? "video" : (store.get("voiceOn", true) ? "coach" : "off"));
+let voiceOn = audioMode === "coach";
 function beep(freq = 880, dur = 0.14, vol = 0.18) {
   try {
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
@@ -452,7 +454,7 @@ function coachPlan(lines) {
 }
 // The coach stays quiet while the demo video's own sound is on (two voices at once
 // is useless). If the phone refused the video's sound, the video is silent, so the coach talks.
-const videoAudible = () => demoSound && !soundBlocked && !$("player-screen").hidden;
+const videoAudible = () => audioMode === "video" && !$("player-screen").hidden;
 function coachTick() {
   if (!voiceOn || videoAudible() || !coach.queue.length) return;
   const line = coach.queue[0], now = Date.now();
@@ -483,14 +485,14 @@ function playVoiceClip(text, done, gen) {
   const id = clipId(text), dur = clipManifest[id];
   if (!dur) { log("no clip, device voice:", text); return deviceSpeak(text, finish); }
   voiceEl.onended = finish;
-  voiceEl.onerror = () => { log("clip error:", id); deviceSpeak(text, finish); };
+  voiceEl.onerror = () => { log("clip error:", id); };
   voiceEl.src = `audio/${id}.m4a`;
   const p = voiceEl.play();
-  if (p && p.then) p.then(() => { voiceUnlocked = true; log("said:", text.slice(0, 50)); });
-  if (p && p.catch) p.catch((e) => {
+  if (p && p.then) p.then(() => { voiceUnlocked = true; log("said:", text.slice(0, 50)); }, (e) => {
     log("clip blocked:", e.name, text.slice(0, 30));
-    if (e.name === "NotAllowedError") voiceUnlocked = false;
-    finish();
+    if (e.name === "NotAllowedError") { voiceUnlocked = false; finish(); }
+    else if (e.name !== "AbortError") deviceSpeak(text, finish); // can't play this file: say it with the device voice
+    else finish();
   });
   coach.safety = setTimeout(finish, (dur + 4) * 1000); // never let one clip stall the coach
 }
@@ -528,68 +530,80 @@ function soundButton(el, on, label) {
   el.classList.toggle("on", on);
   el.setAttribute("aria-pressed", on);
 }
-function updateVoiceBtn() { soundButton($("voice-btn"), voiceOn && !demoSound, demoSound && voiceOn ? "Coach paused" : "Coach"); }
-$("voice-btn").onclick = () => { voiceOn = !voiceOn; store.set("voiceOn", voiceOn); updateVoiceBtn(); if (!voiceOn) coachReset(); };
+function updateVoiceBtn() { soundButton($("voice-btn"), audioMode === "coach", "Coach"); }
+$("voice-btn").onclick = () => setAudioMode(audioMode === "coach" ? "off" : "coach");
 
 /* ---------------- YouTube player ---------------- */
-let demoSound = store.get("demoSound", false);
+let demoSound = audioMode === "video";
 // Browsers (iPhones especially) may refuse sound until the video itself is tapped.
 // When that happens we keep playing muted and ask for a tap instead of retrying forever.
-let soundBlocked = false, unmuteAt = 0, stallTimer = null;
+let soundBlocked = false, stallTimer = null, soundTimer = null, lastMuteCall = 0;
 function applyDemoSound() {
   if (!ytReady) return;
-  if (demoSound && !soundBlocked) { yt.unMute(); yt.setVolume(100); unmuteAt = Date.now(); }
-  else yt.mute();
+  lastMuteCall = Date.now();
+  if (demoSound) { yt.unMute(); yt.setVolume(100); } else yt.mute();
 }
 function hint(msg) { $("video-hint").textContent = msg || ""; $("video-hint").hidden = !msg; }
 const SOUND_HINT = "Tap the video's 🔇 icon to hear it";
-function blockSound() {
-  log("demo sound blocked by browser");
-  soundBlocked = true; yt.mute(); yt.playVideo(); hint(SOUND_HINT);
+// After a clip starts, check whether the browser actually let it make sound
+function watchSound() {
+  clearTimeout(soundTimer);
+  if (!demoSound) return;
+  soundTimer = setTimeout(() => {
+    if (!videoActive || !ytReady || !demoSound) return;
+    if (yt.getPlayerState() === YT.PlayerState.PLAYING && yt.isMuted()) {
+      soundBlocked = true; hint(SOUND_HINT); log("video sound blocked by browser; asked for a tap");
+    }
+  }, 2500);
 }
-// Nudge a clip that hasn't started; if it still won't, ask for a tap
+// A clip that hasn't started after a while: nudge it, then ask for a tap. Never mutes anything.
 function watchStall() {
   clearTimeout(stallTimer);
   stallTimer = setTimeout(() => {
     if (!videoActive || !ytReady) return;
     const st = yt.getPlayerState();
-    if (st === YT.PlayerState.PLAYING || st === YT.PlayerState.BUFFERING) return;
-    if (demoSound && !soundBlocked) blockSound(); else yt.playVideo();
+    if (st === YT.PlayerState.PLAYING) return;
+    yt.playVideo();
     stallTimer = setTimeout(() => {
       if (videoActive && yt.getPlayerState() !== YT.PlayerState.PLAYING) { hint("Tap the video to play it"); log("video stalled, asked for tap"); }
-    }, 2500);
-  }, 3000);
+    }, 5000);
+  }, 4000);
 }
 function updateSoundBtn() { soundButton($("sound-btn"), demoSound, "Video"); }
-$("sound-btn").onclick = () => {
-  demoSound = !demoSound; store.set("demoSound", demoSound); updateSoundBtn();
+$("sound-btn").onclick = () => setAudioMode(audioMode === "video" ? "coach" : "video");
+// fromVideo: the user unmuted/muted with YouTube's own speaker button, so don't touch the player
+function setAudioMode(mode, fromVideo) {
+  if (mode === audioMode) return;
+  log("audio mode:", audioMode, "→", mode, fromVideo ? "(from video controls)" : "");
+  audioMode = mode; store.set("audioMode", mode);
+  voiceOn = mode === "coach"; demoSound = mode === "video";
+  updateVoiceBtn(); updateSoundBtn();
   soundBlocked = false; hint(null);
-  if (demoSound) { coachReset(); log("video sound on: coach paused"); } // resumes from the next step
-  updateVoiceBtn();
-  applyDemoSound(); if (ytReady && videoActive) { yt.playVideo(); watchStall(); }
-};
+  if (!fromVideo) applyDemoSound();          // runs inside the tap, which browsers need for sound
+  if (mode === "coach") replanCurrentStep(); else coachReset();
+  if (demoSound && ytReady && videoActive && !fromVideo) { yt.playVideo(); watchSound(); }
+}
 let yt = null, ytReady = false, pendingVideo = null;
 let videoActive = false; // false whenever the player screen is closed
 let vidList = [], vidIdx = 0, vidPrimary = 1, vidTried = new Set(), vidEx = null;
 
+function onVideoState(e) {
+  log("video", vidList[vidIdx] ? vidList[vidIdx].id : "?", ["unstarted","ended","playing","paused","buffering","","cued"][e.data + 1] || e.data, "muted:", yt.isMuted());
+  if (!videoActive) { if (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.BUFFERING) yt.pauseVideo(); return; }
+  if (e.data === YT.PlayerState.ENDED) nextClipOrLoop();
+  if (e.data === YT.PlayerState.CUED) yt.playVideo();
+  if (e.data === YT.PlayerState.PLAYING) {
+    clearTimeout(stallTimer);
+    if (!soundBlocked) hint(null);
+    watchSound();
+  }
+}
 window.onYouTubeIframeAPIReady = function () {
   yt = new YT.Player("yt", {
     playerVars: { autoplay: 1, mute: 1, playsinline: 1, controls: 1, cc_load_policy: 1, cc_lang_pref: "en", hl: "en", rel: 0, modestbranding: 1, iv_load_policy: 3, disablekb: 1, fs: 0 },
     events: {
       onReady: () => { ytReady = true; applyDemoSound(); if (pendingVideo && videoActive) { playClip(pendingVideo); pendingVideo = null; } },
-      onStateChange: (e) => {
-        log("video", vidList[vidIdx] ? vidList[vidIdx].id : "?", ["unstarted","ended","playing","paused","buffering","","cued"][e.data + 1] || e.data, "muted:", yt.isMuted());
-        if (!videoActive) { if (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.BUFFERING) yt.pauseVideo(); return; }
-        if (e.data === YT.PlayerState.ENDED) nextClipOrLoop();
-        if (e.data === YT.PlayerState.CUED) yt.playVideo();
-        if (e.data === YT.PlayerState.PLAYING) {
-          clearTimeout(stallTimer);
-          if (demoSound && !soundBlocked && yt.isMuted()) applyDemoSound();
-          hint(demoSound && soundBlocked ? SOUND_HINT : null);
-        }
-        // A pause right after we unmuted means the browser refused sound
-        if (e.data === YT.PlayerState.PAUSED && demoSound && !soundBlocked && Date.now() - unmuteAt < 1500) blockSound();
-      },
+      onStateChange: onVideoState,
       onError: (e) => { log("video error", e.data, vidList[vidIdx] && vidList[vidIdx].id); handleVideoError(); }
     }
   });
@@ -599,7 +613,7 @@ const SELFTEST_MODE = /[?&]selftest\b/.test(location.search);
 if (!SELFTEST_MODE) (function loadYT() { const s = document.createElement("script"); s.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(s); })();
 
 function stopVideo() {
-  clearInterval(cueTimer); clearTimeout(stallTimer); hint(null);
+  clearInterval(cueTimer); clearTimeout(stallTimer); clearTimeout(soundTimer); hint(null);
   videoActive = false; pendingVideo = null; vidEx = null;
   try { if (ytReady) { yt.pauseVideo(); yt.stopVideo(); yt.mute(); } } catch {}
 }
@@ -609,7 +623,7 @@ function playClip(v) {
   $("video-fallback").hidden = true;
   yt.loadVideoById({ videoId: v.id, startSeconds: v.start || 0, endSeconds: v.end || undefined });
   applyDemoSound();
-  hint(null);
+  if (!soundBlocked) hint(null);
   watchStall();
 }
 function setVideos(key, set = 1) {
@@ -743,58 +757,84 @@ function renderWork(st) {
       ${timed ? `<button class="ctl" id="c-pause">Pause</button>` : ""}
       <button class="ctl primary" id="c-done">${st.preview ? "Close preview" : timed ? "Skip ›" : "Done ✓"}</button>
     </div>`;
-  const n = ex.cues.length;
+  startCueRotation();
+  if (st.preview) { $("c-done").onclick = exitPlayer; timer.phase = null; }
+  else {
+    $("c-prev").onclick = () => go(-1);
+    $("c-done").onclick = () => { beep(1320, 0.1); go(1); };
+  }
+  const plan = workLines(st);
+  if (timed && !st.preview) {
+    timer = { phase: "ready", left: plan.ready, total: ex.time, paused: false, t0: Date.now() };
+    $("c-pause").onclick = togglePause;
+    $("t-state").textContent = "get in position…";
+    $("t-clock").textContent = fmt(plan.ready);
+  } else if (!st.preview) timer = { phase: null };
+  coachPlan(plan.lines);
+}
+
+// What the coach says on an exercise step (and, for holds, how long "get in position" lasts)
+function workLines(st) {
+  const ex = EX[st.key], n = ex.cues.length;
   // The full coaching (every cue) the first time you meet an exercise; later sets get one reminder
   const first = st.set === 1 && st.side !== "Right side";
   const reminder = n > 1 ? 1 + ((st.set - 2 + (st.side === "Right side" ? 1 : 0)) % (n - 1) + (n - 1)) % (n - 1) : 0;
   const cueLine = (c, extra) => Object.assign({ texts: [SAY.cue(st.key, c)], cue: c }, extra);
-  startCueRotation();
-  if (st.preview) {
-    $("c-done").onclick = exitPlayer; timer.phase = null;
-    coachPlan([{ texts: [SAY.name(st.key), SAY.key(st.key)] }, ...ex.cues.map((_, c) => cueLine(c, { gap: 1.2 }))]);
-    return;
-  }
-  $("c-prev").onclick = () => go(-1);
-  $("c-done").onclick = () => { beep(1320, 0.1); go(1); };
+  if (st.preview) return { lines: [{ texts: [SAY.name(st.key), SAY.key(st.key)] }, ...ex.cues.map((_, c) => cueLine(c, { gap: 1.2 }))] };
   const setIntro = st.warm || st.sets < 2 ? [] : [SAY.setOf(st.set, st.sets), ...(st.set === st.sets ? [SAY.lastSet()] : [])];
   const noteLine = ex.setNotes ? [SAY.setNote(st.key, st.set)] : [];
 
-  if (timed) {
-    const hold = ex.time;
-    const lines = [];
-    if (st.side === "Right side") lines.push({ texts: [SAY.switchSides(), SAY.side("Right side"), ...noteLine] });
-    else if (first) lines.push({ texts: [SAY.name(st.key), ...setIntro, SAY.target(st.key), ...(st.side ? [SAY.side(st.side)] : []), ...noteLine, SAY.key(st.key)] });
-    else lines.push({ texts: [...setIntro, ...(st.side ? [SAY.side(st.side)] : []), ...noteLine] });
+  if (ex.time) {
+    const hold = ex.time, lines = [];
+    if (st.side === "Right side") lines.push({ texts: [SAY.switchSides(), SAY.side("Right side"), ...noteLine], intro: true });
+    else if (first) lines.push({ texts: [SAY.name(st.key), ...setIntro, SAY.target(st.key), ...(st.side ? [SAY.side(st.side)] : []), ...noteLine, SAY.key(st.key)], intro: true });
+    else lines.push({ texts: [...setIntro, ...(st.side ? [SAY.side(st.side)] : []), ...noteLine], intro: true });
     // Time to get into position: at least 6 s, and always long enough to finish the intro before "Go"
     const introSec = lines[0].texts.reduce((t, x) => t + (clipManifest[clipId(x)] || 2) + 0.25, 0.6);
     const ready = Math.ceil(Math.max(first ? 10 : 6, introSec + 1.5));
-    timer = { phase: "ready", left: ready, total: hold, paused: false, t0: Date.now() };
-    $("c-pause").onclick = togglePause;
-    $("t-state").textContent = "get in position…";
-    $("t-clock").textContent = fmt(ready);
-    const workAt = (sec) => () => timer.phase === "work" && timer.total - timer.left >= sec;
-    lines.push({ texts: [SAY.go()], when: () => timer.phase === "work", late: 1.5, gap: 0 });
+    const workAt = (sec) => Object.assign(() => timer.phase === "work" && timer.total - timer.left >= sec, { sec });
+    lines.push({ texts: [SAY.go()], when: () => timer.phase === "work", late: 1.5, gap: 0, intro: true });
     if (first) {
       // Spread the cues across the hold, finishing before the last 10 seconds
       const every = Math.max(7, Math.min(25, (hold - 13) / n));
       ex.cues.forEach((_, c) => { const t = 3 + c * every; if (t < hold - 8) lines.push(cueLine(c, { when: workAt(t), gap: 1.5 })); });
     } else if (hold >= 40) lines.push(cueLine(reminder, { when: workAt(12), gap: 1.5 }));
     if (hold >= 30) lines.push({ texts: [SAY.tenLeft()], when: workAt(hold - 10), late: 3, gap: 0.5 });
-    coachPlan(lines);
-  } else {
-    timer = { phase: null };
-    if (st.warm) {
-      // Warm-ups move quickly: intro, setup cue, then the rest every ~7 seconds
-      coachPlan([{ texts: [SAY.name(st.key), SAY.target(st.key), SAY.key(st.key)] },
-        cueLine(0, { gap: 0.8 }), ...ex.cues.slice(1).map((_, k) => cueLine(k + 1, { at: 8 + k * 7, gap: 2 }))]);
-    } else if (first) {
-      // Setup while you pick up the weights, then one cue every ~9 seconds while you lift
-      coachPlan([{ texts: [SAY.name(st.key), ...setIntro, SAY.target(st.key), SAY.key(st.key)] },
-        cueLine(0, { gap: 0.8 }), ...ex.cues.slice(1).map((_, k) => cueLine(k + 1, { at: 12 + k * 9, gap: 2 }))]);
-    } else {
-      coachPlan([{ texts: [...setIntro, SAY.target(st.key)] }, cueLine(reminder, { at: 8, gap: 2 })]);
-    }
+    return { lines, ready };
   }
+  if (st.warm) // Warm-ups move quickly: intro, setup cue, then the rest every ~7 seconds
+    return { lines: [{ texts: [SAY.name(st.key), SAY.target(st.key), SAY.key(st.key)] },
+      cueLine(0, { gap: 0.8 }), ...ex.cues.slice(1).map((_, k) => cueLine(k + 1, { at: 8 + k * 7, gap: 2 }))] };
+  if (first) // Setup while you pick up the weights, then one cue every ~9 seconds while you lift
+    return { lines: [{ texts: [SAY.name(st.key), ...setIntro, SAY.target(st.key), SAY.key(st.key)] },
+      cueLine(0, { gap: 0.8 }), ...ex.cues.slice(1).map((_, k) => cueLine(k + 1, { at: 12 + k * 9, gap: 2 }))] };
+  return { lines: [{ texts: [...setIntro, SAY.target(st.key)] }, cueLine(reminder, { at: 8, gap: 2 })] };
+}
+
+function restLines(st) {
+  const ni = nextWorkIndex(cur + 1), nx = ni >= 0 ? steps[ni] : null;
+  const nextSet = nx && !nx.warm && nx.sets > 1 ? [SAY.setOf(nx.set, nx.sets)] : [];
+  return [
+    { texts: [SAY.rest(st.dur), ...(nx ? [SAY.nextUp(), SAY.name(nx.key), ...nextSet] : [])], intro: true },
+    st.dur >= 20 ? { texts: [SAY.tenToGo()], when: () => timer.phase === "rest" && timer.left <= 10.5, late: 2 } : null,
+  ];
+}
+
+// Coach switched on mid-step: pick up this step's coaching from where the step is now
+function replanCurrentStep() {
+  if ($("player-screen").hidden || !steps[cur]) return;
+  const st = steps[cur];
+  let lines = st.type === "rest" ? restLines(st) : workLines(st).lines;
+  const inWork = timer.phase === "work", restLeft = timer.phase === "rest" ? timer.left : null;
+  lines = lines.filter((l) => {
+    if (!l) return false;
+    if (st.type === "rest") return !(l.intro && restLeft != null && restLeft < 12);
+    if (inWork && l.intro) return false;                                   // already past "get in position"
+    if (inWork && l.when && l.when.sec != null) return l.when.sec >= timer.total - timer.left; // cues still ahead
+    return true;
+  });
+  coachPlan(lines);
+  log("coach restarted on step", cur + 1, "lines:", lines.length);
 }
 
 // On short (landscape phone) screens only one cue shows at a time; rotate through them
@@ -840,11 +880,7 @@ function renderRest(st) {
   $("c-prev").onclick = () => go(-1);
   $("c-add").onclick = () => { timer.total += 15; timer.left += 15; };
   $("c-skip").onclick = () => go(1);
-  const nextSet = nx && !nx.warm && nx.sets > 1 ? [SAY.setOf(nx.set, nx.sets)] : [];
-  coachPlan([
-    { texts: [SAY.rest(st.dur), ...(nx ? [SAY.nextUp(), SAY.name(nx.key), ...nextSet] : [])] },
-    st.dur >= 20 ? { texts: [SAY.tenToGo()], when: () => timer.phase === "rest" && timer.left <= 10.5, late: 2 } : null,
-  ]);
+  coachPlan(restLines(st));
 }
 
 function togglePause() {
@@ -854,7 +890,12 @@ function togglePause() {
 
 let lastSec = null;
 function onTick() {
-  if (soundBlocked && ytReady && videoActive && !yt.isMuted()) { soundBlocked = false; hint(null); }
+  if (ytReady && videoActive && typeof yt.isMuted === "function") {
+    const muted = yt.isMuted(), playing = yt.getPlayerState() === YT.PlayerState.PLAYING;
+    // Unmuted on the video itself (not by us in the last moment): the video is now the one talking
+    if (!muted && playing && audioMode !== "video" && Date.now() - lastMuteCall > 1500) setAudioMode("video", true);
+    if (!muted && soundBlocked) { soundBlocked = false; hint(null); }
+  }
   const secs = Math.floor((Date.now() - startedAt) / 1000);
   $("p-elapsed").textContent = fmt(secs);
   coachTick();
@@ -932,12 +973,12 @@ $("diag-check").onclick = async () => {
   const onPlay = () => events.push(["start", voiceEl.src.split("/").pop(), performance.now()]);
   const onEnd = () => events.push(["end", voiceEl.src.split("/").pop(), performance.now()]);
   voiceEl.addEventListener("playing", onPlay); voiceEl.addEventListener("ended", onEnd);
-  const wasOn = voiceOn, wasDemo = demoSound; voiceOn = true; demoSound = false;
+  const wasMode = audioMode; audioMode = "coach"; voiceOn = true; demoSound = false;
   playNow(texts);
   const expectMs = texts.reduce((t, x) => t + (clipManifest[clipId(x)] || 2) * 1000 + 300, 0) + 3000;
   const t0 = performance.now();
   while (performance.now() - t0 < expectMs && (coach.playing || coach.queue.length)) await wait(200);
-  voiceOn = wasOn; demoSound = wasDemo;
+  audioMode = wasMode; voiceOn = wasMode === "coach"; demoSound = wasMode === "video";
   voiceEl.removeEventListener("playing", onPlay); voiceEl.removeEventListener("ended", onEnd);
   const starts = events.filter((e) => e[0] === "start" && e[1].endsWith(".m4a")).length;
   const ends = events.filter((e) => e[0] === "end" && e[1].endsWith(".m4a")).length;
@@ -977,6 +1018,18 @@ $("diag-check").onclick = async () => {
 };
 
 /* ---------------- Wire up ---------------- */
+// ?debug: a one-line status bar (audio mode, video mute/state, last line spoken) for device testing
+if (/[?&]debug\b/.test(location.search)) {
+  const bar = document.createElement("div");
+  bar.id = "debug-bar"; bar.setAttribute("role", "status");
+  bar.style.cssText = "position:fixed;left:0;right:0;bottom:0;z-index:9998;background:#300;color:#fff;font:11px monospace;padding:2px 6px;pointer-events:none";
+  document.body.appendChild(bar);
+  setInterval(() => {
+    const said = [...DIAG].reverse().find((l) => l.includes("said:")) || "";
+    const v = ytReady && yt.isMuted ? `muted=${yt.isMuted()} state=${yt.getPlayerState()}` : "no player";
+    bar.textContent = `DBG mode=${audioMode} ${v} hint=${!$("video-hint").hidden} unlocked=${voiceUnlocked} last=${said.slice(9, 60)}`;
+  }, 500);
+}
 if (SELFTEST_MODE) { const t = document.createElement("script"); t.src = "tests/selftest.js"; document.body.appendChild(t); }
 $("day-back").onclick = () => { currentDay = null; show("home"); };
 renderHome();
