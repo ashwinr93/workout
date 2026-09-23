@@ -86,13 +86,14 @@
   .p-body { flex: 1; display: grid; grid-template-columns: 1.35fr 1fr; min-height: 0; background: var(--bg); }
   .video-pane { position: relative; background: #000; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
   .video-box { position: relative; width: 100%; height: 100%; }
-  #yt, .video-box iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; pointer-events: none; }
+  #yt, .video-box iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .video-hint { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); background: rgba(0,0,0,.8); color: #fff;
+    font-size: 14px; font-weight: 600; padding: 7px 12px; border-radius: 8px; pointer-events: none; text-align: center; max-width: 90%; }
   .video-label { position: absolute; left: 10px; bottom: 10px; background: rgba(0,0,0,.65); color: #fff; font-size: 12px;
     padding: 4px 8px; border-radius: 6px; pointer-events: none; }
-  .video-tools { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 6px; }
-  .video-tools { align-items: center; }
-  .video-tools button { background: rgba(0,0,0,.65); color: #fff; font-size: 15px; min-width: 34px; padding: 5px 10px; border-radius: 6px; }
-  .vid-count { background: rgba(0,0,0,.65); color: #fff; font-size: 12px; padding: 6px 8px; border-radius: 6px; font-variant-numeric: tabular-nums; }
+  .video-tools { display: flex; gap: 4px; align-items: center; }
+  .video-tools .icon-btn { min-width: 32px; }
+  .vid-count { color: var(--muted); font-size: 12px; padding: 0 4px; white-space: nowrap; font-variant-numeric: tabular-nums; max-width: 11em; overflow: hidden; text-overflow: ellipsis; }
   .video-fallback { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
     color: var(--muted); text-align: center; padding: 20px; background: #000; }
   .video-fallback a { color: var(--accent); }
@@ -153,6 +154,8 @@
   @media (orientation: portrait) and (max-width: 700px) {
     .p-body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
     .video-pane { aspect-ratio: 16/9; }
+    .p-head .lbl { display: none; }
+    .vid-count { max-width: 5.5em; }
     .rotate-hint { display: block; font-size: 12px; color: var(--muted); text-align: center; padding: 4px; background: var(--panel); }
     .ex-name { font-size: 24px; }
     .target .big { font-size: 44px; }
@@ -207,6 +210,12 @@
       <div><span id="p-day"></span> · step <span id="p-step"></span> · <span class="clock" id="p-elapsed">0:00</span></div>
       <div class="progress"><i id="p-bar"></i></div>
     </div>
+    <div class="video-tools">
+      <button class="icon-btn" id="vid-prev" title="Previous demo">‹</button>
+      <span class="vid-count" id="vid-count"></span>
+      <button class="icon-btn" id="vid-next" title="Next demo">›</button>
+      <button class="icon-btn" id="vid-restart" title="Restart clip">↺</button>
+    </div>
     <button class="icon-btn" id="sound-btn">🔈<span class="lbl"> Demo sound</span></button>
     <button class="icon-btn" id="voice-btn">🔊<span class="lbl"> Voice</span></button>
   </div>
@@ -215,13 +224,7 @@
     <div class="video-pane">
       <div class="video-box"><div id="yt"></div></div>
       <div class="video-fallback" id="video-fallback" hidden></div>
-      <div class="video-label" id="video-label"></div>
-      <div class="video-tools">
-        <button id="vid-prev" title="Previous demo">‹</button>
-        <span class="vid-count" id="vid-count"></span>
-        <button id="vid-next" title="Next demo">›</button>
-        <button id="vid-restart" title="Restart clip">↺</button>
-      </div>
+      <div class="video-hint" id="video-hint" hidden></div>
     </div>
     <div class="info-pane" id="info"></div>
   </div>
@@ -809,20 +812,48 @@ let wakeLock = null;
 async function keepAwake() {
   try { if ("wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen"); } catch {}
 }
-document.addEventListener("visibilitychange", () => { if (!document.hidden && !$("player-screen").hidden) keepAwake(); });
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden || $("player-screen").hidden) return;
+  keepAwake();
+  // iOS pauses video when you leave the app; pick it back up when you return
+  if (videoActive && ytReady) setTimeout(() => { if (videoActive) { yt.playVideo(); watchStall(); } }, 300);
+});
 function updateVoiceBtn() { $("voice-btn").innerHTML = (voiceOn ? "🔊" : "🔇") + '<span class="lbl"> Voice</span>'; }
 $("voice-btn").onclick = () => { voiceOn = !voiceOn; store.set("voiceOn", voiceOn); updateVoiceBtn(); if (!voiceOn) hush() };
 
 /* ---------------- YouTube player ---------------- */
 let demoSound = store.get("demoSound", false);
+// Browsers (iPhones especially) may refuse sound until the video itself is tapped.
+// When that happens we keep playing muted and ask for a tap instead of retrying forever.
+let soundBlocked = false, unmuteAt = 0, stallTimer = null;
 function applyDemoSound() {
   if (!ytReady) return;
-  if (demoSound) { yt.unMute(); yt.setVolume(100); } else yt.mute();
+  if (demoSound && !soundBlocked) { yt.unMute(); yt.setVolume(100); unmuteAt = Date.now(); }
+  else yt.mute();
+}
+function hint(msg) { $("video-hint").textContent = msg || ""; $("video-hint").hidden = !msg; }
+const SOUND_HINT = "Tap the video's 🔇 icon to hear it";
+function blockSound() {
+  soundBlocked = true; yt.mute(); yt.playVideo(); hint(SOUND_HINT);
+}
+// Nudge a clip that hasn't started; if it still won't, ask for a tap
+function watchStall() {
+  clearTimeout(stallTimer);
+  stallTimer = setTimeout(() => {
+    if (!videoActive || !ytReady) return;
+    const st = yt.getPlayerState();
+    if (st === YT.PlayerState.PLAYING || st === YT.PlayerState.BUFFERING) return;
+    if (demoSound && !soundBlocked) blockSound(); else yt.playVideo();
+    stallTimer = setTimeout(() => {
+      if (videoActive && yt.getPlayerState() !== YT.PlayerState.PLAYING) hint("Tap the video to play it");
+    }, 2500);
+  }, 3000);
 }
 function updateSoundBtn() { $("sound-btn").innerHTML = (demoSound ? "🔊" : "🔈") + '<span class="lbl"> Demo sound</span>'; }
 $("sound-btn").onclick = () => {
   demoSound = !demoSound; store.set("demoSound", demoSound); updateSoundBtn();
-  applyDemoSound(); if (ytReady && videoActive) yt.playVideo();
+  soundBlocked = false; hint(null);
+  applyDemoSound(); if (ytReady && videoActive) { yt.playVideo(); watchStall(); }
 };
 let yt = null, ytReady = false, pendingVideo = null;
 let videoActive = false; // false whenever the player screen is closed
@@ -830,13 +861,20 @@ let vidList = [], vidIdx = 0, vidPrimary = 1, vidTried = new Set(), vidEx = null
 
 window.onYouTubeIframeAPIReady = function () {
   yt = new YT.Player("yt", {
-    playerVars: { autoplay: 1, mute: 1, playsinline: 1, controls: 0, rel: 0, modestbranding: 1, iv_load_policy: 3, disablekb: 1, fs: 0 },
+    playerVars: { autoplay: 1, mute: 1, playsinline: 1, controls: 1, rel: 0, modestbranding: 1, iv_load_policy: 3, disablekb: 1, fs: 0 },
     events: {
       onReady: () => { ytReady = true; applyDemoSound(); if (pendingVideo && videoActive) { playClip(pendingVideo); pendingVideo = null; } },
       onStateChange: (e) => {
         if (!videoActive) { if (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.BUFFERING) yt.pauseVideo(); return; }
         if (e.data === YT.PlayerState.ENDED) nextClipOrLoop();
         if (e.data === YT.PlayerState.CUED) yt.playVideo();
+        if (e.data === YT.PlayerState.PLAYING) {
+          clearTimeout(stallTimer);
+          if (demoSound && !soundBlocked && yt.isMuted()) applyDemoSound();
+          hint(demoSound && soundBlocked ? SOUND_HINT : null);
+        }
+        // A pause right after we unmuted means the browser refused sound
+        if (e.data === YT.PlayerState.PAUSED && demoSound && !soundBlocked && Date.now() - unmuteAt < 1500) blockSound();
       },
       onError: () => handleVideoError()
     }
@@ -845,7 +883,7 @@ window.onYouTubeIframeAPIReady = function () {
 (function loadYT() { const s = document.createElement("script"); s.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(s); })();
 
 function stopVideo() {
-  clearInterval(cueTimer);
+  clearInterval(cueTimer); clearTimeout(stallTimer); hint(null);
   videoActive = false; pendingVideo = null; vidEx = null;
   try { if (ytReady) { yt.pauseVideo(); yt.stopVideo(); yt.mute(); } } catch {}
 }
@@ -855,12 +893,8 @@ function playClip(v) {
   $("video-fallback").hidden = true;
   yt.loadVideoById({ videoId: v.id, startSeconds: v.start || 0, endSeconds: v.end || undefined });
   applyDemoSound();
-  // If the phone refuses to autoplay with sound, fall back to muted so the demo still runs
-  if (demoSound) setTimeout(() => {
-    if (videoActive && ytReady && yt.getPlayerState() !== YT.PlayerState.PLAYING) { yt.mute(); yt.playVideo(); }
-  }, 2500);
-  $("video-label").textContent = v.label ? `Demo: ${v.label}` : "Demo";
-  $("video-label").hidden = false;
+  hint(null);
+  watchStall();
 }
 function setVideos(key, set = 1) {
   const ex = EX[key];
@@ -878,7 +912,8 @@ function showClip(i) {
   vidTried.add(vidIdx);
   const multi = vidList.length > 1;
   $("vid-prev").hidden = $("vid-next").hidden = $("vid-count").hidden = !multi;
-  $("vid-count").textContent = `Demo ${vidIdx + 1}/${vidList.length}`;
+  const lbl = vidList[vidIdx].label;
+  $("vid-count").textContent = `Demo ${vidIdx + 1}/${vidList.length}${lbl ? " · " + lbl : ""}`;
   playClip(vidList[vidIdx]);
 }
 // At the end of a clip: rotate through the main demos; an alternate demo just loops
@@ -1059,6 +1094,7 @@ function togglePause() {
 
 let lastSec = null;
 function onTick() {
+  if (soundBlocked && ytReady && videoActive && !yt.isMuted()) { soundBlocked = false; hint(null); }
   const secs = Math.floor((Date.now() - startedAt) / 1000);
   $("p-elapsed").textContent = fmt(secs);
   if (!timer.phase || timer.paused) { timer.t0 = Date.now(); return; }
