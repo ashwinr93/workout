@@ -67,7 +67,7 @@
   .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left .15s; }
   .toggle[aria-pressed="true"] .switch { background: var(--accent); }
   .toggle[aria-pressed="true"] .switch::after { left: 21px; }
-  .start-bar { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px var(--pad-r) max(12px, env(safe-area-inset-bottom, 0px)) var(--pad-x);
+  .start-bar { gap: 10px; flex-wrap: wrap; position: fixed; left: 0; right: 0; bottom: 0; padding: 12px var(--pad-r) max(12px, env(safe-area-inset-bottom, 0px)) var(--pad-x);
     background: linear-gradient(transparent, var(--bg) 35%); display: flex; justify-content: center; }
   .big-btn { background: var(--accent); color: var(--accent-ink); font-weight: 750; font-size: 18px; padding: 14px 28px;
     border-radius: 999px; min-width: 240px; }
@@ -169,7 +169,7 @@
     </div>
     <div id="day-body"></div>
   </div>
-  <div class="start-bar" id="start-bar"><button class="big-btn" id="start-btn">Start workout ▶</button></div>
+  <div class="start-bar" id="start-bar"></div>
 </section>
 
 <!-- ================= PLAYER ================= -->
@@ -602,22 +602,24 @@ const EX = {
 EX.couchSun = Object.assign({}, EX.couch, { sets: 1, rest: 10 });
 
 const WARMUP = ["catcow", "armthread", "hip9090", "revlungetwist"];
+// Post-workout flexibility (the PDF's Sunday static-stretch list), appended to every session
+const COOLDOWN = ["pigeon", "couchSun", "shoulderstretch", "hamstring"];
 
 // Day index follows JS getDay(): 0 = Sunday
 const DAYS = [
-  { d: 1, name: "Monday", focus: "Upper Body A", goal: "Chest/back strength + shoulder stability", warmup: true,
+  { d: 1, name: "Monday", focus: "Upper Body A", goal: "Chest/back strength + shoulder stability",
     items: ["inclinepress", "sarow", "floorpress", "csrow", "facepull"] },
-  { d: 2, name: "Tuesday", focus: "Lower Body A", goal: "Posterior chain & knee-friendly quads", warmup: true,
+  { d: 2, name: "Tuesday", focus: "Lower Body A", goal: "Posterior chain & knee-friendly quads",
     items: ["rdl", "boxsquat", "slbridge", "calfraise", "planktaps"] },
-  { d: 3, name: "Wednesday", focus: "Active Recovery", goal: "Thoracic spine & hip mobility", warmup: false,
+  { d: 3, name: "Wednesday", focus: "Active Recovery", goal: "Thoracic spine & hip mobility",
     items: ["couch", "doorway", "tibraise"] },
-  { d: 4, name: "Thursday", focus: "Football Match", goal: "High-intensity cardio & agility", warmup: true, items: [], match: true },
-  { d: 5, name: "Friday", focus: "Upper Body B", goal: "Hypertrophy & rotator cuff care", warmup: true,
+  { d: 4, name: "Thursday", focus: "Football Match", goal: "High-intensity cardio & agility", items: [], match: true },
+  { d: 5, name: "Friday", focus: "Upper Body B", goal: "Hypertrophy & rotator cuff care",
     items: ["seatedohp", "pullover", "hammercurl", "triceps", "ytw"] },
-  { d: 6, name: "Saturday", focus: "Lower Body B", goal: "Single-leg balance, hips & knee prehab", warmup: true,
+  { d: 6, name: "Saturday", focus: "Lower Body B", goal: "Single-leg balance, hips & knee prehab",
     items: ["dbrevlunge", "sumodl", "stepup", "suitcase"] },
-  { d: 0, name: "Sunday", focus: "Rest & Recovery", goal: "Full-body static stretching", warmup: false,
-    items: ["pigeon", "couchSun", "shoulderstretch", "hamstring"] }
+  { d: 0, name: "Sunday", focus: "Rest & Recovery", goal: "Full-body static stretching",
+    items: COOLDOWN, isCooldown: true }
 ];
 
 /* ===================================================================== */
@@ -651,6 +653,7 @@ function renderHome() {
 /* ---------------- Day overview ---------------- */
 let currentDay = null;
 let includeWarmup = true;
+let includeCooldown = true;
 
 function describe(ex) {
   const sets = ex.sets || 1;
@@ -669,45 +672,71 @@ function exRow(key) {
 
 function openDay(i) {
   currentDay = DAYS[i];
-  includeWarmup = currentDay.warmup;
+  includeWarmup = true;
+  includeCooldown = true;
   $("day-kicker").textContent = currentDay.name;
   $("day-title").textContent = currentDay.focus;
   renderDayBody();
   show("day");
 }
 
+// Cool-down items not already in the day's own list (Wednesday already has the couch stretch)
+function cooldownFor(day) {
+  if (day.isCooldown) return [];
+  const base = (k) => (k === "couchSun" ? "couch" : k);
+  const own = new Set(day.items.map(base));
+  return COOLDOWN.filter((k) => !own.has(base(k)));
+}
+
+function toggleHtml(id, on, title, sub) {
+  return `<button class="toggle" id="${id}" aria-pressed="${on}"><span class="switch"></span>
+    <span><b>${title}</b><br><span style="color:var(--muted);font-size:13px">${sub}</span></span></button>`;
+}
+
 function renderDayBody() {
   const day = currentDay;
+  const cool = cooldownFor(day);
   let html = "";
   if (day.match) {
-    html += `<div class="rest-card"><b>Match day ⚽</b><p class="sub" style="margin:6px 0 0">No lifting today. Do the dynamic warm-up before kick-off to get your spine, shoulders and hips moving.</p></div>`;
-    html += `<div class="ex-section">Pre-match warm-up</div><div class="ex-list" style="margin-bottom:90px">${WARMUP.map(exRow).join("")}</div>`;
-    includeWarmup = true;
+    html += `<div class="rest-card"><b>Match day ⚽</b><p class="sub" style="margin:6px 0 0">No lifting today. Do the dynamic warm-up before kick-off, then the cool-down stretches once you're home.</p></div>`;
+    html += `<div class="ex-list"><div class="ex-section">Pre-match warm-up</div>${WARMUP.map(exRow).join("")}
+      <div class="ex-section">Post-match cool-down</div>${cool.map(exRow).join("")}</div>`;
+    $("start-bar").innerHTML = `<button class="big-btn" id="start-pre">Pre-match warm-up ▶</button><button class="big-btn" id="start-post">Post-match cool-down ▶</button>`;
+    $("day-body").innerHTML = html;
+    $("start-pre").onclick = () => startWorkout({ warm: true, cool: false, label: "Pre-match warm-up" });
+    $("start-post").onclick = () => startWorkout({ warm: false, cool: true, label: "Post-match cool-down" });
   } else {
-    html += `<button class="toggle" id="wu-toggle" aria-pressed="${includeWarmup}"><span class="switch"></span>
-      <span><b>Include dynamic warm-up</b><br><span class="m" style="color:var(--muted);font-size:13px">4 moves · 6–8 min</span></span></button>`;
-    html += `<div class="ex-list">`;
+    html += `<div style="display:flex;flex-direction:column;gap:8px">`;
+    html += toggleHtml("wu-toggle", includeWarmup, "Include dynamic warm-up", "4 moves · 6–8 min");
+    if (cool.length) html += toggleHtml("cd-toggle", includeCooldown, "Include post-workout flexibility", `${cool.length} stretches · ${cool.length === 4 ? "about 15" : "about 10"} min`);
+    html += `</div><div class="ex-list">`;
     if (includeWarmup) html += `<div class="ex-section">Warm-up</div>` + WARMUP.map(exRow).join("");
-    html += `<div class="ex-section">Workout</div>` + day.items.map(exRow).join("");
+    html += `<div class="ex-section">${day.isCooldown ? "Static flexibility" : "Workout"}</div>` + day.items.map(exRow).join("");
+    if (includeCooldown && cool.length) html += `<div class="ex-section">Post-workout flexibility</div>` + cool.map(exRow).join("");
     html += `</div>`;
+    $("day-body").innerHTML = html;
+    $("start-bar").innerHTML = `<button class="big-btn" id="start-btn">Start workout ▶</button>`;
+    $("start-btn").onclick = () => startWorkout({ warm: includeWarmup, cool: includeCooldown, label: `${day.name} · ${day.focus}` });
+    $("wu-toggle").onclick = () => { includeWarmup = !includeWarmup; renderDayBody(); };
+    const cd = $("cd-toggle");
+    if (cd) cd.onclick = () => { includeCooldown = !includeCooldown; renderDayBody(); };
   }
-  $("day-body").innerHTML = html;
-  const t = $("wu-toggle");
-  if (t) t.onclick = () => { includeWarmup = !includeWarmup; renderDayBody(); };
   $("day-body").querySelectorAll(".ex-row").forEach((b) => b.onclick = () => startPreview(b.dataset.key));
 }
 
 /* ---------------- Build step list ---------------- */
-function buildSteps(day, warm) {
-  const keys = (warm || day.match ? WARMUP.map((k) => ({ k, warm: true })) : [])
-    .concat(day.items.map((k) => ({ k, warm: false })));
+function buildSteps(day, warm, cool) {
+  const keys = (warm ? WARMUP.map((k) => ({ k, section: "warm" })) : [])
+    .concat(day.items.map((k) => ({ k, section: "main" })))
+    .concat(cool ? cooldownFor(day).map((k) => ({ k, section: "cool" })) : []);
   const steps = [];
-  keys.forEach(({ k, warm }, idx) => {
+  keys.forEach(({ k, section }, idx) => {
+    const warm = section === "warm", cool = section === "cool";
     const ex = EX[k];
     const sets = ex.sets || 1;
     for (let s = 1; s <= sets; s++) {
       const sides = ex.time && ex.perSide ? ["Left side", "Right side"] : [null];
-      sides.forEach((side) => steps.push({ type: "work", key: k, set: s, sets, side, warm }));
+      sides.forEach((side) => steps.push({ type: "work", key: k, set: s, sets, side, warm, cool }));
       const last = idx === keys.length - 1 && s === sets;
       if (!last && ex.rest) steps.push({ type: "rest", dur: ex.rest });
     }
@@ -759,17 +788,19 @@ function applyDemoSound() {
 function updateSoundBtn() { $("sound-btn").textContent = demoSound ? "🔊 Demo sound" : "🔈 Demo sound"; }
 $("sound-btn").onclick = () => {
   demoSound = !demoSound; store.set("demoSound", demoSound); updateSoundBtn();
-  applyDemoSound(); if (ytReady) yt.playVideo();
+  applyDemoSound(); if (ytReady && videoActive) yt.playVideo();
 };
 let yt = null, ytReady = false, pendingVideo = null;
+let videoActive = false; // false whenever the player screen is closed
 let vidList = [], vidIdx = 0, vidTriedBackup = false, vidEx = null;
 
 window.onYouTubeIframeAPIReady = function () {
   yt = new YT.Player("yt", {
     playerVars: { autoplay: 1, mute: 1, playsinline: 1, controls: 0, rel: 0, modestbranding: 1, iv_load_policy: 3, disablekb: 1, fs: 0 },
     events: {
-      onReady: () => { ytReady = true; applyDemoSound(); if (pendingVideo) { playClip(pendingVideo); pendingVideo = null; } },
+      onReady: () => { ytReady = true; applyDemoSound(); if (pendingVideo && videoActive) { playClip(pendingVideo); pendingVideo = null; } },
       onStateChange: (e) => {
+        if (!videoActive) { if (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.BUFFERING) yt.pauseVideo(); return; }
         if (e.data === YT.PlayerState.ENDED) nextClipOrLoop();
         if (e.data === YT.PlayerState.CUED) yt.playVideo();
       },
@@ -779,15 +810,19 @@ window.onYouTubeIframeAPIReady = function () {
 };
 (function loadYT() { const s = document.createElement("script"); s.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(s); })();
 
-let endWatch = null;
+function stopVideo() {
+  videoActive = false; pendingVideo = null; vidEx = null;
+  try { if (ytReady) { yt.pauseVideo(); yt.stopVideo(); yt.mute(); } } catch {}
+}
 function playClip(v) {
+  if (!videoActive) return;
   if (!ytReady) { pendingVideo = v; return; }
   $("video-fallback").hidden = true;
   yt.loadVideoById({ videoId: v.id, startSeconds: v.start || 0, endSeconds: v.end || undefined });
   applyDemoSound();
   // If the phone refuses to autoplay with sound, fall back to muted so the demo still runs
   if (demoSound) setTimeout(() => {
-    if (ytReady && yt.getPlayerState() !== YT.PlayerState.PLAYING) { yt.mute(); yt.playVideo(); }
+    if (videoActive && ytReady && yt.getPlayerState() !== YT.PlayerState.PLAYING) { yt.mute(); yt.playVideo(); }
   }, 2500);
   $("video-label").textContent = v.label ? `Demo: ${v.label}` : "Demo";
   $("video-label").hidden = false;
@@ -818,17 +853,19 @@ $("vid-restart").onclick = () => { const v = vidList[vidIdx]; if (ytReady && v) 
 $("vid-next").onclick = () => { if (vidList.length > 1) { vidIdx = (vidIdx + 1) % vidList.length; playClip(vidList[vidIdx]); } };
 
 /* ---------------- Player state ---------------- */
+let sessionLabel = "";
 let steps = [], cur = 0, tick = null, startedAt = 0, previewMode = false;
 let timer = { phase: null, left: 0, total: 0, paused: false, t0: 0 };
 
-function startWorkout() {
+function startWorkout({ warm, cool, label }) {
   unlockAudio();
   previewMode = false;
-  steps = buildSteps(currentDay, includeWarmup);
+  steps = buildSteps(currentDay, warm, cool);
   cur = 0; startedAt = Date.now(); vidEx = null;
-  $("p-day").textContent = currentDay.match ? "Pre-match warm-up" : `${currentDay.name} · ${currentDay.focus}`;
+  sessionLabel = label;
+  $("p-day").textContent = label;
   enterPlayer();
-  say(`Let's go. ${currentDay.match ? "Pre-match warm-up." : currentDay.focus + "."}`);
+  say(`Let's go. ${currentDay.match ? label : currentDay.focus}.`);
   renderStep();
 }
 function startPreview(key) {
@@ -843,14 +880,14 @@ function startPreview(key) {
 function enterPlayer() {
   show("player-screen");
   $("p-body").hidden = false; $("p-done").hidden = true;
+  videoActive = true;
   updateVoiceBtn(); updateSoundBtn(); keepAwake();
   clearInterval(tick); tick = setInterval(onTick, 250);
 }
 function exitPlayer() {
   clearInterval(tick); tick = null;
   try { speechSynthesis.cancel(); } catch {}
-  try { if (ytReady) yt.stopVideo(); } catch {}
-  vidEx = null;
+  stopVideo();
   try { wakeLock && wakeLock.release(); } catch {}
   show(currentDay ? "day" : "home");
 }
@@ -882,6 +919,7 @@ function renderStep() {
 function setLine(st, ex) {
   if (st.preview) return ex.sets ? `${ex.sets} sets` : "";
   if (st.warm) return "Warm-up";
+  if (st.cool) return st.sets > 1 ? `Cool-down · set ${st.set} of ${st.sets}` : "Cool-down";
   return `Set ${st.set} of ${st.sets}`;
 }
 
@@ -989,14 +1027,13 @@ function onTick() {
 
 function finish() {
   clearInterval(tick); tick = null; timer.phase = null;
-  try { if (ytReady) yt.stopVideo(); } catch {}
-  vidEx = null;
+  stopVideo();
   const mins = Math.round((Date.now() - startedAt) / 60000);
   $("p-bar").style.width = "100%";
   $("p-body").hidden = true;
   $("p-done").hidden = false;
   $("p-done").innerHTML = `<div class="emoji">💪</div><h1>Workout complete</h1>
-    <p class="sub">${esc(currentDay.name)} · ${esc(currentDay.focus)} · ${mins} min</p>
+    <p class="sub">${esc(sessionLabel)} · ${mins} min</p>
     <button class="big-btn" id="done-close">Back to days</button>`;
   $("done-close").onclick = () => { currentDay = null; exitPlayer(); show("home"); };
   say("Workout complete. Nice work.");
@@ -1005,7 +1042,6 @@ function finish() {
 
 /* ---------------- Wire up ---------------- */
 $("day-back").onclick = () => { currentDay = null; show("home"); };
-$("start-btn").onclick = startWorkout;
 renderHome();
 </script>
 </body>
