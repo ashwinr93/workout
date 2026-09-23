@@ -532,7 +532,7 @@ const UI = {
     $("days").innerHTML = DAYS.map((day, i) => `
       <button class="day-card${day.d === today ? " today" : ""}" data-i="${i}">
         <span class="day-name label"><span>${day.name}</span>${day.d === today ? '<span class="today">Today</span>' : ""}</span>
-        <span class="focus">${esc(day.focus)}</span>
+        <span class="day-focus">${esc(day.focus)}</span>
         <span class="goal">${esc(day.goal)}</span>
       </button>`).join("");
     $("days").onclick = (e) => { const b = e.target.closest(".day-card"); if (b) this.openDay(DAYS[+b.dataset.i]); };
@@ -627,7 +627,7 @@ const UI = {
   },
   work(st) {
     const ex = EX[st.key], v = variant(st.key, Workout.variantOf(st.key)), hold = ex.time && !st.preview;
-    $("panel").innerHTML = `
+    $("panel").innerHTML = `<div class="panel-body">
       <div class="context">${this.context(st, ex)}</div>
       <h2 class="name">${esc(v.name)}</h2>
       ${hold ? `<div class="hold" id="hold"><span class="clock" id="clock"></span><span class="state" id="hold-state"></span></div>`
@@ -638,6 +638,7 @@ const UI = {
         <div class="dots" id="dots">${v.cues.map((_, i) => `<i${i ? "" : ' class="on"'}></i>`).join("")}</div>
       </div>
       <p class="safety">${esc(v.stop)}</p>
+      </div>
       <div class="controls">
         ${st.preview ? `<button class="ctl primary" id="c-done">Close preview</button>`
           : `<button class="ctl" id="c-prev" aria-label="Back">‹</button>${hold ? `<button class="ctl" id="c-pause">Pause</button>` : ""}
@@ -681,7 +682,7 @@ const UI = {
     this.stopCues();
     const nex = next && variant(next.key, Workout.variantOf(next.key));
     const detail = next ? [next.section === "warm" ? "" : `Set ${next.set} of ${next.sets}`, next.side].filter(Boolean).join(" · ") : "";
-    $("panel").innerHTML = `
+    $("panel").innerHTML = `<div class="panel-body">
       <div class="context rest">Rest</div>
       <div class="rest-main">
         <div class="ring">
@@ -691,6 +692,7 @@ const UI = {
         </div>
         ${nex ? `<div class="rest-info"><div class="upnext"><div class="label">Up next</div><h3>${esc(nex.name)}</h3>${detail ? `<div class="muted">${esc(detail)}</div>` : ""}</div>
         <div class="focus"><div class="label">Focus</div><p>${esc(nex.key)}</p></div></div>` : ""}
+      </div>
       </div>
       <div class="controls">
         <button class="ctl" id="c-prev" aria-label="Back">‹</button>

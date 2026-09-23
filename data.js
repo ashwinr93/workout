@@ -129,7 +129,7 @@ const EX = {
   },
   floorpress: {
     name: "Floor Press", sets: 3, reps: "10–12", unit: "reps", rest: 90,
-    key: "Palms facing each other; the floor limits the range",
+    key: "Palms in; the floor limits the range",
     why: "Protects the front of the shoulder joint.",
     cues: [
       "Lie on the floor with knees bent and feet flat",
@@ -309,7 +309,7 @@ const EX = {
   // ---------- Friday: Upper B ----------
   seatedohp: {
     name: "Seated Neutral Overhead Press", sets: 3, reps: "10–12", unit: "reps", rest: 90,
-    key: "Press slightly in front of you, not straight out to the sides",
+    key: "Press slightly forward, not out to the sides",
     why: "Palms facing in, elbows slightly forward, core braced.",
     cues: [
       "Sit upright with your back supported and kick the dumbbells up to shoulder height",

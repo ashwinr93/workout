@@ -240,7 +240,21 @@
     return { name: "Sound buttons & video sound", steps: 10, lines: 0, fails };
   }
 
-  /* ---------- cues and controls fit on screen at the current window size */
+  /* ---------- the coaching panel fits the current window size: nothing overlaps, nothing needs
+     scrolling, and the buttons sit at the bottom of the screen */
+  function panelProblems(label) {
+    const out = [], body = $("panel").querySelector(".panel-body"), controls = $("panel").querySelector(".controls");
+    if (body.scrollHeight > body.clientHeight + 1) out.push(`${label}: doesn't fit (needs scrolling)`);
+    const kids = [...body.children].filter((k) => k.offsetParent && k.getBoundingClientRect().height > 0);
+    for (let a = 0; a < kids.length - 1; a++) {
+      const r1 = kids[a].getBoundingClientRect(), r2 = kids[a + 1].getBoundingClientRect();
+      if (r1.bottom > r2.top + 0.5) out.push(`${label}: ${kids[a].className || kids[a].tagName} overlaps ${kids[a + 1].className || kids[a + 1].tagName}`);
+    }
+    const cues = $("cues"), dots = $("dots");
+    if (cues && dots && dots.offsetParent && cues.getBoundingClientRect().bottom > dots.getBoundingClientRect().top + 0.5) out.push(`${label}: cue text overlaps the dots`);
+    if ($("player").getBoundingClientRect().bottom - controls.getBoundingClientRect().bottom > 40) out.push(`${label}: buttons aren't at the bottom of the screen`);
+    return out;
+  }
   function layoutCheck() {
     const fails = [];
     openDay(0); Workout.start({ warm: true, cool: true, label: "layout" });
@@ -248,19 +262,15 @@
       store.set("demos", { [key]: vi }); Video.key = null;
       Workout.steps = [{ type: "work", key, set, sets: EX[key].sets || 1, side, section: "main" }]; Workout.cur = 0; Workout.render();
       const items = [...$("cues").children], oneAtATime = items.filter((li) => getComputedStyle(li).display !== "none").length === 1;
-      const panel = $("panel").getBoundingClientRect(), name = $("panel").querySelector(".name");
+      const name = $("panel").querySelector(".name");
       if (name.getBoundingClientRect().height > 2.5 * parseFloat(getComputedStyle(name).lineHeight || getComputedStyle(name).fontSize)) fails.push(`${key}: name wraps to 3+ lines`);
-      items.forEach((li, i) => {
-        if (oneAtATime) UI.showCue(i);
-        if ($("panel").querySelector(".controls").getBoundingClientRect().bottom > panel.bottom + 1) fails.push(`${key}: buttons pushed off screen`);
-        if (oneAtATime && li.scrollHeight > li.parentElement.clientHeight + 2) fails.push(`${key} cue ${i + 1} cut off`);
-      });
+      items.forEach((_, i) => { if (oneAtATime) UI.showCue(i); fails.push(...panelProblems(`${key}${vi ? " (variant " + (vi + 1) + ")" : ""}${oneAtATime ? " cue " + (i + 1) : ""}`)); });
     }
     store.set("demos", {});
     // rest screens, with each exercise as "up next"
     for (const key of Object.keys(EX)) {
       Workout.steps = [{ type: "rest", dur: 90 }, { type: "work", key, set: 2, sets: 3, side: "Left side", section: "main" }]; Workout.cur = 0; Workout.render();
-      if ($("panel").querySelector(".controls").getBoundingClientRect().bottom > $("panel").getBoundingClientRect().bottom + 1) fails.push(`rest before ${key}: buttons pushed off screen`);
+      fails.push(...panelProblems(`rest before ${key}`));
     }
     Workout.exit();
     return { name: `Layout ${innerWidth}×${innerHeight}`, steps: 0, lines: 0, fails: [...new Set(fails)] };

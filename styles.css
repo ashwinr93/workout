@@ -45,7 +45,7 @@ h1, h2, h3, p { margin: 0; }
   padding: 16px; display: flex; flex-direction: column; gap: 4px; min-height: 108px;
 }
 .day-card .day-name { display: flex; justify-content: space-between; }
-.day-card .focus { font-size: 19px; font-weight: 650; }
+.day-card .day-focus { font-size: 19px; font-weight: 650; }
 .day-card .goal { color: var(--muted); font-size: 13px; }
 .day-card.today { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
 .day-card.today .today { color: var(--accent); }
@@ -89,7 +89,8 @@ h1, h2, h3, p { margin: 0; }
 .big-btn { background: var(--accent); color: var(--accent-ink); font-weight: 750; font-size: 18px; padding: 15px 30px; border-radius: 999px; min-width: 240px; }
 
 /* ------------------------------------------------------------------ Player */
-#player { position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--bg);
+#player { position: fixed; top: 0; left: 0; right: 0; height: 100vh; height: 100dvh;   /* the visible screen, also as a Home Screen app */
+  display: flex; flex-direction: column; background: var(--bg);
   padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
 
 /* top bar */
@@ -106,7 +107,6 @@ h1, h2, h3, p { margin: 0; }
 .sound { color: var(--muted); font-size: 13px; font-weight: 600; min-width: 64px; }
 .sound.on { color: var(--accent); background: var(--accent-soft); }
 .sound.on.idle { opacity: .45; }             /* chosen, but this demo has no voice */
-.rotate-hint { display: none; }
 
 /* body: video left, coaching panel right */
 .stage { flex: 1; min-height: 0; display: grid; grid-template-columns: 1.3fr 1fr; }
@@ -118,8 +118,11 @@ h1, h2, h3, p { margin: 0; }
   color: var(--muted); background: #000; text-align: center; padding: 20px; }
 .video .fallback a { color: var(--accent); }
 
+/* coaching panel: content that never squeezes (scrolls if it must) + buttons pinned to the bottom */
 .panel { display: flex; flex-direction: column; min-height: 0; overflow: hidden;
   padding: clamp(10px, 2.6vh, 26px) clamp(14px, 2.2vw, 28px); gap: clamp(6px, 1.6vh, 14px); }
+.panel-body { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: inherit; }
+.panel-body > * { flex-shrink: 0; }
 .context { font-size: clamp(12px, 2.4vh, 14px); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
 .context .side { color: var(--text); }
 .context.rest { color: var(--rest); }
@@ -134,8 +137,8 @@ h1, h2, h3, p { margin: 0; }
 
 .focus { border-left: 3px solid var(--accent); padding: 2px 0 2px 12px; }
 .focus p { font-size: clamp(15px, 3.4vh, 20px); font-weight: 650; line-height: 1.25; }
-.form { min-height: 0; display: flex; flex-direction: column; gap: 4px; }
-.cues { list-style: none; margin: 0; padding: 0; font-size: clamp(14px, 3vh, 17px); line-height: 1.35; overflow: hidden; cursor: pointer; }
+.form { display: flex; flex-direction: column; gap: 6px; }
+.cues { list-style: none; margin: 0; padding: 0; font-size: clamp(14px, 3vh, 17px); line-height: 1.35; cursor: pointer; }
 .cues li { color: var(--faint); padding: 3px 0; transition: color .25s; }
 .cues li.on { color: var(--text); }
 .dots { display: none; gap: 5px; }
@@ -144,7 +147,7 @@ h1, h2, h3, p { margin: 0; }
 .safety { font-size: clamp(12px, 2.5vh, 14px); color: var(--caution); line-height: 1.3; }
 .safety::before { content: "⚠︎ "; }
 
-.controls { margin-top: auto; display: flex; gap: 8px; }
+.controls { flex-shrink: 0; display: flex; gap: 8px; }
 .ctl { min-height: clamp(40px, 8vh, 52px); padding: 0 16px; border-radius: 12px; background: var(--panel-2); font-weight: 600; font-size: clamp(14px, 3vh, 16px); }
 .ctl.primary { flex: 1; background: var(--accent); color: var(--accent-ink); font-weight: 800; font-size: clamp(16px, 3.6vh, 20px); }
 .ctl.primary.rest { background: var(--rest); color: #041426; }
@@ -172,17 +175,17 @@ h1, h2, h3, p { margin: 0; }
   .tool { min-height: 34px; }
   .sound { min-width: 56px; }
   .stage { grid-template-columns: 1.12fr 1fr; }
-  .panel { padding: 8px 14px 8px; gap: 5px; }
+  .panel { padding: 6px 14px; gap: 4px; }
   .context { font-size: 11px; }
   .name { font-size: 22px; }
   .target { font-size: 14px; padding: 3px 12px; }
   .hold .clock { font-size: 40px; }
-  .focus p { font-size: 15.5px; line-height: 1.22; }
+  .focus p { font-size: 15px; line-height: 1.2; }
   .cues { font-size: 16px; line-height: 1.28; min-height: 2.56em; }
   .cues li { display: none; padding: 0; }
   .cues li.on { display: block; }
   .dots { display: flex; }
-  .safety { font-size: 12.5px; }
+  .safety { font-size: 12px; line-height: 1.25; }
   .ctl { min-height: 40px; font-size: 15px; }
   .ctl.primary { font-size: 17px; }
   .rest-main { flex-direction: row; align-items: center; gap: 16px; }   /* ring beside "up next" on short screens */
@@ -193,16 +196,19 @@ h1, h2, h3, p { margin: 0; }
 
 /* ------------------------------------------------------------------ Phone, portrait */
 @media (orientation: portrait) and (max-width: 700px) {
+  .bar { padding-top: 8px; }                    /* breathing room under the Dynamic Island */
   .bar .where .line { display: none; }
   .demos .count, #vid-restart { display: none; }
   .tool { min-height: 44px; min-width: 44px; }
-  .rotate-hint { display: block; font-size: 12px; color: var(--muted); text-align: center; padding: 4px; background: var(--panel); }
   .stage { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
   .video { aspect-ratio: 16/9; }
+  .panel { padding: 12px 16px 10px; gap: 8px; }
   .name { font-size: 26px; }
   .cues li { display: none; padding: 0; }
   .cues li.on { display: block; }
   .cues { min-height: 2.7em; }
   .dots { display: flex; }
-  .ring { width: 160px; }
+  .rest-main { flex-direction: row; align-items: center; gap: 16px; }
+  .ring { width: 118px; flex: none; }
+  .ring .num { font-size: 40px; }
 }
