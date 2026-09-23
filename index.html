@@ -1,0 +1,991 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0e1116">
+<title>Joint-Friendly Workout</title>
+<style>
+  :root {
+    --bg: #0e1116;
+    --panel: #171b22;
+    --panel-2: #1f252e;
+    --line: #2a313c;
+    --text: #eef1f5;
+    --muted: #9aa4b2;
+    --accent: #3ddc97;
+    --accent-ink: #062016;
+    --warn: #ff6b5e;
+    --rest: #5aa9ff;
+    --radius: 14px;
+    --pad-x: max(16px, env(safe-area-inset-left, 0px));
+    --pad-r: max(16px, env(safe-area-inset-right, 0px));
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font: 15px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
+  button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+  [hidden] { display: none !important; }
+  .screen { min-height: 100%; padding: max(16px, env(safe-area-inset-top, 0px)) var(--pad-r) max(16px, env(safe-area-inset-bottom, 0px)) var(--pad-x); }
+
+  /* ---------- Home ---------- */
+  .home-wrap { max-width: 980px; margin: 0 auto; }
+  h1 { font-size: clamp(22px, 4vw, 32px); margin: 4px 0 2px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); margin: 0 0 18px; }
+  .days { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .day { text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; min-height: 104px; }
+  .day:active { transform: scale(0.98); }
+  .day .dname { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); display: flex; justify-content: space-between; }
+  .day .dfocus { font-size: 19px; font-weight: 650; }
+  .day .dgoal { color: var(--muted); font-size: 13px; }
+  .day.today { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+  .today-tag { color: var(--accent); font-weight: 700; }
+  .rules { margin-top: 20px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+  .rules h3 { margin: 0 0 6px; font-size: 14px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .rules ul { margin: 0; padding-left: 18px; }
+  .rules li { margin: 4px 0; }
+  .tip { margin-top: 14px; color: var(--muted); font-size: 13px; }
+
+  /* ---------- Day overview ---------- */
+  .topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .back { padding: 8px 12px; border-radius: 10px; background: var(--panel-2); }
+  .ex-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0 90px; }
+  .ex-section { color: var(--muted); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; margin: 12px 0 2px; }
+  .ex-row { display: flex; align-items: center; gap: 12px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; padding: 10px 12px; text-align: left; width: 100%; }
+  .ex-row img { width: 88px; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000; flex: none; }
+  .ex-row .t { font-weight: 600; }
+  .ex-row .m { color: var(--muted); font-size: 13px; }
+  .ex-row .play { margin-left: auto; color: var(--muted); font-size: 13px; flex: none; }
+  .toggle { display: flex; align-items: center; gap: 10px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; padding: 10px 12px; width: 100%; text-align: left; }
+  .switch { width: 42px; height: 24px; border-radius: 12px; background: var(--line); position: relative; flex: none; transition: background .15s; }
+  .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left .15s; }
+  .toggle[aria-pressed="true"] .switch { background: var(--accent); }
+  .toggle[aria-pressed="true"] .switch::after { left: 21px; }
+  .start-bar { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px var(--pad-r) max(12px, env(safe-area-inset-bottom, 0px)) var(--pad-x);
+    background: linear-gradient(transparent, var(--bg) 35%); display: flex; justify-content: center; }
+  .big-btn { background: var(--accent); color: var(--accent-ink); font-weight: 750; font-size: 18px; padding: 14px 28px;
+    border-radius: 999px; min-width: 240px; }
+  .big-btn:active { transform: scale(0.97); }
+  .rest-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-top: 12px; }
+
+  /* ---------- Player ---------- */
+  #player-screen { position: fixed; inset: 0; display: flex; flex-direction: column; background: #000;
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+  .p-head { display: flex; align-items: center; gap: 10px; padding: 6px 12px; background: var(--bg); font-size: 13px; color: var(--muted); }
+  .p-head .grow { flex: 1; min-width: 0; }
+  .progress { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; margin-top: 4px; }
+  .progress > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+  .icon-btn { padding: 6px 10px; border-radius: 8px; background: var(--panel-2); color: var(--text); font-size: 13px; white-space: nowrap; }
+  .icon-btn.danger { background: var(--warn); color: #fff; }
+  .p-body { flex: 1; display: grid; grid-template-columns: 1.35fr 1fr; min-height: 0; background: var(--bg); }
+  .video-pane { position: relative; background: #000; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .video-box { position: relative; width: 100%; height: 100%; }
+  #yt, .video-box iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; pointer-events: none; }
+  .video-label { position: absolute; left: 10px; bottom: 10px; background: rgba(0,0,0,.65); color: #fff; font-size: 12px;
+    padding: 4px 8px; border-radius: 6px; pointer-events: none; }
+  .video-tools { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 6px; }
+  .video-tools button { background: rgba(0,0,0,.65); color: #fff; font-size: 12px; padding: 5px 9px; border-radius: 6px; }
+  .video-fallback { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    color: var(--muted); text-align: center; padding: 20px; background: #000; }
+  .video-fallback a { color: var(--accent); }
+
+  .info-pane { display: flex; flex-direction: column; padding: clamp(10px, 2.2vh, 22px) clamp(12px, 2vw, 24px); gap: clamp(6px, 1.4vh, 12px); min-height: 0; overflow: hidden; }
+  .phase { font-size: clamp(11px, 2.4vh, 14px); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+  .phase.rest { color: var(--rest); }
+  .ex-name { font-size: clamp(18px, 5.2vh, 34px); font-weight: 750; line-height: 1.12; letter-spacing: -0.01em; }
+  .target { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .target .big { font-size: clamp(26px, 9vh, 60px); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+  .target .unit { color: var(--muted); font-size: clamp(12px, 3vh, 18px); }
+  .setnote { color: var(--rest); font-weight: 600; font-size: clamp(12px, 3vh, 16px); }
+  .key { color: var(--warn); font-weight: 700; font-size: clamp(13px, 3.3vh, 19px); line-height: 1.25; }
+  .cues { margin: 0; padding-left: 1.1em; font-size: clamp(12px, 2.9vh, 16px); line-height: 1.35; overflow: auto; min-height: 0; }
+  .cues li { margin: 0 0 .25em; }
+  .stop { font-size: clamp(11px, 2.7vh, 14px); color: #ffb4ad; background: rgba(255,107,94,.1); border-left: 3px solid var(--warn); padding: 6px 9px; border-radius: 0 8px 8px 0; }
+  .controls { margin-top: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .ctl { padding: clamp(8px, 2.2vh, 14px) clamp(12px, 1.6vw, 18px); border-radius: 12px; background: var(--panel-2); font-weight: 600; font-size: clamp(13px, 3vh, 16px); }
+  .ctl.primary { background: var(--accent); color: var(--accent-ink); flex: 1; font-size: clamp(15px, 3.8vh, 20px); font-weight: 800; }
+  .ctl.primary.rest { background: var(--rest); color: #041426; }
+  .ctl:active { transform: scale(0.97); }
+  .clock { font-variant-numeric: tabular-nums; }
+  .ring { position: relative; width: clamp(90px, 30vh, 190px); aspect-ratio: 1; align-self: center; }
+  .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring .num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: clamp(26px, 10vh, 64px); font-weight: 800; font-variant-numeric: tabular-nums; }
+  .upnext { font-size: clamp(12px, 3vh, 16px); color: var(--muted); }
+  .upnext b { color: var(--text); }
+
+  .done-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 20px; background: var(--bg); }
+  .done-wrap .emoji { font-size: 56px; }
+
+  .rotate-hint { display: none; }
+  @media (orientation: portrait) and (max-width: 700px) {
+    .p-body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    .video-pane { aspect-ratio: 16/9; }
+    .rotate-hint { display: block; font-size: 12px; color: var(--muted); text-align: center; padding: 4px; background: var(--panel); }
+    .ex-name { font-size: 24px; }
+    .target .big { font-size: 44px; }
+    .cues { font-size: 15px; }
+    .key { font-size: 16px; }
+    .stop { font-size: 13px; }
+    .ctl { font-size: 15px; padding: 12px 14px; }
+    .ring { width: 150px; }
+    .ring .num { font-size: 48px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= HOME ================= -->
+<section id="home" class="screen">
+  <div class="home-wrap">
+    <h1>Joint-Friendly Strength &amp; Flexibility</h1>
+    <p class="sub">4-day upper/lower split · Dumbbells &amp; bench · Football-optimized</p>
+    <div class="days" id="days"></div>
+    <div class="rules">
+      <h3>Core joint rules</h3>
+      <ul>
+        <li><b>Shoulder protection:</b> use a neutral grip (palms facing each other) and 30°–45° inclines. Do 2 pulling sets for every pushing set.</li>
+        <li><b>Knee protection:</b> focus on the posterior chain (hamstrings and glutes) and keep your shins vertical to avoid shear on the kneecap.</li>
+      </ul>
+    </div>
+    <p class="tip">For the TV: turn off Rotation Lock, hold the phone sideways, then open Control Center → Screen Mirroring.</p>
+  </div>
+</section>
+
+<!-- ================= DAY OVERVIEW ================= -->
+<section id="day" class="screen" hidden>
+  <div class="home-wrap">
+    <div class="topbar">
+      <button class="back" id="day-back">‹ Days</button>
+      <div>
+        <div class="sub" style="margin:0" id="day-kicker"></div>
+        <h1 style="margin:0" id="day-title"></h1>
+      </div>
+    </div>
+    <div id="day-body"></div>
+  </div>
+  <div class="start-bar" id="start-bar"><button class="big-btn" id="start-btn">Start workout ▶</button></div>
+</section>
+
+<!-- ================= PLAYER ================= -->
+<section id="player-screen" hidden>
+  <div class="p-head">
+    <button class="icon-btn" id="exit-btn">✕ Exit</button>
+    <div class="grow">
+      <div><span id="p-day"></span> · step <span id="p-step"></span> · <span class="clock" id="p-elapsed">0:00</span></div>
+      <div class="progress"><i id="p-bar"></i></div>
+    </div>
+    <button class="icon-btn" id="voice-btn">🔊 Voice</button>
+  </div>
+  <div class="rotate-hint">Turn the phone sideways to fill the TV</div>
+  <div class="p-body" id="p-body">
+    <div class="video-pane">
+      <div class="video-box"><div id="yt"></div></div>
+      <div class="video-fallback" id="video-fallback" hidden></div>
+      <div class="video-label" id="video-label"></div>
+      <div class="video-tools">
+        <button id="vid-restart" title="Restart clip">↺</button>
+        <button id="vid-next" title="Next demo" hidden>Next demo ›</button>
+      </div>
+    </div>
+    <div class="info-pane" id="info"></div>
+  </div>
+  <div class="done-wrap" id="p-done" hidden></div>
+</section>
+
+<script>
+/* =====================================================================
+   EXERCISE LIBRARY
+   videos: YouTube demo clips (id). Optional start/end in seconds to trim
+   a clip; the clip loops. If a video fails, `backup` is tried instead.
+   ===================================================================== */
+const EX = {
+  // ---------- Warm-up ----------
+  catcow: {
+    name: "Cat-Cow → Child's Pose", reps: "8", unit: "slow reps",
+    key: "Move slowly, with your breath",
+    why: "Loosens the spine and shoulders without putting load on the joints.",
+    cues: [
+      "Get on all fours: hands under shoulders, knees under hips",
+      "Breathe in: let the belly drop, lift the chest and tailbone (Cow)",
+      "Breathe out: round the back up and tuck the chin (Cat)",
+      "Sit your hips back toward your heels, arms long (Child's Pose), then return"
+    ],
+    stop: "Stop if you feel sharp back pain. If sitting back hurts your knees, put a cushion behind them.",
+    videos: [{ id: "Kegpy6v-NfA" }], backup: "vuyUwtHl694"
+  },
+  armthread: {
+    name: "Arm Circles + Thread the Needle", reps: "10", unit: "each side",
+    key: "Twist from the upper back, not the lower back",
+    why: "Rotates the upper back and makes room at the top of the shoulder.",
+    cues: [
+      "Arm circles: arms straight out to the sides, go from small to big circles, then reverse",
+      "Thread the needle: on all fours, slide one arm under your body and lower that shoulder toward the floor",
+      "Then open up and reach the same arm to the ceiling, eyes following your hand",
+      "Keep your hips still, stacked over your knees"
+    ],
+    stop: "If you feel a pinch at the top or front of the shoulder, make the circles smaller.",
+    videos: [{ id: "3STTSi_jdHk", label: "Arm circles" }, { id: "YuAJ1i76Hek", label: "Thread the needle" }]
+  },
+  hip9090: {
+    name: "90/90 Hip Swivels", reps: "8", unit: "each side",
+    key: "Your knees move; your feet stay planted",
+    why: "Rotates the hips in both directions without twisting the knee.",
+    cues: [
+      "Sit tall, feet wider than your hips, knees bent about 90°",
+      "Put your hands on the floor behind you if you need support",
+      "Drop both knees to one side so each leg makes a 90° angle",
+      "Swivel slowly to the other side. That's 1 rep"
+    ],
+    stop: "If the inside or outside of your knee hurts, set your feet wider and don't go as far.",
+    videos: [{ id: "m51AZSXMvEA" }], backup: "YxECcOkUCEY"
+  },
+  revlungetwist: {
+    name: "Reverse Lunge + Twist", reps: "6", unit: "each side",
+    key: "Step BACK and keep the front shin vertical",
+    why: "Stepping backward keeps the front shin vertical, which protects the front knee.",
+    cues: [
+      "Step one foot back and lower the back knee toward the floor",
+      "Keep the front knee over the ankle, not out past the toes",
+      "Turn your chest toward the front leg",
+      "Push through the front heel to stand back up"
+    ],
+    stop: "If your front knee hurts, take a shorter step and don't go as low.",
+    videos: [{ id: "LrIE5onzj68" }], backup: "UuBs5AqO3JY"
+  },
+
+  // ---------- Monday: Upper A ----------
+  inclinepress: {
+    name: "Neutral-Grip Incline DB Press", sets: 3, reps: "8–10", unit: "reps", rest: 90,
+    key: "Bench at 30°–45°, palms facing each other",
+    why: "Avoids pinching the shoulder. Keep your elbows at 45°.",
+    cues: [
+      "Set the bench to 30–45°. Don't go steeper",
+      "Pull your shoulder blades back and down into the bench",
+      "Lower the dumbbells to chest level, elbows about 45° from your body",
+      "Press up and slightly in. Keep your feet flat and don't arch much"
+    ],
+    stop: "If you feel a pinch at the front of the shoulder, don't lower as far, or use a lighter weight.",
+    videos: [{ id: "2SU_K4-knrc" }], backup: "SMO17ItT5Wc"
+  },
+  sarow: {
+    name: "Single-Arm DB Row", sets: 3, reps: "10–12", unit: "reps each side", rest: 60,
+    key: "Pull toward your HIP, not your chest",
+    why: "Keep your back flat and pause for 1 second at the top.",
+    cues: [
+      "Put one hand and one knee on the bench, back flat like a table",
+      "Let the dumbbell hang, then drive your elbow back toward your hip",
+      "Pause for 1 second at the top",
+      "Lower slowly without twisting your body. Do all reps on one side, then switch"
+    ],
+    stop: "If your lower back strains, brace your core harder or use a lighter weight.",
+    videos: [{ id: "ZRSGpBUVcNw" }], backup: "DMo3HJoawrU"
+  },
+  floorpress: {
+    name: "DB Floor Press", sets: 3, reps: "10–12", unit: "reps", rest: 90,
+    key: "The floor limits how far your shoulders can go",
+    why: "Protects the front of the shoulder joint.",
+    cues: [
+      "Lie on the floor with knees bent and feet flat",
+      "Keep your elbows about 45° from your body",
+      "Lower until your upper arms lightly touch the floor. Pause, don't bounce",
+      "Press up. Palms can face each other"
+    ],
+    stop: "If your elbow or shoulder hurts at the bottom, turn your palms to face each other and use a lighter weight.",
+    videos: [{ id: "T0Y3OBF1bNI" }], backup: "lNdi7VEf2Ew"
+  },
+  csrow: {
+    name: "Chest-Supported Incline Row", sets: 3, reps: "12–15", unit: "reps", rest: 60,
+    key: "Keep your chest glued to the bench",
+    why: "Resting your chest on the bench takes strain off the lower back.",
+    cues: [
+      "Set the bench to 30–45° and lie face down with your chest on the pad",
+      "Let your arms hang straight down",
+      "Row your elbows back and squeeze your shoulder blades together at the top",
+      "Lower slowly. Don't shrug your shoulders toward your ears"
+    ],
+    stop: "If your neck tenses up, tuck your chin and keep your shoulders down.",
+    videos: [{ id: "tZUYS7X50so" }], backup: "vmX58YYK3-8"
+  },
+  facepull: {
+    name: "DB Face Pulls / Band Pull-Aparts", sets: 3, reps: "15–20", unit: "reps", rest: 60,
+    key: "Use a LIGHT weight; good form matters more than load",
+    why: "Key for the rear shoulders and keeping the shoulder blades stable.",
+    cues: [
+      "Dumbbells: lean forward (or lie on an incline bench) and pull the weights up toward your face",
+      "Band: hold it at shoulder height and pull it apart until it touches your chest",
+      "Point your thumbs back and squeeze the rear shoulders for 1 second",
+      "Return slowly"
+    ],
+    stop: "If anything pinches, go lighter.",
+    videos: [{ id: "nzTY7j9ocR8", label: "DB face pull" }, { id: "stwYTTPXubo", label: "Band pull-apart" }]
+  },
+
+  // ---------- Tuesday: Lower A ----------
+  rdl: {
+    name: "DB Romanian Deadlift (RDL)", sets: 3, reps: "8–10", unit: "reps", rest: 90,
+    key: "Hinge at the hips with soft knees",
+    why: "Puts no shear on the knee and protects the kneecap tendon.",
+    cues: [
+      "Stand tall with the dumbbells in front of your thighs",
+      "Push your hips BACK, knees slightly bent and staying still",
+      "Slide the weights down your legs until you feel a hamstring stretch (about mid-shin)",
+      "Keep your back flat and chest up, then squeeze your glutes to stand"
+    ],
+    stop: "If your lower back rounds or hurts, stop higher up the shin.",
+    videos: [{ id: "5WxMW-Fu5KU" }], backup: "hQgFixeXdZo"
+  },
+  boxsquat: {
+    name: "DB Box Squat (to Bench)", sets: 3, reps: "10–12", unit: "reps", rest: 90,
+    key: "Keep your shins vertical and sit BACK",
+    why: "Keeps the knees from pushing forward. Drive through your heels.",
+    cues: [
+      "Stand in front of the bench holding a dumbbell at your chest",
+      "Sit your hips back until you lightly touch the bench. Don't drop onto it",
+      "Keep your shins close to vertical and your chest up",
+      "Push through your heels to stand"
+    ],
+    stop: "If your knees hurt, use a higher surface to sit to.",
+    videos: [{ id: "o8R9B1t-Kv0" }], backup: "DqWrOnzZ5No"
+  },
+  slbridge: {
+    name: "Single-Leg Glute Bridge", sets: 3, reps: "12", unit: "reps each side", rest: 60,
+    key: "Squeeze for 2 seconds at the top",
+    why: "Lying flat takes load off the spine and isolates the glutes.",
+    cues: [
+      "Lie on your back with one foot flat and the other leg straight or pulled to your chest",
+      "Push through the heel and lift your hips",
+      "Keep your hips level. Don't let one side drop",
+      "Hold for 2 seconds and lower slowly. Do all reps on one side, then switch"
+    ],
+    stop: "If your hamstring cramps, move your foot closer to your hips.",
+    videos: [{ id: "vdmlNaXSjd4" }], backup: "AVAXhy6pl7o"
+  },
+  calfraise: {
+    name: "Standing DB Calf Raises", sets: 3, reps: "15", unit: "reps", rest: 45,
+    key: "Go slowly and hold the top for 2 seconds",
+    why: "Builds ankle and Achilles stability.",
+    cues: [
+      "Stand holding the dumbbells, on a step edge if you have one",
+      "Rise onto the balls of your feet as high as you can",
+      "Hold for 2 seconds",
+      "Lower slowly into a full stretch"
+    ],
+    stop: "If your Achilles hurts, skip the step and use a smaller range.",
+    videos: [{ id: "wxwY7GXxL4k" }], backup: "ADIDoYt_ko4"
+  },
+  planktaps: {
+    name: "Plank with Shoulder Taps", sets: 3, time: 45, rest: 60,
+    key: "Keep your hips square; no rocking",
+    why: "Keeps the spine from twisting. Tap slowly.",
+    cues: [
+      "Get into a high plank, hands under your shoulders",
+      "Set your feet wider for more stability",
+      "Slowly tap each hand to the opposite shoulder, alternating sides",
+      "Squeeze your glutes and brace your abs"
+    ],
+    stop: "If your wrists or lower back hurt, drop to your knees.",
+    videos: [{ id: "8rgurWd-PB8" }], backup: "0PrTUpElJ44"
+  },
+
+  // ---------- Wednesday: Active recovery ----------
+  couch: {
+    name: "Couch Stretch", sets: 2, time: 120, perSide: true, rest: 20,
+    key: "Squeeze the glute of your back leg",
+    why: "Releases tight quads and hip flexors that pull on the kneecap tendon.",
+    cues: [
+      "Put your back knee on a cushion against the couch or wall, with the shin running up it",
+      "Put your front foot flat on the floor in a lunge",
+      "Tuck your pelvis under and squeeze the back glute",
+      "Gradually come more upright and keep breathing"
+    ],
+    stop: "If your kneecap feels pressure, add padding or move the knee farther from the wall.",
+    videos: [{ id: "fHKndvWwenc" }], backup: "Fg-lwNBzVV8"
+  },
+  doorway: {
+    name: "Doorway Chest Stretch", sets: 2, time: 120, rest: 20,
+    key: "Gentle stretch; there should be no shoulder pain",
+    why: "Opens the chest without straining the front of the shoulder.",
+    cues: [
+      "Put your forearms on the door frame, elbows at or just below shoulder height",
+      "Step one foot through the doorway",
+      "Lean gently until you feel a stretch across your chest",
+      "Keep your shoulders down and ribs in"
+    ],
+    stop: "If you feel pinching or tingling down the arm, lower your elbows.",
+    videos: [{ id: "CEQMx4zFwYs" }], backup: "M850sCj9LHQ"
+  },
+  tibraise: {
+    name: "Tibialis Raises", sets: 2, reps: "20", unit: "reps", rest: 30,
+    key: "Lift your toes high and lower them slowly",
+    why: "Strengthens the shin muscles that slow you down, which helps protect the knees in football.",
+    cues: [
+      "Lean your back against a wall with your heels about 30 cm away",
+      "Pull your toes up toward your shins as high as you can",
+      "Lower slowly without slapping your feet down",
+      "Keep your knees straight"
+    ],
+    stop: "If your shins cramp, shorten the set and shake it out.",
+    videos: [{ id: "VzIcGAgBiaM" }], backup: "OPEuhclsTUQ"
+  },
+
+  // ---------- Friday: Upper B ----------
+  seatedohp: {
+    name: "Seated Neutral Overhead Press", sets: 3, reps: "10–12", unit: "reps", rest: 90,
+    key: "Press slightly in front of you, not straight out to the sides",
+    why: "Palms facing in, elbows slightly forward, core braced.",
+    cues: [
+      "Sit on an upright or nearly upright bench with your back supported",
+      "Palms face each other, elbows slightly in front of your body",
+      "Press up so the weights end slightly in front of your ears",
+      "Brace your core and keep your ribs down. Don't arch your lower back"
+    ],
+    stop: "If your shoulder pinches, shorten the range or tilt the bench back a little.",
+    videos: [{ id: "7oH0algsdww" }], backup: "LED1bhzkfLU"
+  },
+  pullover: {
+    name: "DB Lat Pullovers", sets: 3, reps: "12", unit: "reps", rest: 60,
+    key: "Soft elbows; only go as far as is comfortable",
+    why: "Only lower to a comfortable shoulder stretch.",
+    cues: [
+      "Lie on the bench and hold one dumbbell with both hands over your chest",
+      "Keep a slight bend in your elbows and don't let it change",
+      "Lower the weight behind your head until you feel a comfortable stretch",
+      "Pull it back over your chest using your lats"
+    ],
+    stop: "If you feel shoulder discomfort, stop earlier.",
+    videos: [{ id: "jQjWlIwG4sI" }], backup: "ieFKuQAGYIA"
+  },
+  hammercurl: {
+    name: "Incline DB Hammer Curls", sets: 3, reps: "12", unit: "reps", rest: 60,
+    key: "Palms facing in; keep your upper arms still",
+    why: "The neutral grip protects the elbow and shoulder tendons.",
+    cues: [
+      "Set the bench to 45–60° and let your arms hang",
+      "Curl up with your thumbs pointing up",
+      "Keep your elbows back and don't swing",
+      "Lower slowly all the way down"
+    ],
+    stop: "If the front of your shoulder strains at the bottom, raise the bench.",
+    videos: [{ id: "1Z6XiaBxwHQ" }], backup: "9XWLM49qZvM"
+  },
+  triceps: {
+    name: "Overhead / Floor Triceps Extension", sets: 3, reps: "12–15", unit: "reps", rest: 60,
+    key: "Keep your elbows tucked in",
+    why: "Stop right away if your shoulder pinches.",
+    cues: [
+      "Floor: lie down, palms facing each other, and lower the dumbbells beside your head",
+      "Overhead: sit and hold one dumbbell with both hands, lowering it behind your head",
+      "Keep your upper arms still; only the elbows bend",
+      "Straighten your arms fully and squeeze"
+    ],
+    stop: "If your shoulder pinches, stop right away and use the floor version.",
+    videos: [{ id: "Py4I0J6i2kY", label: "Floor version" }, { id: "HADoxgsslvw", label: "Overhead version" }]
+  },
+  ytw: {
+    name: "Light DB Y-T-W Raises", sets: 2, reps: "10", unit: "reps of each letter", rest: 60,
+    key: "Use 2–4 kg at most",
+    why: "Rebuilds the small stabilizing muscles of the rotator cuff.",
+    cues: [
+      "Lie face down on an incline bench with your arms hanging",
+      "Y: raise your arms overhead at 45°, thumbs up",
+      "T: raise your arms straight out to the sides",
+      "W: bend your elbows and squeeze your shoulder blades back and down. Go slowly"
+    ],
+    stop: "If anything hurts, use lighter dumbbells or none at all.",
+    videos: [{ id: "QdGTI4Lshg4" }], backup: "3wgOMSF9LG8"
+  },
+
+  // ---------- Saturday: Lower B ----------
+  dbrevlunge: {
+    name: "DB Reverse Lunges", sets: 3, reps: "10", unit: "reps each side", rest: 90,
+    key: "Step BACKWARD",
+    why: "Keeps the front shin vertical so there's no twisting force on the knee.",
+    cues: [
+      "Hold a dumbbell in each hand and stand tall",
+      "Step back and lower until both knees are at about 90°",
+      "Keep the front knee over the ankle and your weight in the front heel",
+      "Push through the front heel to return"
+    ],
+    stop: "If your front knee hurts, take a shorter step, don't go as deep, or use lighter weights.",
+    videos: [{ id: "UoQcIFYTN_o" }], backup: "RZKXLMxPF_I"
+  },
+  sumodl: {
+    name: "DB Sumo / Goblet Deadlift", sets: 3, reps: "10–12", unit: "reps", rest: 90,
+    key: "Wide stance, toes turned slightly out",
+    why: "Less compression on the knees while still loading the glutes.",
+    cues: [
+      "Set your feet wider than your shoulders, toes turned out about 30°",
+      "Hold one dumbbell upright between your legs",
+      "Push your hips back, with your knees following the line of your toes",
+      "Keep your back flat, stand up tall, and squeeze your glutes"
+    ],
+    stop: "If your lower back rounds, shorten the range (put the dumbbell on a block).",
+    videos: [{ id: "De9OUZz5W_I", label: "Sumo" }, { id: "TC2jOPCNYhU", label: "Goblet" }]
+  },
+  stepup: {
+    name: "DB Step-Ups (Low Bench)", sets: 3, reps: "10", unit: "reps each side", rest: 60,
+    key: "Use a step low enough that your knee is at 90° or less",
+    why: "Push through the heel of your leading leg.",
+    cues: [
+      "Place your whole foot on the bench",
+      "Push through that HEEL to stand up tall",
+      "Don't push off with the back foot",
+      "Step down slowly. Do all reps on one side, then switch"
+    ],
+    stop: "If your knee hurts, use a lower step.",
+    videos: [{ id: "DxUNi119Qzs" }], backup: "7AtIjR-QqVA"
+  },
+  suitcase: {
+    name: "Suitcase Carries", sets: 3, reps: "40 m", unit: "(switch hands at 20 m)", rest: 60,
+    key: "Walk tall without leaning",
+    why: "Trains core and side-to-side hip stability.",
+    cues: [
+      "Hold a heavy dumbbell in one hand",
+      "Keep your shoulders level, ribs down, and eyes forward",
+      "Take short, steady steps. Indoors, walk laps",
+      "Switch hands halfway"
+    ],
+    stop: "If you can't stay upright, use a lighter weight.",
+    videos: [{ id: "3RKKnZhhelE" }], backup: "bAnCoDrvXc4"
+  },
+
+  // ---------- Sunday: Static flexibility ----------
+  pigeon: {
+    name: "Pigeon Pose / Figure-4", sets: 1, time: 120, perSide: true, rest: 10,
+    key: "Gentle stretch; no knee pain",
+    why: "Stretches the glutes and the deep hip rotators.",
+    cues: [
+      "Pigeon: one shin across the front of your mat, the other leg straight behind you",
+      "Figure-4 (easier on the knee): lie on your back, cross one ankle over the other knee, and pull that thigh toward you",
+      "Keep your hips square and your spine long",
+      "Breathe slowly and relax into it"
+    ],
+    stop: "If your front knee hurts in pigeon, switch to the lying figure-4.",
+    videos: [{ id: "op-eDU9eNqM", label: "Pigeon" }, { id: "-g0nuyTHMrI", label: "Figure-4" }]
+  },
+  couchSun: null, // filled below (same as couch, 1 set)
+  shoulderstretch: {
+    name: "Cross-Body & Overhead Triceps Stretch", sets: 2, time: 30, perSide: true, rest: 10,
+    setNotes: ["Cross-body stretch", "Overhead triceps stretch"],
+    key: "Keep your shoulder down, away from your ear",
+    why: "Stretches the back of the shoulder capsule.",
+    cues: [
+      "Cross-body: pull one arm across your chest by holding just above the elbow",
+      "Overhead: reach one hand down your back and gently push that elbow with the other hand",
+      "Keep your shoulders relaxed and low",
+      "Aim for a gentle stretch, not pain"
+    ],
+    stop: "If you feel pinching at the front of the shoulder, ease off.",
+    videos: [{ id: "aIq0fLi8iak", label: "Cross-body" }, { id: "_IOHtPSYGbk", label: "Overhead triceps" }]
+  },
+  hamstring: {
+    name: "Hamstring Doorway Stretch", sets: 1, time: 60, perSide: true, rest: 10,
+    key: "Keep your lower back flat on the floor",
+    why: "Stretches the hamstrings without stressing the lower back.",
+    cues: [
+      "Lie on your back in a doorway",
+      "Rest one leg straight up the door frame and keep the other flat through the doorway",
+      "Scoot closer to the frame to make the stretch stronger",
+      "Keep your lower back flat and relax"
+    ],
+    stop: "If you feel tingling down the leg, back off. That's a nerve, not the muscle.",
+    videos: [{ id: "VWk9QD10Xjg" }], backup: "b7k-9CZVYbA"
+  }
+};
+EX.couchSun = Object.assign({}, EX.couch, { sets: 1, rest: 10 });
+
+const WARMUP = ["catcow", "armthread", "hip9090", "revlungetwist"];
+
+// Day index follows JS getDay(): 0 = Sunday
+const DAYS = [
+  { d: 1, name: "Monday", focus: "Upper Body A", goal: "Chest/back strength + shoulder stability", warmup: true,
+    items: ["inclinepress", "sarow", "floorpress", "csrow", "facepull"] },
+  { d: 2, name: "Tuesday", focus: "Lower Body A", goal: "Posterior chain & knee-friendly quads", warmup: true,
+    items: ["rdl", "boxsquat", "slbridge", "calfraise", "planktaps"] },
+  { d: 3, name: "Wednesday", focus: "Active Recovery", goal: "Thoracic spine & hip mobility", warmup: false,
+    items: ["couch", "doorway", "tibraise"] },
+  { d: 4, name: "Thursday", focus: "Football Match", goal: "High-intensity cardio & agility", warmup: true, items: [], match: true },
+  { d: 5, name: "Friday", focus: "Upper Body B", goal: "Hypertrophy & rotator cuff care", warmup: true,
+    items: ["seatedohp", "pullover", "hammercurl", "triceps", "ytw"] },
+  { d: 6, name: "Saturday", focus: "Lower Body B", goal: "Single-leg balance, hips & knee prehab", warmup: true,
+    items: ["dbrevlunge", "sumodl", "stepup", "suitcase"] },
+  { d: 0, name: "Sunday", focus: "Rest & Recovery", goal: "Full-body static stretching", warmup: false,
+    items: ["pigeon", "couchSun", "shoulderstretch", "hamstring"] }
+];
+
+/* ===================================================================== */
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+const fmt = (s) => { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+const thumb = (id) => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
+const ytLink = (id) => `https://www.youtube.com/watch?v=${id}`;
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function show(screen) {
+  for (const id of ["home", "day", "player-screen"]) $(id).hidden = id !== screen;
+  window.scrollTo(0, 0);
+}
+
+/* ---------------- Home ---------------- */
+function renderHome() {
+  const today = new Date().getDay();
+  $("days").innerHTML = DAYS.map((day, i) => `
+    <button class="day ${day.d === today ? "today" : ""}" data-i="${i}">
+      <span class="dname"><span>${day.name}</span>${day.d === today ? '<span class="today-tag">TODAY</span>' : ""}</span>
+      <span class="dfocus">${day.focus}</span>
+      <span class="dgoal">${day.goal}</span>
+    </button>`).join("");
+  $("days").querySelectorAll(".day").forEach((b) => b.onclick = () => openDay(+b.dataset.i));
+}
+
+/* ---------------- Day overview ---------------- */
+let currentDay = null;
+let includeWarmup = true;
+
+function describe(ex) {
+  const sets = ex.sets || 1;
+  if (ex.time) return `${sets} × ${fmt(ex.time)}${ex.perSide ? " each side" : ""}` + (ex.rest ? ` · rest ${ex.rest}s` : "");
+  return (ex.sets ? `${sets} × ${ex.reps} ${ex.unit}` : `${ex.reps} ${ex.unit}`) + (ex.rest ? ` · rest ${ex.rest}s` : "");
+}
+
+function exRow(key) {
+  const ex = EX[key];
+  return `<button class="ex-row" data-key="${key}">
+    <img src="${thumb(ex.videos[0].id)}" alt="" loading="lazy">
+    <div><div class="t">${esc(ex.name)}</div><div class="m">${esc(describe(ex))}</div></div>
+    <span class="play">Preview ›</span>
+  </button>`;
+}
+
+function openDay(i) {
+  currentDay = DAYS[i];
+  includeWarmup = currentDay.warmup;
+  $("day-kicker").textContent = currentDay.name;
+  $("day-title").textContent = currentDay.focus;
+  renderDayBody();
+  show("day");
+}
+
+function renderDayBody() {
+  const day = currentDay;
+  let html = "";
+  if (day.match) {
+    html += `<div class="rest-card"><b>Match day ⚽</b><p class="sub" style="margin:6px 0 0">No lifting today. Do the dynamic warm-up before kick-off to get your spine, shoulders and hips moving.</p></div>`;
+    html += `<div class="ex-section">Pre-match warm-up</div><div class="ex-list" style="margin-bottom:90px">${WARMUP.map(exRow).join("")}</div>`;
+    includeWarmup = true;
+  } else {
+    html += `<button class="toggle" id="wu-toggle" aria-pressed="${includeWarmup}"><span class="switch"></span>
+      <span><b>Include dynamic warm-up</b><br><span class="m" style="color:var(--muted);font-size:13px">4 moves · 6–8 min</span></span></button>`;
+    html += `<div class="ex-list">`;
+    if (includeWarmup) html += `<div class="ex-section">Warm-up</div>` + WARMUP.map(exRow).join("");
+    html += `<div class="ex-section">Workout</div>` + day.items.map(exRow).join("");
+    html += `</div>`;
+  }
+  $("day-body").innerHTML = html;
+  const t = $("wu-toggle");
+  if (t) t.onclick = () => { includeWarmup = !includeWarmup; renderDayBody(); };
+  $("day-body").querySelectorAll(".ex-row").forEach((b) => b.onclick = () => startPreview(b.dataset.key));
+}
+
+/* ---------------- Build step list ---------------- */
+function buildSteps(day, warm) {
+  const keys = (warm || day.match ? WARMUP.map((k) => ({ k, warm: true })) : [])
+    .concat(day.items.map((k) => ({ k, warm: false })));
+  const steps = [];
+  keys.forEach(({ k, warm }, idx) => {
+    const ex = EX[k];
+    const sets = ex.sets || 1;
+    for (let s = 1; s <= sets; s++) {
+      const sides = ex.time && ex.perSide ? ["Left side", "Right side"] : [null];
+      sides.forEach((side) => steps.push({ type: "work", key: k, set: s, sets, side, warm }));
+      const last = idx === keys.length - 1 && s === sets;
+      if (!last && ex.rest) steps.push({ type: "rest", dur: ex.rest });
+    }
+  });
+  return steps;
+}
+
+/* ---------------- Audio / voice / wake lock ---------------- */
+let audioCtx = null;
+let voiceOn = store.get("voiceOn", true);
+function beep(freq = 880, dur = 0.12, vol = 0.25) {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.frequency.value = freq; o.type = "sine";
+    g.gain.setValueAtTime(vol, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+    o.connect(g).connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + dur);
+  } catch {}
+}
+function say(text) {
+  if (!voiceOn || !("speechSynthesis" in window)) return;
+  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.rate = 1.02; speechSynthesis.speak(u); } catch {}
+}
+function unlockAudio() {
+  try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); } catch {}
+  try { if ("speechSynthesis" in window) { const u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); } } catch {}
+}
+let wakeLock = null;
+async function keepAwake() {
+  try { if ("wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen"); } catch {}
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden && !$("player-screen").hidden) keepAwake(); });
+function updateVoiceBtn() { $("voice-btn").textContent = voiceOn ? "🔊 Voice" : "🔇 Voice"; }
+$("voice-btn").onclick = () => { voiceOn = !voiceOn; store.set("voiceOn", voiceOn); updateVoiceBtn(); if (!voiceOn) try { speechSynthesis.cancel(); } catch {} };
+
+/* ---------------- YouTube player ---------------- */
+let yt = null, ytReady = false, pendingVideo = null;
+let vidList = [], vidIdx = 0, vidTriedBackup = false, vidEx = null;
+
+window.onYouTubeIframeAPIReady = function () {
+  yt = new YT.Player("yt", {
+    playerVars: { autoplay: 1, mute: 1, playsinline: 1, controls: 0, rel: 0, modestbranding: 1, iv_load_policy: 3, disablekb: 1, fs: 0 },
+    events: {
+      onReady: () => { ytReady = true; yt.mute(); if (pendingVideo) { playClip(pendingVideo); pendingVideo = null; } },
+      onStateChange: (e) => {
+        if (e.data === YT.PlayerState.ENDED) nextClipOrLoop();
+        if (e.data === YT.PlayerState.CUED) yt.playVideo();
+      },
+      onError: () => handleVideoError()
+    }
+  });
+};
+(function loadYT() { const s = document.createElement("script"); s.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(s); })();
+
+let endWatch = null;
+function playClip(v) {
+  if (!ytReady) { pendingVideo = v; return; }
+  $("video-fallback").hidden = true;
+  yt.loadVideoById({ videoId: v.id, startSeconds: v.start || 0, endSeconds: v.end || undefined });
+  yt.mute();
+  $("video-label").textContent = v.label ? `Demo: ${v.label}` : "Demo";
+  $("video-label").hidden = false;
+}
+function setVideos(key, set = 1) {
+  const ex = EX[key];
+  // Exercises with per-set notes (e.g. a different stretch each set) show the matching demo
+  const start = ex.setNotes ? Math.min(set - 1, ex.videos.length - 1) : 0;
+  if (vidEx === key && (!ex.setNotes || vidIdx === start)) return; // keep the same clip running between sets
+  vidEx = key; vidList = ex.videos; vidIdx = start; vidTriedBackup = false;
+  $("vid-next").hidden = vidList.length < 2;
+  playClip(vidList[start]);
+}
+function nextClipOrLoop() {
+  if (vidList.length > 1) { vidIdx = (vidIdx + 1) % vidList.length; playClip(vidList[vidIdx]); }
+  else { const v = vidList[vidIdx]; yt.seekTo(v.start || 0, true); yt.playVideo(); }
+}
+function handleVideoError() {
+  const ex = EX[vidEx];
+  if (ex && ex.backup && !vidTriedBackup && vidList.length === 1) {
+    vidTriedBackup = true; vidList = [{ id: ex.backup }]; playClip(vidList[0]); return;
+  }
+  const v = vidList[vidIdx] || {};
+  $("video-fallback").innerHTML = `<div>This demo can't play here.</div><a href="${ytLink(v.id)}" target="_blank" rel="noopener">Open it on YouTube ↗</a>`;
+  $("video-fallback").hidden = false;
+}
+$("vid-restart").onclick = () => { const v = vidList[vidIdx]; if (ytReady && v) { yt.seekTo(v.start || 0, true); yt.playVideo(); } };
+$("vid-next").onclick = () => { if (vidList.length > 1) { vidIdx = (vidIdx + 1) % vidList.length; playClip(vidList[vidIdx]); } };
+
+/* ---------------- Player state ---------------- */
+let steps = [], cur = 0, tick = null, startedAt = 0, previewMode = false;
+let timer = { phase: null, left: 0, total: 0, paused: false, t0: 0 };
+
+function startWorkout() {
+  unlockAudio();
+  previewMode = false;
+  steps = buildSteps(currentDay, includeWarmup);
+  cur = 0; startedAt = Date.now(); vidEx = null;
+  $("p-day").textContent = currentDay.match ? "Pre-match warm-up" : `${currentDay.name} · ${currentDay.focus}`;
+  enterPlayer();
+  say(`Let's go. ${currentDay.match ? "Pre-match warm-up." : currentDay.focus + "."}`);
+  renderStep();
+}
+function startPreview(key) {
+  unlockAudio();
+  previewMode = true;
+  steps = [{ type: "work", key, set: 1, sets: EX[key].sets || 1, side: null, preview: true }];
+  cur = 0; startedAt = Date.now(); vidEx = null;
+  $("p-day").textContent = "Preview";
+  enterPlayer();
+  renderStep();
+}
+function enterPlayer() {
+  show("player-screen");
+  $("p-body").hidden = false; $("p-done").hidden = true;
+  updateVoiceBtn(); keepAwake();
+  clearInterval(tick); tick = setInterval(onTick, 250);
+}
+function exitPlayer() {
+  clearInterval(tick); tick = null;
+  try { speechSynthesis.cancel(); } catch {}
+  try { if (ytReady) yt.stopVideo(); } catch {}
+  vidEx = null;
+  try { wakeLock && wakeLock.release(); } catch {}
+  show(currentDay ? "day" : "home");
+}
+let exitArmed = 0;
+$("exit-btn").onclick = () => {
+  if (previewMode || Date.now() - exitArmed < 2500) { exitArmed = 0; $("exit-btn").textContent = "✕ Exit"; $("exit-btn").classList.remove("danger"); exitPlayer(); return; }
+  exitArmed = Date.now(); $("exit-btn").textContent = "Tap again to exit"; $("exit-btn").classList.add("danger");
+  setTimeout(() => { if (exitArmed && Date.now() - exitArmed >= 2400) { $("exit-btn").textContent = "✕ Exit"; $("exit-btn").classList.remove("danger"); } }, 2600);
+};
+
+function nextWorkIndex(from) { for (let i = from; i < steps.length; i++) if (steps[i].type === "work") return i; return -1; }
+
+function go(delta) {
+  const n = cur + delta;
+  if (n < 0) return;
+  if (n >= steps.length) return finish();
+  cur = n; renderStep();
+}
+
+function renderStep() {
+  const st = steps[cur];
+  const workCount = steps.filter((s) => s.type === "work").length;
+  const workDone = steps.slice(0, cur).filter((s) => s.type === "work").length;
+  $("p-step").textContent = `${Math.min(workDone + 1, workCount)}/${workCount}`;
+  $("p-bar").style.width = (100 * cur / Math.max(1, steps.length)) + "%";
+  if (st.type === "work") renderWork(st); else renderRest(st);
+}
+
+function setLine(st, ex) {
+  if (st.preview) return ex.sets ? `${ex.sets} sets` : "";
+  if (st.warm) return "Warm-up";
+  return `Set ${st.set} of ${st.sets}`;
+}
+
+function renderWork(st) {
+  const ex = EX[st.key];
+  setVideos(st.key, st.set);
+  const note = ex.setNotes && ex.setNotes[st.set - 1];
+  const timed = !!ex.time;
+  const target = timed
+    ? `<div class="target"><span class="big clock" id="t-clock">${fmt(ex.time)}</span><span class="unit" id="t-state">${st.side ? st.side : "hold / work"}</span></div>`
+    : `<div class="target"><span class="big">${esc(ex.reps)}</span><span class="unit">${esc(ex.unit)}</span></div>`;
+  const sideOrNote = [note, timed ? null : st.side].filter(Boolean).join(" · ");
+  $("info").innerHTML = `
+    <div class="phase">${esc(setLine(st, ex))}</div>
+    <div class="ex-name">${esc(ex.name)}</div>
+    ${target}
+    ${sideOrNote ? `<div class="setnote">${esc(sideOrNote)}</div>` : ""}
+    <div class="key">${esc(ex.key)}</div>
+    <ul class="cues">${ex.cues.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>
+    <div class="stop">⚠︎ ${esc(ex.stop)}</div>
+    <div class="controls">
+      ${st.preview ? "" : `<button class="ctl" id="c-prev">‹</button>`}
+      ${timed ? `<button class="ctl" id="c-pause">Pause</button>` : ""}
+      <button class="ctl primary" id="c-done">${st.preview ? "Close preview" : timed ? "Skip ›" : "Done ✓"}</button>
+    </div>`;
+  if (st.preview) { $("c-done").onclick = exitPlayer; timer.phase = null; return; }
+  $("c-prev").onclick = () => go(-1);
+  $("c-done").onclick = () => { beep(1320, 0.1); go(1); };
+  if (timed) {
+    timer = { phase: "ready", left: 5, total: ex.time, paused: false, t0: Date.now() };
+    $("c-pause").onclick = togglePause;
+    $("t-state").textContent = "get in position…";
+    $("t-clock").textContent = "0:05";
+    say(`${st.side ? st.side + ". " : ""}${ex.name}. Get in position.`);
+  } else {
+    timer = { phase: null };
+    const spoken = st.warm ? `${ex.name}. ${ex.reps} ${ex.unit}.` : `${ex.name}. Set ${st.set} of ${st.sets}. ${ex.reps.replace("–", " to ")} ${ex.unit}.`;
+    say(spoken);
+  }
+}
+
+function renderRest(st) {
+  const ni = nextWorkIndex(cur + 1);
+  const nx = ni >= 0 ? steps[ni] : null;
+  const nex = nx ? EX[nx.key] : null;
+  if (nx) setVideos(nx.key, nx.set);
+  const R = 54, C = 2 * Math.PI * R;
+  $("info").innerHTML = `
+    <div class="phase rest">Rest</div>
+    <div class="ring">
+      <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="${R}" fill="none" stroke="var(--line)" stroke-width="8"/>
+      <circle id="r-arc" cx="60" cy="60" r="${R}" fill="none" stroke="var(--rest)" stroke-width="8" stroke-linecap="round"
+        stroke-dasharray="${C}" stroke-dashoffset="0"/></svg>
+      <div class="num" id="r-num">${st.dur}</div>
+    </div>
+    ${nex ? `<div class="upnext">Up next: <b>${esc(nex.name)}</b>${nx.warm ? "" : ` · set ${nx.set} of ${nx.sets}`}${nx.side ? ` · ${nx.side}` : ""}</div>
+    <div class="key" style="font-size:clamp(12px,3vh,16px)">${esc(nex.key)}</div>` : ""}
+    <div class="controls">
+      <button class="ctl" id="c-prev">‹</button>
+      <button class="ctl" id="c-add">+15s</button>
+      <button class="ctl primary rest" id="c-skip">Skip rest ›</button>
+    </div>`;
+  timer = { phase: "rest", left: st.dur, total: st.dur, paused: false, t0: Date.now(), C };
+  $("c-prev").onclick = () => go(-1);
+  $("c-add").onclick = () => { timer.total += 15; timer.left += 15; };
+  $("c-skip").onclick = () => go(1);
+  say(`Rest ${st.dur} seconds.${nex ? " Next: " + nex.name + "." : ""}`);
+}
+
+function togglePause() {
+  timer.paused = !timer.paused;
+  const b = $("c-pause"); if (b) b.textContent = timer.paused ? "Resume" : "Pause";
+}
+
+let lastSec = null;
+function onTick() {
+  const secs = Math.floor((Date.now() - startedAt) / 1000);
+  $("p-elapsed").textContent = fmt(secs);
+  if (!timer.phase || timer.paused) { timer.t0 = Date.now(); return; }
+  const now = Date.now();
+  timer.left -= (now - timer.t0) / 1000; timer.t0 = now;
+  const whole = Math.ceil(timer.left);
+
+  if (timer.phase === "ready") {
+    const c = $("t-clock"); if (c) c.textContent = fmt(whole);
+    if (whole !== lastSec && whole <= 3 && whole > 0) beep(660);
+    if (timer.left <= 0) {
+      timer.phase = "work"; timer.left = timer.total; beep(1320, 0.25);
+      const s = $("t-state"); if (s) s.textContent = steps[cur].side || "go!";
+      say("Go");
+    }
+  } else if (timer.phase === "work") {
+    const c = $("t-clock"); if (c) c.textContent = fmt(whole);
+    if (whole !== lastSec && whole === Math.floor(timer.total / 2) && timer.total >= 60) say("Halfway");
+    if (whole !== lastSec && whole <= 3 && whole > 0) beep(660);
+    if (timer.left <= 0) { timer.phase = null; beep(1320, 0.3); go(1); }
+  } else if (timer.phase === "rest") {
+    const n = $("r-num"); if (n) n.textContent = Math.max(0, whole);
+    const arc = $("r-arc"); if (arc) arc.setAttribute("stroke-dashoffset", String(timer.C * (1 - Math.max(0, timer.left) / timer.total)));
+    if (whole !== lastSec && whole <= 3 && whole > 0) beep(660);
+    if (timer.left <= 0) { timer.phase = null; beep(1320, 0.3); go(1); }
+  }
+  lastSec = whole;
+}
+
+function finish() {
+  clearInterval(tick); tick = null; timer.phase = null;
+  try { if (ytReady) yt.stopVideo(); } catch {}
+  vidEx = null;
+  const mins = Math.round((Date.now() - startedAt) / 60000);
+  $("p-bar").style.width = "100%";
+  $("p-body").hidden = true;
+  $("p-done").hidden = false;
+  $("p-done").innerHTML = `<div class="emoji">💪</div><h1>Workout complete</h1>
+    <p class="sub">${esc(currentDay.name)} · ${esc(currentDay.focus)} · ${mins} min</p>
+    <button class="big-btn" id="done-close">Back to days</button>`;
+  $("done-close").onclick = () => { currentDay = null; exitPlayer(); show("home"); };
+  say("Workout complete. Nice work.");
+  const log = store.get("log", []); log.push({ day: currentDay.name, at: Date.now(), mins }); store.set("log", log.slice(-60));
+}
+
+/* ---------------- Wire up ---------------- */
+$("day-back").onclick = () => { currentDay = null; show("home"); };
+$("start-btn").onclick = startWorkout;
+renderHome();
+</script>
+</body>
+</html>
