@@ -90,7 +90,9 @@
   .video-label { position: absolute; left: 10px; bottom: 10px; background: rgba(0,0,0,.65); color: #fff; font-size: 12px;
     padding: 4px 8px; border-radius: 6px; pointer-events: none; }
   .video-tools { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 6px; }
-  .video-tools button { background: rgba(0,0,0,.65); color: #fff; font-size: 12px; padding: 5px 9px; border-radius: 6px; }
+  .video-tools { align-items: center; }
+  .video-tools button { background: rgba(0,0,0,.65); color: #fff; font-size: 15px; min-width: 34px; padding: 5px 10px; border-radius: 6px; }
+  .vid-count { background: rgba(0,0,0,.65); color: #fff; font-size: 12px; padding: 6px 8px; border-radius: 6px; font-variant-numeric: tabular-nums; }
   .video-fallback { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
     color: var(--muted); text-align: center; padding: 20px; background: #000; }
   .video-fallback a { color: var(--accent); }
@@ -102,7 +104,7 @@
   .target { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
   .target .big { font-size: clamp(26px, 9vh, 60px); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
   .target .unit { color: var(--muted); font-size: clamp(12px, 3vh, 18px); }
-  .setnote { color: var(--rest); font-weight: 600; font-size: clamp(12px, 3vh, 16px); }
+  .setnote { color: var(--rest); }
   .key { color: var(--warn); font-weight: 700; font-size: clamp(13px, 3.3vh, 19px); line-height: 1.25; }
   .cues { margin: 0; padding-left: 1.1em; font-size: clamp(12px, 2.9vh, 16px); line-height: 1.35; overflow: auto; min-height: 0; }
   .cues li { margin: 0 0 .25em; }
@@ -122,7 +124,32 @@
   .done-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 20px; background: var(--bg); }
   .done-wrap .emoji { font-size: 56px; }
 
+  .cue-dots { display: none; }
   .rotate-hint { display: none; }
+  @media (orientation: landscape) and (max-height: 520px) {
+    .p-head { padding: 3px 8px; }
+    .p-head .lbl { display: none; }
+    .icon-btn { padding: 5px 9px; font-size: 15px; }
+    .p-body { grid-template-columns: 1.15fr 1fr; }
+    .info-pane { padding: 6px 14px 8px; gap: 4px; }
+    .phase { font-size: 12px; }
+    .ex-name { font-size: 20px; }
+    .target .big { font-size: 36px; }
+    .target .unit { font-size: 15px; }
+    .key { font-size: 15.5px; line-height: 1.2; }
+    .cues { list-style: none; padding: 0; font-size: 17px; line-height: 1.28; min-height: 2.56em; overflow: hidden; cursor: pointer; }
+    .cues li { display: none; margin: 0; }
+    .cues li.on { display: block; }
+    .cue-dots { display: flex; gap: 5px; }
+    .cue-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
+    .cue-dots i.on { background: var(--text); }
+    .stop { font-size: 12.5px; line-height: 1.3; padding: 4px 8px; }
+    .ctl { padding: 9px 14px; font-size: 15px; }
+    .ctl.primary { font-size: 17px; }
+    .ring { width: 130px; }
+    .ring .num { font-size: 44px; }
+    .upnext { font-size: 15px; }
+  }
   @media (orientation: portrait) and (max-width: 700px) {
     .p-body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
     .video-pane { aspect-ratio: 16/9; }
@@ -175,13 +202,13 @@
 <!-- ================= PLAYER ================= -->
 <section id="player-screen" hidden>
   <div class="p-head">
-    <button class="icon-btn" id="exit-btn">✕ Exit</button>
+    <button class="icon-btn" id="exit-btn">✕<span class="lbl"> Exit</span></button>
     <div class="grow">
       <div><span id="p-day"></span> · step <span id="p-step"></span> · <span class="clock" id="p-elapsed">0:00</span></div>
       <div class="progress"><i id="p-bar"></i></div>
     </div>
-    <button class="icon-btn" id="sound-btn">🔈 Demo sound</button>
-    <button class="icon-btn" id="voice-btn">🔊 Voice</button>
+    <button class="icon-btn" id="sound-btn">🔈<span class="lbl"> Demo sound</span></button>
+    <button class="icon-btn" id="voice-btn">🔊<span class="lbl"> Voice</span></button>
   </div>
   <div class="rotate-hint">Turn the phone sideways to fill the TV</div>
   <div class="p-body" id="p-body">
@@ -190,8 +217,10 @@
       <div class="video-fallback" id="video-fallback" hidden></div>
       <div class="video-label" id="video-label"></div>
       <div class="video-tools">
+        <button id="vid-prev" title="Previous demo">‹</button>
+        <span class="vid-count" id="vid-count"></span>
+        <button id="vid-next" title="Next demo">›</button>
         <button id="vid-restart" title="Restart clip">↺</button>
-        <button id="vid-next" title="Next demo" hidden>Next demo ›</button>
       </div>
     </div>
     <div class="info-pane" id="info"></div>
@@ -203,7 +232,8 @@
 /* =====================================================================
    EXERCISE LIBRARY
    videos: YouTube demo clips (id). Optional start/end in seconds to trim
-   a clip; the clip loops. If a video fails, `backup` is tried instead.
+   a clip; the clip loops. `backup` is offered as an extra demo (‹ › buttons)
+   and is tried automatically if a video fails.
    ===================================================================== */
 const EX = {
   // ---------- Warm-up ----------
@@ -226,7 +256,7 @@ const EX = {
     why: "Rotates the upper back and makes room at the top of the shoulder.",
     cues: [
       "Arm circles: arms straight out to the sides, go from small to big circles, then reverse",
-      "Thread the needle: on all fours, slide one arm under your body and lower that shoulder toward the floor",
+      "Thread the needle: on all fours, slide one arm under your body, shoulder toward the floor",
       "Then open up and reach the same arm to the ceiling, eyes following your hand",
       "Keep your hips still, stacked over your knees"
     ],
@@ -324,7 +354,7 @@ const EX = {
       "Return slowly"
     ],
     stop: "If anything pinches, go lighter.",
-    videos: [{ id: "nzTY7j9ocR8", label: "DB face pull" }, { id: "stwYTTPXubo", label: "Band pull-apart" }]
+    videos: [{ id: "nzTY7j9ocR8", label: "DB face pull" }, { id: "stwYTTPXubo", label: "Band pull-apart", start: 8 }]
   },
 
   // ---------- Tuesday: Lower A ----------
@@ -365,7 +395,7 @@ const EX = {
       "Hold for 2 seconds and lower slowly. Do all reps on one side, then switch"
     ],
     stop: "If your hamstring cramps, move your foot closer to your hips.",
-    videos: [{ id: "vdmlNaXSjd4" }], backup: "AVAXhy6pl7o"
+    videos: [{ id: "vdmlNaXSjd4", start: 4 }], backup: "AVAXhy6pl7o"
   },
   calfraise: {
     name: "Standing DB Calf Raises", sets: 3, reps: "15", unit: "reps", rest: 45,
@@ -378,7 +408,7 @@ const EX = {
       "Lower slowly into a full stretch"
     ],
     stop: "If your Achilles hurts, skip the step and use a smaller range.",
-    videos: [{ id: "wxwY7GXxL4k" }], backup: "ADIDoYt_ko4"
+    videos: [{ id: "wxwY7GXxL4k", start: 3 }], backup: "ADIDoYt_ko4"
   },
   planktaps: {
     name: "Plank with Shoulder Taps", sets: 3, time: 45, rest: 60,
@@ -406,7 +436,7 @@ const EX = {
       "Gradually come more upright and keep breathing"
     ],
     stop: "If your kneecap feels pressure, add padding or move the knee farther from the wall.",
-    videos: [{ id: "fHKndvWwenc" }], backup: "Fg-lwNBzVV8"
+    videos: [{ id: "fHKndvWwenc", start: 19 }], backup: "Fg-lwNBzVV8"
   },
   doorway: {
     name: "Doorway Chest Stretch", sets: 2, time: 120, rest: 20,
@@ -419,7 +449,7 @@ const EX = {
       "Keep your shoulders down and ribs in"
     ],
     stop: "If you feel pinching or tingling down the arm, lower your elbows.",
-    videos: [{ id: "CEQMx4zFwYs" }], backup: "M850sCj9LHQ"
+    videos: [{ id: "CEQMx4zFwYs", start: 4 }], backup: "M850sCj9LHQ"
   },
   tibraise: {
     name: "Tibialis Raises", sets: 2, reps: "20", unit: "reps", rest: 30,
@@ -432,7 +462,7 @@ const EX = {
       "Keep your knees straight"
     ],
     stop: "If your shins cramp, shorten the set and shake it out.",
-    videos: [{ id: "VzIcGAgBiaM" }], backup: "OPEuhclsTUQ"
+    videos: [{ id: "VzIcGAgBiaM", end: 22 }], backup: "OPEuhclsTUQ"
   },
 
   // ---------- Friday: Upper B ----------
@@ -514,7 +544,7 @@ const EX = {
       "Push through the front heel to return"
     ],
     stop: "If your front knee hurts, take a shorter step, don't go as deep, or use lighter weights.",
-    videos: [{ id: "UoQcIFYTN_o" }], backup: "RZKXLMxPF_I"
+    videos: [{ id: "UoQcIFYTN_o", start: 3, end: 33 }], backup: "RZKXLMxPF_I"
   },
   sumodl: {
     name: "DB Sumo / Goblet Deadlift", sets: 3, reps: "10–12", unit: "reps", rest: 90,
@@ -527,7 +557,7 @@ const EX = {
       "Keep your back flat, stand up tall, and squeeze your glutes"
     ],
     stop: "If your lower back rounds, shorten the range (put the dumbbell on a block).",
-    videos: [{ id: "De9OUZz5W_I", label: "Sumo" }, { id: "TC2jOPCNYhU", label: "Goblet" }]
+    videos: [{ id: "De9OUZz5W_I", label: "Sumo" }, { id: "TC2jOPCNYhU", label: "Goblet", end: 33 }]
   },
   stepup: {
     name: "DB Step-Ups (Low Bench)", sets: 3, reps: "10", unit: "reps each side", rest: 60,
@@ -563,12 +593,12 @@ const EX = {
     why: "Stretches the glutes and the deep hip rotators.",
     cues: [
       "Pigeon: one shin across the front of your mat, the other leg straight behind you",
-      "Figure-4 (easier on the knee): lie on your back, cross one ankle over the other knee, and pull that thigh toward you",
+      "Figure-4 (easier on the knee): on your back, ankle over the other knee, pull that thigh in",
       "Keep your hips square and your spine long",
       "Breathe slowly and relax into it"
     ],
     stop: "If your front knee hurts in pigeon, switch to the lying figure-4.",
-    videos: [{ id: "op-eDU9eNqM", label: "Pigeon" }, { id: "-g0nuyTHMrI", label: "Figure-4" }]
+    videos: [{ id: "op-eDU9eNqM", label: "Pigeon", start: 5 }, { id: "-g0nuyTHMrI", label: "Figure-4", start: 5 }]
   },
   couchSun: null, // filled below (same as couch, 1 set)
   shoulderstretch: {
@@ -757,14 +787,18 @@ function beep(freq = 880, dur = 0.12, vol = 0.25) {
     o.connect(g).connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + dur);
   } catch {}
 }
+let sayTimer = null;
 function say(text) {
   if (!voiceOn || !("speechSynthesis" in window)) return;
   try {
-    // iOS Safari can drop an utterance queued straight after cancel(), so give it a beat
+    // iOS Safari can drop an utterance queued straight after cancel(), so give it a beat.
+    // Only the latest announcement is kept, so skipping ahead never queues up stale ones.
+    clearTimeout(sayTimer);
     if (speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
-    setTimeout(() => { const u = new SpeechSynthesisUtterance(text); u.rate = 1.02; u.volume = 1; speechSynthesis.speak(u); }, 60);
+    sayTimer = setTimeout(() => { const u = new SpeechSynthesisUtterance(text); u.rate = 1.02; u.volume = 1; speechSynthesis.speak(u); }, 60);
   } catch {}
 }
+function hush() { clearTimeout(sayTimer); try { speechSynthesis.cancel(); } catch {} }
 function unlockAudio() {
   // Let beeps play even when the iPhone's silent switch is on (Safari 16.4+)
   try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch {}
@@ -776,8 +810,8 @@ async function keepAwake() {
   try { if ("wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen"); } catch {}
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden && !$("player-screen").hidden) keepAwake(); });
-function updateVoiceBtn() { $("voice-btn").textContent = voiceOn ? "🔊 Voice" : "🔇 Voice"; }
-$("voice-btn").onclick = () => { voiceOn = !voiceOn; store.set("voiceOn", voiceOn); updateVoiceBtn(); if (!voiceOn) try { speechSynthesis.cancel(); } catch {} };
+function updateVoiceBtn() { $("voice-btn").innerHTML = (voiceOn ? "🔊" : "🔇") + '<span class="lbl"> Voice</span>'; }
+$("voice-btn").onclick = () => { voiceOn = !voiceOn; store.set("voiceOn", voiceOn); updateVoiceBtn(); if (!voiceOn) hush() };
 
 /* ---------------- YouTube player ---------------- */
 let demoSound = store.get("demoSound", false);
@@ -785,14 +819,14 @@ function applyDemoSound() {
   if (!ytReady) return;
   if (demoSound) { yt.unMute(); yt.setVolume(100); } else yt.mute();
 }
-function updateSoundBtn() { $("sound-btn").textContent = demoSound ? "🔊 Demo sound" : "🔈 Demo sound"; }
+function updateSoundBtn() { $("sound-btn").innerHTML = (demoSound ? "🔊" : "🔈") + '<span class="lbl"> Demo sound</span>'; }
 $("sound-btn").onclick = () => {
   demoSound = !demoSound; store.set("demoSound", demoSound); updateSoundBtn();
   applyDemoSound(); if (ytReady && videoActive) yt.playVideo();
 };
 let yt = null, ytReady = false, pendingVideo = null;
 let videoActive = false; // false whenever the player screen is closed
-let vidList = [], vidIdx = 0, vidTriedBackup = false, vidEx = null;
+let vidList = [], vidIdx = 0, vidPrimary = 1, vidTried = new Set(), vidEx = null;
 
 window.onYouTubeIframeAPIReady = function () {
   yt = new YT.Player("yt", {
@@ -811,6 +845,7 @@ window.onYouTubeIframeAPIReady = function () {
 (function loadYT() { const s = document.createElement("script"); s.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(s); })();
 
 function stopVideo() {
+  clearInterval(cueTimer);
   videoActive = false; pendingVideo = null; vidEx = null;
   try { if (ytReady) { yt.pauseVideo(); yt.stopVideo(); yt.mute(); } } catch {}
 }
@@ -832,25 +867,35 @@ function setVideos(key, set = 1) {
   // Exercises with per-set notes (e.g. a different stretch each set) show the matching demo
   const start = ex.setNotes ? Math.min(set - 1, ex.videos.length - 1) : 0;
   if (vidEx === key && (!ex.setNotes || vidIdx === start)) return; // keep the same clip running between sets
-  vidEx = key; vidList = ex.videos; vidIdx = start; vidTriedBackup = false;
-  $("vid-next").hidden = vidList.length < 2;
-  playClip(vidList[start]);
+  vidEx = key; vidIdx = start; vidTried = new Set();
+  // Main demos first, then the backup as an alternate
+  vidPrimary = ex.videos.length;
+  vidList = ex.videos.concat(ex.backup ? [{ id: ex.backup, label: "Alternate demo" }] : []);
+  showClip(start);
 }
+function showClip(i) {
+  vidIdx = (i + vidList.length) % vidList.length;
+  vidTried.add(vidIdx);
+  const multi = vidList.length > 1;
+  $("vid-prev").hidden = $("vid-next").hidden = $("vid-count").hidden = !multi;
+  $("vid-count").textContent = `Demo ${vidIdx + 1}/${vidList.length}`;
+  playClip(vidList[vidIdx]);
+}
+// At the end of a clip: rotate through the main demos; an alternate demo just loops
 function nextClipOrLoop() {
-  if (vidList.length > 1) { vidIdx = (vidIdx + 1) % vidList.length; playClip(vidList[vidIdx]); }
+  if (vidIdx < vidPrimary && vidPrimary > 1) showClip((vidIdx + 1) % vidPrimary);
   else { const v = vidList[vidIdx]; yt.seekTo(v.start || 0, true); yt.playVideo(); }
 }
 function handleVideoError() {
-  const ex = EX[vidEx];
-  if (ex && ex.backup && !vidTriedBackup && vidList.length === 1) {
-    vidTriedBackup = true; vidList = [{ id: ex.backup }]; playClip(vidList[0]); return;
-  }
+  const untried = vidList.findIndex((_, i) => !vidTried.has(i));
+  if (untried >= 0) { showClip(untried); return; }
   const v = vidList[vidIdx] || {};
   $("video-fallback").innerHTML = `<div>This demo can't play here.</div><a href="${ytLink(v.id)}" target="_blank" rel="noopener">Open it on YouTube ↗</a>`;
   $("video-fallback").hidden = false;
 }
 $("vid-restart").onclick = () => { const v = vidList[vidIdx]; if (ytReady && v) { yt.seekTo(v.start || 0, true); yt.playVideo(); } };
-$("vid-next").onclick = () => { if (vidList.length > 1) { vidIdx = (vidIdx + 1) % vidList.length; playClip(vidList[vidIdx]); } };
+$("vid-next").onclick = () => { if (vidList.length > 1) showClip(vidIdx + 1); };
+$("vid-prev").onclick = () => { if (vidList.length > 1) showClip(vidIdx - 1); };
 
 /* ---------------- Player state ---------------- */
 let sessionLabel = "";
@@ -886,16 +931,16 @@ function enterPlayer() {
 }
 function exitPlayer() {
   clearInterval(tick); tick = null;
-  try { speechSynthesis.cancel(); } catch {}
+  hush();
   stopVideo();
   try { wakeLock && wakeLock.release(); } catch {}
   show(currentDay ? "day" : "home");
 }
 let exitArmed = 0;
 $("exit-btn").onclick = () => {
-  if (previewMode || Date.now() - exitArmed < 2500) { exitArmed = 0; $("exit-btn").textContent = "✕ Exit"; $("exit-btn").classList.remove("danger"); exitPlayer(); return; }
-  exitArmed = Date.now(); $("exit-btn").textContent = "Tap again to exit"; $("exit-btn").classList.add("danger");
-  setTimeout(() => { if (exitArmed && Date.now() - exitArmed >= 2400) { $("exit-btn").textContent = "✕ Exit"; $("exit-btn").classList.remove("danger"); } }, 2600);
+  if (previewMode || Date.now() - exitArmed < 2500) { exitArmed = 0; $("exit-btn").innerHTML = '✕<span class="lbl"> Exit</span>'; $("exit-btn").classList.remove("danger"); exitPlayer(); return; }
+  exitArmed = Date.now(); $("exit-btn").textContent = "Tap again"; $("exit-btn").classList.add("danger");
+  setTimeout(() => { if (exitArmed && Date.now() - exitArmed >= 2400) { $("exit-btn").innerHTML = '✕<span class="lbl"> Exit</span>'; $("exit-btn").classList.remove("danger"); } }, 2600);
 };
 
 function nextWorkIndex(from) { for (let i = from; i < steps.length; i++) if (steps[i].type === "work") return i; return -1; }
@@ -933,21 +978,22 @@ function renderWork(st) {
     : `<div class="target"><span class="big">${esc(ex.reps)}</span><span class="unit">${esc(ex.unit)}</span></div>`;
   const sideOrNote = [note, timed ? null : st.side].filter(Boolean).join(" · ");
   $("info").innerHTML = `
-    <div class="phase">${esc(setLine(st, ex))}</div>
+    <div class="phase">${esc(setLine(st, ex))}${sideOrNote ? ` · <span class="setnote">${esc(sideOrNote)}</span>` : ""}</div>
     <div class="ex-name">${esc(ex.name)}</div>
     ${target}
-    ${sideOrNote ? `<div class="setnote">${esc(sideOrNote)}</div>` : ""}
     <div class="key">${esc(ex.key)}</div>
-    <ul class="cues">${ex.cues.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>
+    <ul class="cues" id="cues">${ex.cues.map((c, i) => `<li class="${i ? "" : "on"}">${esc(c)}</li>`).join("")}</ul>
+    <div class="cue-dots" id="cue-dots">${ex.cues.map((_, i) => `<i class="${i ? "" : "on"}"></i>`).join("")}</div>
     <div class="stop">⚠︎ ${esc(ex.stop)}</div>
     <div class="controls">
       ${st.preview ? "" : `<button class="ctl" id="c-prev">‹</button>`}
       ${timed ? `<button class="ctl" id="c-pause">Pause</button>` : ""}
       <button class="ctl primary" id="c-done">${st.preview ? "Close preview" : timed ? "Skip ›" : "Done ✓"}</button>
     </div>`;
-  if (st.preview) { $("c-done").onclick = exitPlayer; timer.phase = null; return; }
+  if (st.preview) { $("c-done").onclick = exitPlayer; timer.phase = null; startCueRotation(); return; }
   $("c-prev").onclick = () => go(-1);
   $("c-done").onclick = () => { beep(1320, 0.1); go(1); };
+  startCueRotation();
   if (timed) {
     timer = { phase: "ready", left: 5, total: ex.time, paused: false, t0: Date.now() };
     $("c-pause").onclick = togglePause;
@@ -961,7 +1007,24 @@ function renderWork(st) {
   }
 }
 
+// On short (landscape phone) screens only one cue shows at a time; rotate through them
+let cueTimer = null, cueIdx = 0;
+function showCue(i) {
+  const items = document.querySelectorAll("#cues li"), dots = document.querySelectorAll("#cue-dots i");
+  if (!items.length) return;
+  cueIdx = (i + items.length) % items.length;
+  items.forEach((li, j) => li.classList.toggle("on", j === cueIdx));
+  dots.forEach((d, j) => d.classList.toggle("on", j === cueIdx));
+}
+function startCueRotation() {
+  const restart = () => { clearInterval(cueTimer); cueTimer = setInterval(() => showCue(cueIdx + 1), 7000); };
+  cueIdx = 0; restart();
+  const ul = $("cues");
+  if (ul) ul.onclick = () => { showCue(cueIdx + 1); restart(); }; // tap to skip ahead
+}
+
 function renderRest(st) {
+  clearInterval(cueTimer);
   const ni = nextWorkIndex(cur + 1);
   const nx = ni >= 0 ? steps[ni] : null;
   const nex = nx ? EX[nx.key] : null;
