@@ -79,6 +79,7 @@
     padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
   .p-head { display: flex; align-items: center; gap: 10px; padding: 6px 12px; background: var(--bg); font-size: 13px; color: var(--muted); }
   .p-head .grow { flex: 1; min-width: 0; }
+  .p-head .grow > div:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .progress { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; margin-top: 4px; }
   .progress > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .3s; }
   .icon-btn { padding: 6px 10px; border-radius: 8px; background: var(--panel-2); color: var(--text); font-size: 13px; white-space: nowrap; }
@@ -155,7 +156,7 @@
     .p-body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
     .video-pane { aspect-ratio: 16/9; }
     .p-head .lbl { display: none; }
-    .vid-count { max-width: 5.5em; }
+    .vid-count, #vid-restart { display: none; }
     .rotate-hint { display: block; font-size: 12px; color: var(--muted); text-align: center; padding: 4px; background: var(--panel); }
     .ex-name { font-size: 24px; }
     .target .big { font-size: 44px; }
@@ -264,7 +265,7 @@ const EX = {
       "Keep your hips still, stacked over your knees"
     ],
     stop: "If you feel a pinch at the top or front of the shoulder, make the circles smaller.",
-    videos: [{ id: "3STTSi_jdHk", label: "Arm circles" }, { id: "YuAJ1i76Hek", label: "Thread the needle" }]
+    videos: [{ id: "140RTNMciH8", label: "Arm circles", start: 3, end: 22 }, { id: "YuAJ1i76Hek", label: "Thread the needle" }]
   },
   hip9090: {
     name: "90/90 Hip Swivels", reps: "8", unit: "each side",
@@ -791,6 +792,18 @@ function beep(freq = 880, dur = 0.12, vol = 0.25) {
   } catch {}
 }
 let sayTimer = null;
+const speakable = (t) => t.replace(/\s*–\s*(?=\d)/g, " to ").replace(/°/g, " degrees").replace(/≤/g, "at most ").replace(/[–—]/g, ", ");
+// Adds to the speech queue without cutting off what's playing; onDone fires when it finishes
+function speakQueued(text, onDone) {
+  if (!voiceOn || !("speechSynthesis" in window)) { onDone && setTimeout(onDone, 5000); return; }
+  setTimeout(() => {
+    try {
+      const u = new SpeechSynthesisUtterance(speakable(text)); u.rate = 1.02;
+      if (onDone) { u.onend = onDone; u.onerror = onDone; }
+      speechSynthesis.speak(u);
+    } catch { onDone && onDone(); }
+  }, 150);
+}
 function say(text) {
   if (!voiceOn || !("speechSynthesis" in window)) return;
   try {
@@ -798,7 +811,7 @@ function say(text) {
     // Only the latest announcement is kept, so skipping ahead never queues up stale ones.
     clearTimeout(sayTimer);
     if (speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
-    sayTimer = setTimeout(() => { const u = new SpeechSynthesisUtterance(text); u.rate = 1.02; u.volume = 1; speechSynthesis.speak(u); }, 60);
+    sayTimer = setTimeout(() => { const u = new SpeechSynthesisUtterance(speakable(text)); u.rate = 1.02; u.volume = 1; speechSynthesis.speak(u); }, 60);
   } catch {}
 }
 function hush() { clearTimeout(sayTimer); try { speechSynthesis.cancel(); } catch {} }
@@ -861,7 +874,7 @@ let vidList = [], vidIdx = 0, vidPrimary = 1, vidTried = new Set(), vidEx = null
 
 window.onYouTubeIframeAPIReady = function () {
   yt = new YT.Player("yt", {
-    playerVars: { autoplay: 1, mute: 1, playsinline: 1, controls: 1, rel: 0, modestbranding: 1, iv_load_policy: 3, disablekb: 1, fs: 0 },
+    playerVars: { autoplay: 1, mute: 1, playsinline: 1, controls: 1, cc_load_policy: 1, cc_lang_pref: "en", hl: "en", rel: 0, modestbranding: 1, iv_load_policy: 3, disablekb: 1, fs: 0 },
     events: {
       onReady: () => { ytReady = true; applyDemoSound(); if (pendingVideo && videoActive) { playClip(pendingVideo); pendingVideo = null; } },
       onStateChange: (e) => {
@@ -883,7 +896,7 @@ window.onYouTubeIframeAPIReady = function () {
 (function loadYT() { const s = document.createElement("script"); s.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(s); })();
 
 function stopVideo() {
-  clearInterval(cueTimer); clearTimeout(stallTimer); hint(null);
+  cueGen++; coaching = false; clearInterval(cueTimer); clearTimeout(cueTimer); clearTimeout(stallTimer); hint(null);
   videoActive = false; pendingVideo = null; vidEx = null;
   try { if (ytReady) { yt.pauseVideo(); yt.stopVideo(); yt.mute(); } } catch {}
 }
@@ -993,6 +1006,7 @@ function renderStep() {
   const workDone = steps.slice(0, cur).filter((s) => s.type === "work").length;
   $("p-step").textContent = `${Math.min(workDone + 1, workCount)}/${workCount}`;
   $("p-bar").style.width = (100 * cur / Math.max(1, steps.length)) + "%";
+  $("p-bar").parentElement.hidden = previewMode;
   if (st.type === "work") renderWork(st); else renderRest(st);
 }
 
@@ -1025,20 +1039,25 @@ function renderWork(st) {
       ${timed ? `<button class="ctl" id="c-pause">Pause</button>` : ""}
       <button class="ctl primary" id="c-done">${st.preview ? "Close preview" : timed ? "Skip ›" : "Done ✓"}</button>
     </div>`;
-  if (st.preview) { $("c-done").onclick = exitPlayer; timer.phase = null; startCueRotation(); return; }
+  // Read the form cues aloud the first time you meet an exercise (not on every set)
+  const coach = voiceOn && st.set === 1 && st.side !== "Right side";
+  if (st.preview) {
+    $("c-done").onclick = exitPlayer; timer.phase = null;
+    say(`${ex.name}. ${ex.key}.`); startCueRotation(coach); return;
+  }
   $("c-prev").onclick = () => go(-1);
   $("c-done").onclick = () => { beep(1320, 0.1); go(1); };
-  startCueRotation();
+  startCueRotation(coach);
   if (timed) {
     timer = { phase: "ready", left: 5, total: ex.time, paused: false, t0: Date.now() };
     $("c-pause").onclick = togglePause;
     $("t-state").textContent = "get in position…";
     $("t-clock").textContent = "0:05";
-    say(`${st.side ? st.side + ". " : ""}${ex.name}. Get in position.`);
+    say(`${st.side ? st.side + ". " : ""}${ex.name}. Get in position.${coach ? " " + ex.key + "." : ""}`);
   } else {
     timer = { phase: null };
-    const spoken = st.warm ? `${ex.name}. ${ex.reps} ${ex.unit}.` : `${ex.name}. Set ${st.set} of ${st.sets}. ${ex.reps.replace("–", " to ")} ${ex.unit}.`;
-    say(spoken);
+    const spoken = st.warm ? `${ex.name}. ${ex.reps} ${ex.unit}.` : `${ex.name}. Set ${st.set} of ${st.sets}. ${ex.reps} ${ex.unit}.`;
+    say(spoken + (coach ? " " + ex.key + "." : ""));
   }
 }
 
@@ -1051,15 +1070,32 @@ function showCue(i) {
   items.forEach((li, j) => li.classList.toggle("on", j === cueIdx));
   dots.forEach((d, j) => d.classList.toggle("on", j === cueIdx));
 }
-function startCueRotation() {
-  const restart = () => { clearInterval(cueTimer); cueTimer = setInterval(() => showCue(cueIdx + 1), 7000); };
-  cueIdx = 0; restart();
+let cueGen = 0, coaching = false;
+function startCueRotation(coach) {
+  const gen = ++cueGen;
+  const restart = () => { coaching = false; clearTimeout(cueTimer); clearInterval(cueTimer); cueTimer = setInterval(() => showCue(cueIdx + 1), 7000); };
+  cueIdx = 0;
+  const items = [...document.querySelectorAll("#cues li")];
+  if (coach && items.length) {
+    // Speak each cue in turn (queued after the announcement), then keep rotating silently
+    coaching = true;
+    const readCue = (i) => {
+      if (gen !== cueGen) return;
+      if (i >= items.length) { showCue(0); restart(); return; }
+      showCue(i);
+      let moved = false;
+      const next = () => { if (moved || gen !== cueGen) return; moved = true; cueTimer = setTimeout(() => readCue(i + 1), 1500); };
+      speakQueued(items[i].textContent, next);
+      cueTimer = setTimeout(next, 16000); // in case the browser never reports the speech ending
+    };
+    readCue(0);
+  } else restart();
   const ul = $("cues");
-  if (ul) ul.onclick = () => { showCue(cueIdx + 1); restart(); }; // tap to skip ahead
+  if (ul) ul.onclick = () => { cueGen++; hush(); showCue(cueIdx + 1); restart(); }; // tap to skip ahead (stops the reading)
 }
 
 function renderRest(st) {
-  clearInterval(cueTimer);
+  cueGen++; coaching = false; clearTimeout(cueTimer); clearInterval(cueTimer);
   const ni = nextWorkIndex(cur + 1);
   const nx = ni >= 0 ? steps[ni] : null;
   const nex = nx ? EX[nx.key] : null;
@@ -1108,7 +1144,7 @@ function onTick() {
     if (timer.left <= 0) {
       timer.phase = "work"; timer.left = timer.total; beep(1320, 0.25);
       const s = $("t-state"); if (s) s.textContent = steps[cur].side || "go!";
-      say("Go");
+      if (!coaching) say("Go"); // the beep is enough while cues are being read
     }
   } else if (timer.phase === "work") {
     const c = $("t-clock"); if (c) c.textContent = fmt(whole);
