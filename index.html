@@ -180,6 +180,7 @@
       <div><span id="p-day"></span> · step <span id="p-step"></span> · <span class="clock" id="p-elapsed">0:00</span></div>
       <div class="progress"><i id="p-bar"></i></div>
     </div>
+    <button class="icon-btn" id="sound-btn">🔈 Demo sound</button>
     <button class="icon-btn" id="voice-btn">🔊 Voice</button>
   </div>
   <div class="rotate-hint">Turn the phone sideways to fill the TV</div>
@@ -729,9 +730,15 @@ function beep(freq = 880, dur = 0.12, vol = 0.25) {
 }
 function say(text) {
   if (!voiceOn || !("speechSynthesis" in window)) return;
-  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.rate = 1.02; speechSynthesis.speak(u); } catch {}
+  try {
+    // iOS Safari can drop an utterance queued straight after cancel(), so give it a beat
+    if (speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
+    setTimeout(() => { const u = new SpeechSynthesisUtterance(text); u.rate = 1.02; u.volume = 1; speechSynthesis.speak(u); }, 60);
+  } catch {}
 }
 function unlockAudio() {
+  // Let beeps play even when the iPhone's silent switch is on (Safari 16.4+)
+  try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch {}
   try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); } catch {}
   try { if ("speechSynthesis" in window) { const u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); } } catch {}
 }
@@ -744,6 +751,16 @@ function updateVoiceBtn() { $("voice-btn").textContent = voiceOn ? "🔊 Voice" 
 $("voice-btn").onclick = () => { voiceOn = !voiceOn; store.set("voiceOn", voiceOn); updateVoiceBtn(); if (!voiceOn) try { speechSynthesis.cancel(); } catch {} };
 
 /* ---------------- YouTube player ---------------- */
+let demoSound = store.get("demoSound", false);
+function applyDemoSound() {
+  if (!ytReady) return;
+  if (demoSound) { yt.unMute(); yt.setVolume(100); } else yt.mute();
+}
+function updateSoundBtn() { $("sound-btn").textContent = demoSound ? "🔊 Demo sound" : "🔈 Demo sound"; }
+$("sound-btn").onclick = () => {
+  demoSound = !demoSound; store.set("demoSound", demoSound); updateSoundBtn();
+  applyDemoSound(); if (ytReady) yt.playVideo();
+};
 let yt = null, ytReady = false, pendingVideo = null;
 let vidList = [], vidIdx = 0, vidTriedBackup = false, vidEx = null;
 
@@ -751,7 +768,7 @@ window.onYouTubeIframeAPIReady = function () {
   yt = new YT.Player("yt", {
     playerVars: { autoplay: 1, mute: 1, playsinline: 1, controls: 0, rel: 0, modestbranding: 1, iv_load_policy: 3, disablekb: 1, fs: 0 },
     events: {
-      onReady: () => { ytReady = true; yt.mute(); if (pendingVideo) { playClip(pendingVideo); pendingVideo = null; } },
+      onReady: () => { ytReady = true; applyDemoSound(); if (pendingVideo) { playClip(pendingVideo); pendingVideo = null; } },
       onStateChange: (e) => {
         if (e.data === YT.PlayerState.ENDED) nextClipOrLoop();
         if (e.data === YT.PlayerState.CUED) yt.playVideo();
@@ -767,7 +784,11 @@ function playClip(v) {
   if (!ytReady) { pendingVideo = v; return; }
   $("video-fallback").hidden = true;
   yt.loadVideoById({ videoId: v.id, startSeconds: v.start || 0, endSeconds: v.end || undefined });
-  yt.mute();
+  applyDemoSound();
+  // If the phone refuses to autoplay with sound, fall back to muted so the demo still runs
+  if (demoSound) setTimeout(() => {
+    if (ytReady && yt.getPlayerState() !== YT.PlayerState.PLAYING) { yt.mute(); yt.playVideo(); }
+  }, 2500);
   $("video-label").textContent = v.label ? `Demo: ${v.label}` : "Demo";
   $("video-label").hidden = false;
 }
@@ -822,7 +843,7 @@ function startPreview(key) {
 function enterPlayer() {
   show("player-screen");
   $("p-body").hidden = false; $("p-done").hidden = true;
-  updateVoiceBtn(); keepAwake();
+  updateVoiceBtn(); updateSoundBtn(); keepAwake();
   clearInterval(tick); tick = setInterval(onTick, 250);
 }
 function exitPlayer() {
