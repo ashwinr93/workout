@@ -86,6 +86,9 @@
   .progress > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .3s; }
   .icon-btn { padding: 6px 10px; border-radius: 8px; background: var(--panel-2); color: var(--text); font-size: 13px; white-space: nowrap; }
   .icon-btn.danger { background: var(--warn); color: #fff; }
+  .icon-btn.snd { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); }
+  .icon-btn.snd.on { color: var(--accent); background: rgba(61, 220, 151, .12); }
+  .snd-lbl { font-size: 12px; font-weight: 600; }
   .p-body { flex: 1; display: grid; grid-template-columns: 1.35fr 1fr; min-height: 0; background: var(--bg); }
   .video-pane { position: relative; background: #000; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
   .video-box { position: relative; width: 100%; height: 100%; }
@@ -198,10 +201,12 @@
       <h3>Diagnostics log</h3>
       <p class="tip" style="margin-top:0">If something misbehaves, tap Copy and paste this to Claude.</p>
       <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button class="icon-btn" id="diag-check">Run phone check</button>
         <button class="icon-btn" id="diag-copy">Copy log</button>
         <button class="icon-btn" id="diag-clear">Clear</button>
         <span class="tip" id="diag-status" style="margin:0;align-self:center"></span>
       </div>
+      <div id="diag-video" style="width:200px;aspect-ratio:16/9;margin-bottom:8px" hidden></div>
       <pre id="diag-text"></pre>
     </div>
   </div>
@@ -236,8 +241,8 @@
       <button class="icon-btn" id="vid-next" title="Next demo">›</button>
       <button class="icon-btn" id="vid-restart" title="Restart clip">↺</button>
     </div>
-    <button class="icon-btn" id="sound-btn">🔈<span class="lbl"> Demo sound</span></button>
-    <button class="icon-btn" id="voice-btn">🔊<span class="lbl"> Voice</span></button>
+    <button class="icon-btn snd" id="sound-btn" aria-label="Video sound"></button>
+    <button class="icon-btn snd" id="voice-btn" aria-label="Coach voice"></button>
   </div>
   <div class="rotate-hint">Turn the phone sideways to fill the TV</div>
   <div class="p-body" id="p-body">
@@ -261,6 +266,7 @@ const DIAG = (() => { try { return JSON.parse(localStorage.getItem("diag") || "[
 function log(...parts) {
   const line = new Date().toTimeString().slice(0, 8) + " " + parts.map((p) => typeof p === "string" ? p : JSON.stringify(p)).join(" ");
   DIAG.push(line); if (DIAG.length > 500) DIAG.splice(0, DIAG.length - 500);
+  if (/[?&]selftest\b/.test(location.search)) return; // test runs don't touch the saved log
   try { localStorage.setItem("diag", JSON.stringify(DIAG)); } catch {}
 }
 window.addEventListener("error", (e) => log("JS error:", e.message, (e.filename || "").split("/").pop() + ":" + e.lineno));
@@ -444,8 +450,11 @@ function coachPlan(lines) {
   coach.stepT0 = Date.now(); coach.lastEnd = Date.now();
   coach.queue = lines.filter((l) => l && l.texts && l.texts.length);
 }
+// The coach stays quiet while the demo video's own sound is on (two voices at once
+// is useless). If the phone refused the video's sound, the video is silent, so the coach talks.
+const videoAudible = () => demoSound && !soundBlocked && !$("player-screen").hidden;
 function coachTick() {
-  if (!voiceOn || !coach.queue.length) return;
+  if (!voiceOn || videoAudible() || !coach.queue.length) return;
   const line = coach.queue[0], now = Date.now();
   const due = line.when ? line.when() : (now - coach.stepT0) / 1000 >= (line.at || 0);
   if (due && !line.dueAt) line.dueAt = now;
@@ -493,7 +502,7 @@ function deviceSpeak(text, done) {
     coach.safety = setTimeout(done, 12000);
   } catch { done(); }
 }
-function playNow(texts) { coachPlan([{ texts }]); coachTick(); }
+function playNow(texts) { coachPlan([{ texts, gap: 0 }]); coachTick(); }
 
 let wakeLock = null;
 async function keepAwake() {
@@ -507,7 +516,19 @@ document.addEventListener("visibilitychange", () => {
   // iOS pauses video when you leave the app; pick it back up when you return
   if (videoActive && ytReady) setTimeout(() => { if (videoActive) { yt.playVideo(); watchStall(); } }, 300);
 });
-function updateVoiceBtn() { $("voice-btn").innerHTML = (voiceOn ? "🔊" : "🔇") + '<span class="lbl"> Voice</span>'; }
+// Speaker icon: on = speaker with sound waves, off = speaker with a slash through it
+function speakerIcon(on) {
+  return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/>${on
+      ? '<path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>'
+      : '<path d="M3 3l18 18"/>'}</svg>`;
+}
+function soundButton(el, on, label) {
+  el.innerHTML = speakerIcon(on) + `<span class="snd-lbl">${label}</span>`;
+  el.classList.toggle("on", on);
+  el.setAttribute("aria-pressed", on);
+}
+function updateVoiceBtn() { soundButton($("voice-btn"), voiceOn && !demoSound, demoSound && voiceOn ? "Coach paused" : "Coach"); }
 $("voice-btn").onclick = () => { voiceOn = !voiceOn; store.set("voiceOn", voiceOn); updateVoiceBtn(); if (!voiceOn) coachReset(); };
 
 /* ---------------- YouTube player ---------------- */
@@ -539,10 +560,12 @@ function watchStall() {
     }, 2500);
   }, 3000);
 }
-function updateSoundBtn() { $("sound-btn").innerHTML = (demoSound ? "🔊" : "🔈") + '<span class="lbl"> Demo sound</span>'; }
+function updateSoundBtn() { soundButton($("sound-btn"), demoSound, "Video"); }
 $("sound-btn").onclick = () => {
   demoSound = !demoSound; store.set("demoSound", demoSound); updateSoundBtn();
   soundBlocked = false; hint(null);
+  if (demoSound) { coachReset(); log("video sound on: coach paused"); } // resumes from the next step
+  updateVoiceBtn();
   applyDemoSound(); if (ytReady && videoActive) { yt.playVideo(); watchStall(); }
 };
 let yt = null, ytReady = false, pendingVideo = null;
@@ -571,7 +594,9 @@ window.onYouTubeIframeAPIReady = function () {
     }
   });
 };
-(function loadYT() { const s = document.createElement("script"); s.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(s); })();
+// ?selftest runs the automated test suite (tests/selftest.js) with YouTube stubbed out
+const SELFTEST_MODE = /[?&]selftest\b/.test(location.search);
+if (!SELFTEST_MODE) (function loadYT() { const s = document.createElement("script"); s.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(s); })();
 
 function stopVideo() {
   clearInterval(cueTimer); clearTimeout(stallTimer); hint(null);
@@ -736,16 +761,18 @@ function renderWork(st) {
 
   if (timed) {
     const hold = ex.time;
-    const ready = first ? 10 : 6; // time to get into position (longer when there's an intro to hear)
+    const lines = [];
+    if (st.side === "Right side") lines.push({ texts: [SAY.switchSides(), SAY.side("Right side"), ...noteLine] });
+    else if (first) lines.push({ texts: [SAY.name(st.key), ...setIntro, SAY.target(st.key), ...(st.side ? [SAY.side(st.side)] : []), ...noteLine, SAY.key(st.key)] });
+    else lines.push({ texts: [...setIntro, ...(st.side ? [SAY.side(st.side)] : []), ...noteLine] });
+    // Time to get into position: at least 6 s, and always long enough to finish the intro before "Go"
+    const introSec = lines[0].texts.reduce((t, x) => t + (clipManifest[clipId(x)] || 2) + 0.25, 0.6);
+    const ready = Math.ceil(Math.max(first ? 10 : 6, introSec + 1.5));
     timer = { phase: "ready", left: ready, total: hold, paused: false, t0: Date.now() };
     $("c-pause").onclick = togglePause;
     $("t-state").textContent = "get in position…";
     $("t-clock").textContent = fmt(ready);
     const workAt = (sec) => () => timer.phase === "work" && timer.total - timer.left >= sec;
-    const lines = [];
-    if (st.side === "Right side") lines.push({ texts: [SAY.switchSides(), SAY.side("Right side"), ...noteLine] });
-    else if (first) lines.push({ texts: [SAY.name(st.key), ...setIntro, SAY.target(st.key), ...(st.side ? [SAY.side(st.side)] : []), ...noteLine, SAY.key(st.key)] });
-    else lines.push({ texts: [...setIntro, ...(st.side ? [SAY.side(st.side)] : []), ...noteLine] });
     lines.push({ texts: [SAY.go()], when: () => timer.phase === "work", late: 1.5, gap: 0 });
     if (first) {
       // Spread the cues across the hold, finishing before the last 10 seconds
@@ -886,7 +913,71 @@ $("diag-copy").onclick = async () => {
   }
 };
 
+/* ---------------- Phone check ----------------
+   ~30 s of real playback on the actual device: the voice clips (in order, no
+   overlap), a beep, and a muted YouTube demo, then whether the phone lets the
+   demo's sound turn on without a tap. Results go into the diagnostics log. */
+$("diag-check").onclick = async () => {
+  unlockAudio(); // must happen inside this tap
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const btn = $("diag-check"); btn.disabled = true; btn.textContent = "Checking…";
+  const results = [];
+  const note = (ok, msg) => { results.push((ok ? "PASS " : "FAIL ") + msg); log("check:", (ok ? "PASS " : "FAIL ") + msg); renderDiag(); };
+  log("=== phone check", navigator.userAgent.match(/OS [\d_]+/)?.[0] || "", "standalone:", !!navigator.standalone,
+      "audioSession:", !!navigator.audioSession, "voice:", voiceOn, "video sound:", demoSound);
+
+  // 1. Three voice clips back to back
+  const texts = [SAY.name("rdl"), SAY.key("rdl"), SAY.go()];
+  const events = [];
+  const onPlay = () => events.push(["start", voiceEl.src.split("/").pop(), performance.now()]);
+  const onEnd = () => events.push(["end", voiceEl.src.split("/").pop(), performance.now()]);
+  voiceEl.addEventListener("playing", onPlay); voiceEl.addEventListener("ended", onEnd);
+  const wasOn = voiceOn, wasDemo = demoSound; voiceOn = true; demoSound = false;
+  playNow(texts);
+  const expectMs = texts.reduce((t, x) => t + (clipManifest[clipId(x)] || 2) * 1000 + 300, 0) + 3000;
+  const t0 = performance.now();
+  while (performance.now() - t0 < expectMs && (coach.playing || coach.queue.length)) await wait(200);
+  voiceOn = wasOn; demoSound = wasDemo;
+  voiceEl.removeEventListener("playing", onPlay); voiceEl.removeEventListener("ended", onEnd);
+  const starts = events.filter((e) => e[0] === "start" && e[1].endsWith(".m4a")).length;
+  const ends = events.filter((e) => e[0] === "end" && e[1].endsWith(".m4a")).length;
+  let overlap = false;
+  for (let i = 1; i < events.length; i++) if (events[i][0] === "start" && events[i - 1][0] === "start") overlap = true;
+  note(Object.keys(clipManifest).length > 0, `voice recordings available (${Object.keys(clipManifest).length})`);
+  note(starts === 3 && ends === 3, `coach voice played ${starts}/3 clips, ${ends}/3 finished`);
+  note(!overlap, "voice clips never overlapped");
+
+  // 2. Beep
+  try { beep(880, 0.2); note(!!audioCtx && audioCtx.state === "running", `beep audio ${audioCtx ? audioCtx.state : "unavailable"}`); }
+  catch (e) { note(false, "beep error " + e.message); }
+
+  // 3. YouTube demo: muted autoplay, then sound without a tap
+  if (!window.YT || !YT.Player) { note(false, "YouTube player didn't load"); }
+  else {
+    $("diag-video").hidden = false;
+    const box = document.createElement("div"); $("diag-video").replaceChildren(box);
+    let state = -9;
+    const p = new YT.Player(box, { width: 200, height: 112, videoId: EX.catcow.videos[0].id,
+      playerVars: { autoplay: 1, mute: 1, playsinline: 1, controls: 1 },
+      events: { onReady: (e) => e.target.playVideo(), onStateChange: (e) => { state = e.data; }, onError: (e) => note(false, "demo video error " + e.data) } });
+    const t1 = performance.now();
+    while (state !== 1 && performance.now() - t1 < 10000) await wait(250);
+    note(state === 1, `demo video autoplays muted (${state === 1 ? "yes" : "no, state " + state + "; Low Power Mode blocks this"})`);
+    if (state === 1) {
+      p.unMute(); p.setVolume(100);
+      await wait(2000);
+      const ok = p.getPlayerState() === 1 && !p.isMuted();
+      note(ok, `demo sound can turn on without tapping the video (${ok ? "yes" : "no, needs a tap on the video"})`);
+    }
+    p.destroy(); $("diag-video").hidden = true;
+  }
+  log("=== phone check done:", results.filter((r) => r.startsWith("FAIL")).length, "problems");
+  renderDiag();
+  btn.disabled = false; btn.textContent = "Run phone check";
+};
+
 /* ---------------- Wire up ---------------- */
+if (SELFTEST_MODE) { const t = document.createElement("script"); t.src = "tests/selftest.js"; document.body.appendChild(t); }
 $("day-back").onclick = () => { currentDay = null; show("home"); };
 renderHome();
 </script>
