@@ -9,7 +9,7 @@ import path from "node:path";
 
 const ROOT = path.resolve(import.meta.dirname, "../..");
 const QUICK = process.argv.includes("--quick");
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".m4a": "audio/mp4" };
+const TYPES = { ".html": "text/html", ".css": "text/css", ".js": "text/javascript", ".json": "application/json", ".m4a": "audio/mp4" };
 
 // tiny static server for the site folder
 const server = http.createServer((req, res) => {

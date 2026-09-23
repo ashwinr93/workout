@@ -1,4 +1,4 @@
-/* Joint-Friendly Workout — app
+/* Workout player — app
  *
  * Parts (each owns its own state):
  *   Diag       rolling diagnostics log (Home → Diagnostics)
@@ -528,6 +528,12 @@ const UI = {
 
   /* ---------- home */
   home() {
+    document.title = PLAN.title;
+    $("plan-title").textContent = PLAN.title;
+    $("plan-subtitle").textContent = PLAN.subtitle;
+    $("plan-rules").hidden = !PLAN.rules.length;
+    $("plan-rules-title").textContent = PLAN.rulesTitle;
+    $("plan-rules-list").innerHTML = PLAN.rules.map(([lead, text]) => `<li><b>${esc(lead)}</b> ${esc(text)}</li>`).join("");
     const today = new Date().getDay();
     $("days").innerHTML = DAYS.map((day, i) => `
       <button class="day-card${day.d === today ? " today" : ""}" data-i="${i}">

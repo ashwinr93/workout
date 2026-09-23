@@ -10,12 +10,14 @@ Live: https://ashwinr93.github.io/workout/ — GitHub Pages from `ashwinr93/work
 |---|---|
 | `index.html` | Markup only (home, day, player screens) |
 | `styles.css` | Design tokens and layout; compact rules for landscape phone (`max-height: 520px`) and portrait phone |
-| `data.js` | Exercises (`EX`), `WARMUP`, `COOLDOWN`, `DAYS`, and all narration wording (`SAY`, `SPOKEN_NAMES`, `allPhrases()`, `clipId()`) |
+| `data.js` | Everything plan-specific: `PLAN` (home title, subtitle, rules card), exercises (`EX`), `WARMUP`, `COOLDOWN`, `DAYS`, and all narration wording (`SAY`, `SPOKEN_NAMES`, `allPhrases()`, `clipId()`) |
 | `app.js` | The app, one owner per concern: `Diag`, `Beep`, `Voice` (coach), `Video` (YouTube), `Sound` (who talks), `Narration` (what's said when), `Workout` (steps/timer), `UI`, `Diagnostics` (phone check) |
 | `audio/` | One `.m4a` per phrase, named by `clipId(text)`, plus `manifest.json` (id → seconds) |
+| `tools/credits.mjs` | Rebuilds the README's "Demo videos" credits from `data.js` (run after adding/swapping a video) |
 | `tools/make_audio.py` | Records every phrase from `data.js` with the Kokoro voice `af_heart` |
 | `tests/selftest.js` | Fast self-test (virtual clock, fake YouTube); runs with `index.html?selftest` |
-| `tests/e2e/` | Playwright: `real-browsers.mjs` (real YouTube, real clicks), `ad-scan.mjs` (ads + which demos have a voice) |
+| `tests/e2e/` | Playwright: `real-browsers.mjs` (real YouTube, real clicks), `ad-scan.mjs` (ads + which demos have a voice), `screenshots.mjs` (regenerates `docs/*.png` for the README) |
+| `README.md` | Public story, usage tips and "make it yours" guide — keep it true when behaviour changes; re-run `screenshots.mjs` after visual changes |
 
 ### Exercise data (`EX` in `data.js`)
 `name`, `sets?`, `reps`+`unit` **or** `time` (seconds), `perSide?`, `rest`, `key` (the one cue that matters most → "Focus"), `cues` (in the order the demo shows them), `stop` (safety), `videos` (main first, then alternates: `{ id, label?, start?, end?, voice?, name?, key?, cues?, stop? }`). `voice: true` means someone talks in the demo; `name`/`key`/`cues`/`stop` on a video make it a variant with its own text.
@@ -54,4 +56,5 @@ Setup (if the venv/models are gone — they were kept in `/private/tmp/claude-50
 1. Find candidates (YouTube search); prefer short, clear, side-on demos.
 2. `node tests/e2e/ad-scan.mjs --talk <ids>` — reject any "AD"; the output tells you which have a voice (`voice: true`).
 3. Check intro/outro frames and set `start`/`end`; check the cues match what the demo does.
-4. Run the tests.
+4. `node tools/credits.mjs` to update the README credits.
+5. Run the tests.

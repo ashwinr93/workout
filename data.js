@@ -548,6 +548,17 @@ const WARMUP = ["catcow", "armcircles", "threadneedle", "hip9090", "revlungetwis
 // Post-workout flexibility (the PDF's Sunday static-stretch list), offered after every session
 const COOLDOWN = ["pigeon", "couchSun", "crossbody", "tricepsstretch", "hamstring"];
 
+// The plan's own words on the home screen. `rules` items are [bold lead, text].
+const PLAN = {
+  title: "Joint-Friendly Strength & Flexibility",
+  subtitle: "4-day upper/lower split · Dumbbells & bench · Football-optimized",
+  rulesTitle: "Core joint rules",
+  rules: [
+    ["Shoulder protection:", "use a neutral grip (palms facing each other) and 30°–45° inclines. Do 2 pulling sets for every pushing set."],
+    ["Knee protection:", "focus on the posterior chain (hamstrings and glutes) and keep your shins vertical to avoid shear on the kneecap."],
+  ],
+};
+
 // d follows Date.getDay(): 0 = Sunday
 const DAYS = [
   { d: 1, name: "Monday", focus: "Upper Body A", goal: "Chest/back strength + shoulder stability",
