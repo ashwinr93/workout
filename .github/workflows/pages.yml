@@ -28,6 +28,12 @@ jobs:
           if git ls-remote --exit-code --heads "https://github.com/${{ github.repository }}" staging; then
             git clone --depth 1 --branch staging "https://github.com/${{ github.repository }}" site/staging
           fi
+          # stamp each copy with its own commit, so browsers fetch a release's files together
+          for dir in site site/staging; do
+            [ -d "$dir/.git" ] || continue
+            v=$(git -C "$dir" rev-parse --short HEAD)
+            sed -i "s/?v=dev/?v=$v/g; s/name=\"build\" content=\"dev\"/name=\"build\" content=\"$v\"/" "$dir/index.html"
+          done
           rm -rf site/.git site/.github site/staging/.git site/staging/.github
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

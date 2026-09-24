@@ -88,7 +88,9 @@ h1, h2, h3, p { margin: 0; }
   display: flex; align-items: center; gap: 14px; width: 100%; text-align: left;
   background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px;
 }
-.ex-row img { width: 96px; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000; flex: none; }
+.ex-row img { width: 96px; height: auto; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: var(--panel-2); flex: none; }
+.thumb { opacity: 0; transition: opacity .25s; }
+.thumb.in { opacity: 1; }
 .ex-row .ex-title { font-weight: 600; }
 .ex-row .ex-meta { color: var(--muted); font-size: 13px; }
 .ex-row > div { flex: 1; min-width: 0; }
@@ -175,6 +177,13 @@ h1, h2, h3, p { margin: 0; }
 .plan-hero::before { background: linear-gradient(0deg, rgb(8 10 14 / .85) 0%, rgb(8 10 14 / .2) 50%, transparent 100%); }
 .plan-hero { display: flex; align-items: flex-end; min-height: 200px; padding: 18px; margin-bottom: 10px; }
 .plan-hero .title { margin: 0; color: #fff; }
+.plan-hero .plan-days { display: block; margin-bottom: 2px; }
+.view-meta { margin: 0 0 10px; color: var(--muted); }
+.view-meta .plan-level { background: var(--text); color: var(--bg); }
+/* My week opens on your plan's photo */
+.week-hero { min-height: 210px; margin: 6px 0 18px; }
+.week-hero .plan-photo { object-position: 50% 20%; }
+.week-hero .subtitle { margin: 4px 0 0; color: rgba(255, 255, 255, .82); }
 .create-tile { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; padding: 16px 18px; border-radius: 16px; background: var(--panel); border: 1px dashed #3a4250; }
 .create-tile .link-accent { align-self: flex-start; margin-top: 6px; }
 .plan-day { margin-top: 10px; width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; }
@@ -255,6 +264,9 @@ h1, h2, h3, p { margin: 0; }
 .context { font-size: clamp(12px, 2.4vh, 14px); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
 .context .side { color: var(--text); }
 .context.rest { color: var(--rest); }
+.context-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; min-width: 0; }
+.context-row .context { min-width: 0; }
+.skip-warm { flex: none; font-size: clamp(12px, 2.4vh, 14px); font-weight: 650; color: var(--muted); padding: 8px 0 8px 12px; margin: -8px 0; }   /* a finger-sized target without taking room */
 .name { font-size: clamp(22px, 6vh, 38px); font-weight: 750; line-height: 1.1; letter-spacing: -0.015em; }
 .target { align-self: flex-start; display: inline-flex; align-items: baseline; gap: 6px; border-radius: 999px;
   padding: clamp(4px, 1vh, 7px) clamp(12px, 1.4vw, 16px); background: var(--panel-2); font-size: clamp(14px, 3vh, 18px); color: var(--muted); }
@@ -307,6 +319,14 @@ h1, h2, h3, p { margin: 0; }
 
 /* ------------------------------------------------------------------ Phone, landscape (what the TV shows) */
 @media (orientation: landscape) and (max-height: 520px) {
+  /* plan cards lie on their side: the photo on the left, the statement beside it */
+  .plan-tile { min-height: 200px; padding: 14px 16px 14px calc(42% + 16px); gap: 4px; }
+  .plan-tile .plan-photo { width: 42%; height: 100%; }
+  .plan-tile::before { background: linear-gradient(90deg, transparent 0, transparent calc(42% - 60px), var(--base) 42%); }
+  .plan-days b { font-size: 24px; }
+  .plan-name { font-size: 20px; }
+  .plan-cta { min-height: 38px; margin-top: 6px; font-size: 15px; }
+  .plan-hero { min-height: 150px; }
   .tabbar { padding-top: 3px; padding-bottom: max(4px, env(safe-area-inset-bottom, 0px)); }
   .tabbar button span { display: none; }
   .screen.tabbed { padding-bottom: calc(50px + env(safe-area-inset-bottom, 0px)); }

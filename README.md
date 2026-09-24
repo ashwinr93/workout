@@ -197,7 +197,7 @@ Every demo is the creator's own video, played through YouTube's embedded player 
 - **[Wade Bass](https://www.youtube.com/@Tglcoach)**: [Tibialis Raises](https://www.youtube.com/watch?v=OPEuhclsTUQ)
 - **[YMCA Calgary](https://www.youtube.com/@ymcacalgary)**: [Seated Leg Curl](https://www.youtube.com/watch?v=TAbolZJ6Lg4)
 
-The plan photos come from [Unsplash](https://unsplash.com) (free to use under the [Unsplash License](https://unsplash.com/license)) and load from Unsplash's servers. Thank you to these photographers:
+The plan photos come from [Unsplash](https://unsplash.com) (free to use under the [Unsplash License](https://unsplash.com/license)) (copies are saved in `photos/`). Thank you to these photographers:
 
 - [Start Here: Full Body](https://unsplash.com/photos/funsezUxxe4) by Vitaly Gariev
 - [Lose Weight at Home](https://unsplash.com/photos/oLStrTTMz2s) by bruce mars

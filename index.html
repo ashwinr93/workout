@@ -7,9 +7,23 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Workout Coach">
 <meta name="theme-color" content="#0d1015">
+<!-- The deploy stamps each release's commit here and on the file links below (?v=), so a phone never
+     mixes a new page with old cached scripts; locally it stays "dev" -->
+<meta name="build" content="dev">
 <title>Workout Coach</title>
+<meta name="description" content="A free workout coach: your weekly plan with demo videos, a coach voice and timers. Pick a ready-made plan or have your own AI build one.">
+<meta property="og:title" content="Workout Coach">
+<meta property="og:description" content="Your weekly plan with demo videos, a coach voice and timers. Pick a ready-made plan or have your own AI build one. Free.">
+<meta property="og:image" content="https://ashwinr93.github.io/workout/docs/share.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://www.youtube.com">
-<link rel="stylesheet" href="styles.css">
+<link rel="preconnect" href="https://i.ytimg.com">
+<link rel="stylesheet" href="styles.css?v=dev">
 </head>
 <body>
 <!-- Stripes for helping muscles on every muscle figure (Figure.COLORS.help) -->
@@ -21,8 +35,8 @@
 <section id="home" class="screen tabbed">
   <div class="wrap">
     <div class="label brand">Workout Coach</div>
-    <h1 class="title" id="plan-title"></h1>
-    <p class="subtitle" id="plan-subtitle"></p>
+    <div class="plan-hero week-hero" id="week-hero"><img class="plan-photo" id="week-photo" alt="" decoding="async">
+      <div><h1 class="title" id="plan-title"></h1><p class="subtitle" id="plan-subtitle"></p></div></div>
     <div class="days" id="days"></div>
     <div id="plan-card"></div>
     <div class="sheet-wrap" id="plan-menu" hidden>
@@ -167,11 +181,11 @@
   <div class="finished" id="finished" hidden></div>
 </section>
 
-<script src="library.js"></script>
-<script src="plan.js"></script>
-<script src="speech.js"></script>
-<script src="prompt.js"></script>
-<script src="programs.js"></script>
-<script src="app.js"></script>
+<script src="library.js?v=dev"></script>
+<script src="plan.js?v=dev"></script>
+<script src="speech.js?v=dev"></script>
+<script src="prompt.js?v=dev"></script>
+<script src="programs.js?v=dev"></script>
+<script src="app.js?v=dev"></script>
 </body>
 </html>

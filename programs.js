@@ -7,9 +7,10 @@
    title: the name as shown (a link can only carry letters and hyphens)
    goals: lose (Lose weight) · strong (Get stronger) · move (Move better)
    photo: the card's picture, from Unsplash (free to use under the Unsplash License; credited in the
-   README by tools/credits.mjs): img = its id on images.unsplash.com, page = its unsplash.com/photos/ id */
+   README by tools/credits.mjs), saved in photos/<page>.jpg by tools/photos.mjs: img = its id on
+   images.unsplash.com, page = its unsplash.com/photos/ id */
 const GOALS = { lose: "Lose weight", strong: "Get stronger", move: "Move better" };
-const photoUrl = (p, w) => `https://images.unsplash.com/photo-${p.photo.img}?w=${w}&q=70&auto=format&fit=crop`;
+const photoUrl = (p) => `photos/${p.photo.page}.jpg`;
 // A plan you made with AI gets a photo that matches what it uses: the most kit any of its exercises
 // needs (GEAR in library.js), or stretching when it's all stretches
 const OWN_PHOTOS = {

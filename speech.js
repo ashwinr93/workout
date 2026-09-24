@@ -60,6 +60,12 @@ const SAY = {
   tenLeft: () => "Ten seconds left.",
   rest: (sec) => `Rest ${durationWords(sec)}.`,
   nextUp: () => "Next up,",
+  // said in the rest before a main exercise: "This one works your quads, glutes and hamstrings."
+  works: (key, vi) => {
+    const names = variant(key, vi).muscles.main.map((m) => MUSCLES[m].toLowerCase());
+    const list = names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names.at(-1)}` : names[0];
+    return `This one ${EX[key].type === "stretch" ? "stretches" : "works"} your ${list}.`;
+  },
   tenToGo: () => "Ten seconds. Get ready.",
   done: () => "Workout complete. Nice work.",
 };
@@ -77,7 +83,7 @@ function allPhrases() {
   for (const [key, ex] of Object.entries(EX)) {
     doseOptions(key).forEach((d) => out.add(SAY.target(d)));
     ex.videos.forEach((_, vi) => {
-      out.add(SAY.name(key, vi)); out.add(SAY.key(key, vi));
+      out.add(SAY.name(key, vi)); out.add(SAY.key(key, vi)); out.add(SAY.works(key, vi));
       variant(key, vi).cues.forEach((_, i) => out.add(SAY.cue(key, i, vi)));
     });
     if (ex.rest) out.add(SAY.rest(ex.rest));

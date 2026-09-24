@@ -49,7 +49,7 @@ const photos = [...ctx.PROGRAMS.map((p) => [p.title || ctx.examplePlan().title, 
 const section = [START,
   `Every demo is the creator's own video, played through YouTube's embedded player (start and end points only; nothing is downloaded or edited). Thank you to these ${channels.size} channels:`,
   "", ...lines, "",
-  "The plan photos come from [Unsplash](https://unsplash.com) (free to use under the [Unsplash License](https://unsplash.com/license)) and load from Unsplash's servers. Thank you to these photographers:",
+  "The plan photos come from [Unsplash](https://unsplash.com) (free to use under the [Unsplash License](https://unsplash.com/license)) (copies are saved in `photos/`). Thank you to these photographers:",
   "", ...photos, END].join("\n");
 
 const readme = fs.readFileSync(README, "utf8");

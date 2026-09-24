@@ -24,6 +24,8 @@ const QUERY = new URLSearchParams(location.search);
 const TEST_MODE = QUERY.has("selftest");
 const REVIEW_MODE = QUERY.has("review");         // screenshots for review (tests/review.js): nothing is saved
 // Staging (…/workout/staging/) shares the live site's origin, so its saved data gets its own keys
+// This release (the deploy's commit; "dev" locally): data files are fetched with it, so they match the page
+const BUILD = document.querySelector('meta[name="build"]')?.content || "dev";
 const STORE_PREFIX = /\/staging\//.test(location.pathname) ? "staging:" : "";
 const store = {
   get(k, fallback) { try { const v = localStorage.getItem(STORE_PREFIX + k); return v === null ? fallback : JSON.parse(v); } catch { return fallback; } },
@@ -92,7 +94,7 @@ const Voice = {
 
   load() {
     this.el.preload = "auto";
-    return fetch("audio/manifest.json").then((r) => r.json())
+    return fetch(`audio/manifest.json?v=${BUILD}`).then((r) => r.json())
       .then((m) => { this.manifest = m; log("voice clips loaded:", Object.keys(m).length); })
       .catch((e) => log("voice clips NOT loaded:", e.message));
   },
@@ -380,8 +382,11 @@ const Narration = {
 
   rest(st, next) {
     const nextSet = next && next.section !== "warm" && next.sets > 1 ? [SAY.setOf(next.set, next.sets)] : [];
+    // before a main exercise's first set, and only when the rest has room: what it works
+    const works = next && next.section === "main" && next.set === 1 && next.side !== "Right side" && st.dur >= 30;
     return [
       { texts: [SAY.rest(st.dur), ...(next ? [SAY.nextUp(), SAY.name(next.key, Workout.variantOf(next.key)), ...nextSet] : [])], intro: true },
+      works ? { texts: [SAY.works(next.key, Workout.variantOf(next.key))], gap: 0.8, intro: true } : null,
       st.dur >= 20 ? { texts: [SAY.tenToGo()], when: () => Workout.timer.phase === "rest" && Workout.timer.left <= 10.5, late: 2 } : null,
     ];
   },
@@ -439,6 +444,18 @@ const Workout = {
       }
     });
     return steps;
+  },
+
+  // In the warm-up (or a rest before its next move): the player offers to skip the rest of it
+  inWarmup() {
+    const st = this.step();
+    return !this.preview && !!st && (st.type === "work" ? st.section === "warm" : this.nextWork()?.section === "warm");
+  },
+  skipWarmup() {
+    const n = this.steps.findIndex((st) => st.type === "work" && st.section !== "warm");
+    log("skip warm-up");
+    if (n < 0) return this.finish();
+    this.cur = n; this.render();
   },
 
   start({ warm, cool, label }) {
@@ -534,6 +551,9 @@ document.addEventListener("visibilitychange", () => {
   setTimeout(() => Video.resume(), 300);        // iOS pauses video in the background
 });
 
+// A demo's still for exercise rows: YouTube's thumbnail (or the still in `thumb`, for a black
+// first frame; tools/thumbs.mjs), faded in once loaded so a slow network shows a calm placeholder
+const thumb = (v) => `<img class="thumb" src="https://i.ytimg.com/vi/${v.id}/${v.thumb || "mqdefault"}.jpg" alt="" loading="lazy" decoding="async" width="320" height="180" onload="this.classList.add('in')">`;
 const SWAP_ICON = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4 3 8l4 4"/><path d="M3 8h14"/><path d="m17 20 4-4-4-4"/><path d="M21 16H7"/></svg>`;
 // Icons for the plan menu (outline, like the swap icon)
 const MENU_ICON = (d) => `<span class="menu-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg></span>`;
@@ -557,7 +577,7 @@ const Figure = {
   data: null, fetched: {},                        // kind → promise of that figure
 
   get(kind) {
-    return this.fetched[kind] ||= fetch(`figures/${kind}.json`).then((r) => r.json())
+    return this.fetched[kind] ||= fetch(`figures/${kind}.json?v=${BUILD}`).then((r) => r.json())
       .catch((e) => { delete this.fetched[kind]; log("figure not loaded:", e.message); });
   },
   // The chosen figure; the other one is fetched afterwards so switching is instant
@@ -659,6 +679,8 @@ const Plans = {
   // This page's address for your week (bookmarkable: the plan lives in it)
   url() { return location.pathname + location.search + (!this.current || this.current.example ? "" : "#" + this.current.link); },
   recent() { return REVIEW_MODE ? [] : store.get("plans", []); },
+  // Take a plan off Your plans (never the one you're following)
+  forget(link) { if (!REVIEW_MODE && link !== this.current?.link) store.set("plans", this.recent().filter((p) => p.link !== link)); },
   link(plan = this.current) { return SITE + (plan.example ? "" : "#" + plan.link); },
 };
 addEventListener("resize", () => UI.fitMuscleKey());   // turning the phone changes how much fits
@@ -715,25 +737,28 @@ const UI = {
   ownPlans() {
     const known = new Set([EXAMPLE_PLAN.link, ...PROGRAMS.map((p) => p.link)]);
     const links = [Plans.current, ...Plans.recent()].filter((p) => p && !known.has(p.link) && !p.example).map((p) => p.link);
-    return [...new Set(links)].map((link, i) => {
-      const plan = parsePlan(link).plan, keys = plan.days.flatMap((d) => (d.items || []).map((x) => x.key));
-      const kind = keys.length && keys.every((k) => EX[k].type === "stretch") ? "stretch"
-        : Object.keys(GEAR).reverse().find((g) => keys.some((k) => EX[k].gear.includes(g))) || "bodyweight";
-      return { id: `own-${i}`, plan, goals: [], own: true, mins: null, photo: OWN_PHOTOS[kind],
-        level: keys.some((k) => EX[k].videos.some((_, vi) => variant(k, vi).level === "intermediate")) ? "intermediate" : "beginner",
-        gear: kind === "stretch" ? "Stretching" : GEAR[kind].name,
-        about: "Your own plan, made with AI. Open a day to see its exercises, or adjust the plan with AI." };
-    });
+    return [...new Set(links)].map((link, i) => this.ownEntry(parsePlan(link).plan, `own-${i}`));
+  },
+  ownEntry(plan, id) {
+    const keys = plan.days.flatMap((d) => (d.items || []).map((x) => x.key));
+    const kind = keys.length && keys.every((k) => EX[k].type === "stretch") ? "stretch"
+      : Object.keys(GEAR).reverse().find((g) => keys.some((k) => EX[k].gear.includes(g))) || "bodyweight";
+    return { id, plan, goals: [], own: true, mins: null, photo: OWN_PHOTOS[kind],
+      level: keys.some((k) => EX[k].videos.some((_, vi) => variant(k, vi).level === "intermediate")) ? "intermediate" : "beginner",
+      gear: kind === "stretch" ? "Stretching" : GEAR[kind].name,
+      about: "Your own plan, made with AI. Open a day to see its exercises, or adjust the plan with AI." };
   },
   planEntry(id) { return [...this.ownPlans(), ...this.readyPlans()].find((e) => e.id === id); },
+  // The card facts for any plan: a ready-made one's, or worked out for one you made
+  entryOf(plan) { return this.readyPlans().find((e) => e.plan.link === plan.link) || this.ownEntry(plan, "own"); },
   // A card that makes one statement: how many days, what it is, what you need, and a clear way in
   planTile(e) {
-    const mine = Plans.current?.link === e.plan.link, w = this.planWeek(e.plan);
-    return `<button class="plan-tile" data-id="${e.id}"><img class="plan-photo" src="${photoUrl(e, 720)}" alt="" loading="lazy">
+    const mine = Plans.current?.link === e.plan.link;
+    return `<button class="plan-tile" data-id="${e.id}"><img class="plan-photo" src="${photoUrl(e)}" alt="" loading="lazy">
       ${mine ? '<span class="mine">Your week</span>' : ""}
-      <span class="plan-days"><b>${w.train}</b> day${w.train === 1 ? "" : "s"} a week${w.extra ? ` <small>+ ${w.extra}</small>` : ""}</span>
+      ${this.planDays(e.plan)}
       <span class="plan-name">${esc(e.plan.title)}</span>
-      <span class="plan-meta"><span class="plan-level">${e.own ? "Made with AI" : e.level === "beginner" ? "Beginner" : "Intermediate"}</span>${esc(this.planFacts(e, false))}</span>
+      <span class="plan-meta"><span class="plan-level">${this.levelLabel(e)}</span>${esc(this.planFacts(e, false))}</span>
       <span class="plan-cta">View plan <span aria-hidden="true">→</span></span></button>`;
   },
   programPlan(p) {
@@ -742,6 +767,12 @@ const UI = {
     if (p.title) plan.title = p.title;
     return plan;
   },
+  // "3 days a week + 1 walk", with the number big
+  planDays(plan) {
+    const w = this.planWeek(plan);
+    return `<span class="plan-days"><b>${w.train}</b> day${w.train === 1 ? "" : "s"} a week${w.extra ? ` <small>+ ${w.extra}</small>` : ""}</span>`;
+  },
+  levelLabel(e) { return e.own ? "Made with AI" : e.level === "beginner" ? "Beginner" : "Intermediate"; },
   // A plan's week: training days, and any walks or other activities ("3 days + 3 walks")
   planWeek(plan) {
     const acts = plan.days.filter((d) => d.kind === "activity"), train = plan.days.length - acts.length;
@@ -759,14 +790,16 @@ const UI = {
     // each day opens its day screen (muscles, exercises to preview, even a try-out session)
     const dayCard = (d, i) => `<button class="card plan-day" data-day="${i}"><span><span class="label">${DAY_NAMES[d.d]}</span><b>${esc(d.name)}</b>
       <span class="muted">${esc(d.kind === "activity" ? this.daySummary(d) : d.items.map((x) => EX[x.key].name).join(" · "))}</span></span><span class="chev">›</span></button>`;
-    $("plan-view-body").innerHTML = `<div class="plan-hero"><img class="plan-photo" src="${photoUrl(e, 1200)}" alt="">
-        <h1 class="title">${esc(plan.title)}</h1></div>
-      <div class="ex-tags"><span class="tag">${e.own ? "Made with AI" : e.level === "beginner" ? "Beginner" : "Intermediate"}</span><span class="tag">${esc(this.planFacts(e))}</span></div>
+    $("plan-view-body").innerHTML = `<div class="plan-hero"><img class="plan-photo" src="${photoUrl(e)}" alt="" decoding="async">
+        <div>${this.planDays(e.plan)}<h1 class="title">${esc(plan.title)}</h1></div></div>
+      <p class="plan-meta view-meta"><span class="plan-level">${this.levelLabel(e)}</span>${esc(this.planFacts(e, false))}</p>
       <p class="card-text">${esc(e.about)}</p>
       ${plan.days.map(dayCard).join("")}
-      <p class="note"><button class="link" id="plan-adjust">Adjust it to suit you with AI</button></p>`;
+      <p class="note"><button class="link" id="plan-adjust">Adjust it to suit you with AI</button>${
+        e.own && !mine ? ' · <button class="link" id="plan-forget">Remove from Your plans</button>' : ""}</p>`;
     $("plan-view-body").onclick = (ev) => { const b = ev.target.closest("button[data-day]"); if (b) this.openDay(plan.days[+b.dataset.day], "plan-view"); };
     $("plan-adjust").onclick = () => this.create(true, plan.link);
+    if ($("plan-forget")) $("plan-forget").onclick = () => { Plans.forget(plan.link); this.tab("plans"); };
     $("plan-start").textContent = mine ? "This is your week" : "Start this plan";
     $("plan-start").disabled = mine;
     $("plan-start").onclick = () => (Plans.current ? this.confirmPlan(plan) : this.startPlan(plan));
@@ -819,7 +852,7 @@ const UI = {
   libraryRow(key) {
     const ex = EX[key], m = ex.muscles;
     return `<button class="ex-row" data-ex="${key}" aria-label="Preview ${esc(ex.name)}">
-      <img src="https://i.ytimg.com/vi/${ex.videos[0].id}/mqdefault.jpg" alt="" loading="lazy">
+      ${thumb(ex.videos[0])}
       <div><div class="ex-title">${esc(ex.name)}</div><div class="ex-meta">${esc(muscleList(m.main))} · ${ex.level === "beginner" ? "Beginner" : "Intermediate"}</div></div>
       ${Figure.slot("badge", m, muscleList(m.main))}<span class="chev">›</span></button>`;
   },
@@ -830,12 +863,13 @@ const UI = {
   home() {
     const plan = Plans.current;
     $("week-empty").hidden = !!plan;
-    for (const id of ["plan-title", "plan-subtitle", "days", "plan-card"]) $(id).hidden = !plan;
+    for (const id of ["week-hero", "days", "plan-card"]) $(id).hidden = !plan;
     $("week-browse").onclick = () => this.tab("plans");
     $("week-create").onclick = () => this.create(false);
     if (!plan) { $("plan-title").textContent = ""; document.title = "Workout Coach"; return; }
     document.title = `${plan.title} · Workout Coach`;
     $("plan-title").textContent = plan.title;
+    $("week-photo").src = photoUrl(this.entryOf(plan));
     $("plan-subtitle").textContent = plan.subtitle || this.planSummary(plan);
     const today = new Date().getDay(), order = plan.days.map((day, i) => [day, i]).sort(([a], [b]) => ((a.d - today + 7) % 7) - ((b.d - today + 7) % 7));
     $("days").innerHTML = order.map(([day, i]) => `
@@ -940,7 +974,7 @@ const UI = {
     const ex = EX[entry.key], m = variant(entry.key, Workout.variantOf(entry.key)).muscles;
     this.rows.push(entry);
     return `<button class="ex-row" data-r="${this.rows.length - 1}" aria-label="Preview ${esc(ex.name)}">
-      <img src="https://i.ytimg.com/vi/${ex.videos[0].id}/mqdefault.jpg" alt="" loading="lazy">
+      ${thumb(ex.videos[Workout.variantOf(entry.key)] || ex.videos[0])}
       <div><div class="ex-title">${esc(ex.name)}</div><div class="ex-meta">${esc(this.amount(entry.dose))} · ${esc(muscleList(m.main))}</div></div>
       ${Figure.slot("badge", m, muscleList(m.main))}<span class="chev">›</span></button>`;
   },
@@ -1043,6 +1077,10 @@ const UI = {
   },
 
   /* ---------- player: exercise */
+  // The panel's top line, with "Skip warm-up" at its end during the warm-up
+  contextRow(context) {
+    return Workout.inWarmup() ? `<div class="context-row">${context}<button class="skip-warm" id="c-skipwarm">Skip warm-up ›</button></div>` : context;
+  },
   context(st) {
     const what = st.preview ? `${this.facts(st.key, Workout.variantOf(st.key)).level}${st.sets > 1 ? ` · ${st.sets} sets` : ""}`
       : st.section === "warm" ? "Warm-up"
@@ -1067,7 +1105,7 @@ const UI = {
   work(st) {
     const vi = Workout.variantOf(st.key), v = variant(st.key, vi), hold = st.dose.time && !st.preview, f = st.preview && this.facts(st.key, vi);
     $("panel").innerHTML = `<div class="panel-body">
-      <div class="context">${this.context(st)}</div>
+      ${this.contextRow(`<div class="context">${this.context(st)}</div>`)}
       <div class="head"><div class="head-text"><h2 class="name">${esc(v.name)}</h2>
         ${hold ? `<div class="hold" id="hold"><span class="clock" id="clock"></span><span class="state" id="hold-state"></span></div>`
                : `<div class="target-row"><div class="target">${this.target(st.dose)}</div>${f ? `<p class="equip">${esc(f.equip)}</p>` : ""}</div>`}</div>
@@ -1088,6 +1126,7 @@ const UI = {
              <button class="ctl primary" id="c-done">${hold ? "Skip ›" : "Done ✓"}</button>`}
       </div>`;
     $("c-done").onclick = st.preview ? () => Workout.exit() : () => { Beep.done(); Workout.go(1); };
+    if ($("c-skipwarm")) $("c-skipwarm").onclick = () => Workout.skipWarmup();
     if (!st.preview) $("c-prev").onclick = () => Workout.go(-1);
     if (hold) $("c-pause").onclick = () => Workout.togglePause();
     $("cues").onclick = () => this.showCue(this.cueIdx + 1, true);   // tap for the next cue
@@ -1127,7 +1166,7 @@ const UI = {
     const nex = next && variant(next.key, Workout.variantOf(next.key));
     const detail = next ? [next.section === "warm" ? "" : `Set ${next.set} of ${next.sets}`, next.side].filter(Boolean).join(" · ") : "";
     $("panel").innerHTML = `<div class="panel-body">
-      <div class="context rest">Rest</div>
+      ${this.contextRow('<div class="context rest">Rest</div>')}
       <div class="rest-main">
         <div class="ring">
           <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" fill="none" stroke="var(--line)" stroke-width="8"/>
@@ -1147,6 +1186,7 @@ const UI = {
     $("c-prev").onclick = () => Workout.go(-1);
     $("c-add").onclick = () => Workout.addRest(15);
     $("c-skip").onclick = () => Workout.go(1);
+    if ($("c-skipwarm")) $("c-skipwarm").onclick = () => Workout.skipWarmup();
     Figure.paint($("panel"));
   },
 

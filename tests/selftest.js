@@ -71,8 +71,12 @@
   const useSound = (mode) => { Sound.mode = mode; UI.soundButtons(); };
 
   /* ---------- what each step must say */
-  function expected(st) {
-    if (st.type === "rest") return [SAY.rest(st.dur), ...(st.dur >= 20 ? [SAY.tenToGo()] : [])];
+  function expected(st, next) {
+    if (st.type === "rest") {
+      // before a main exercise's first set, a long enough rest also says what it works
+      const works = next && next.section === "main" && next.set === 1 && next.side !== "Right side" && st.dur >= 30;
+      return [SAY.rest(st.dur), ...(works ? [SAY.works(next.key, Workout.variantOf(next.key))] : []), ...(st.dur >= 20 ? [SAY.tenToGo()] : [])];
+    }
     const hold = st.dose.time, vi = Workout.variantOf(st.key), must = [], first = st.set === 1 && st.side !== "Right side";
     if (st.side === "Right side") must.push(SAY.switchSides());
     const n = variant(st.key, vi).cues.length, every = hold && Math.max(7, Math.min(25, (hold - 13) / (n + 1)));
@@ -109,7 +113,7 @@
     await settle(5);
     W.steps.forEach((st, i) => {
       const said = T.said.filter((s) => s.step === i).map((s) => s.text);
-      for (const m of expected(st)) if (!said.includes(m))
+      for (const m of expected(st, W.steps.slice(i + 1).find((x) => x.type === "work"))) if (!said.includes(m))
         fails.push(`step ${i + 1} ${st.key || st.type}${st.set ? ` set ${st.set}` : ""}${st.side ? ` ${st.side}` : ""}: missing "${m}"`);
     });
     if (!T.said.some((s) => s.text === SAY.done())) fails.push(`never said "${SAY.done()}"`);
@@ -375,6 +379,25 @@
     return { name: "Exercises tab", steps: 0, lines: 0, fails };
   }
 
+  /* ---------- the player's extras and the files the page needs */
+  async function extrasCheck() {
+    const fails = [], check = (ok, msg) => { if (!ok) fails.push(msg); };
+    // Skip warm-up: offered during the warm-up only, and lands on the first main exercise
+    openDay(0); Workout.start({ warm: true, cool: false, label: "skip" }); await settle(1);
+    check(!!$("c-skipwarm"), "no Skip warm-up during the warm-up");
+    $("c-skipwarm")?.click(); await settle(1);
+    check(Workout.step().type === "work" && Workout.step().section === "main" && !$("c-skipwarm"), "Skip warm-up didn't land on the first main exercise");
+    Workout.exit(); await settle(0.5);
+    Workout.startPreview("catcow"); await settle(1);
+    check(!$("c-skipwarm"), "a preview offers Skip warm-up");
+    Workout.exit(); await settle(0.5);
+    // every plan photo and icon is there
+    const files = [...new Set([...PROGRAMS, ...Object.values(OWN_PHOTOS).map((photo) => ({ photo }))].map(photoUrl)),
+      "icons/icon.svg", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png", "manifest.webmanifest"];
+    for (const f of files) { const r = await fetch(f, { method: "HEAD" }).catch(() => null); check(r?.ok, `missing ${f}`); }
+    return { name: "Player extras and files", steps: files.length, lines: 0, fails };
+  }
+
   /* ---------- Plans tab: every ready-made plan is valid, browsing never changes your week */
   async function plansCheck() {
     const fails = [], check = (ok, msg) => { if (!ok) fails.push(msg); };
@@ -426,7 +449,7 @@
     // a plan you made with AI gets the same card, under Your plans, with a photo that fits its kit
     Plans.use(parsePlan(USER_PLAN).plan); UI.tab("plans");
     const own = $("plans-list").querySelector('.plan-tile[data-id^="own-"]');
-    check(own?.querySelector(".mine") && own.querySelector(".plan-photo")?.src.includes("images.unsplash.com"), "your own plan has no card (with a photo) under Your plans");
+    check(own?.querySelector(".mine") && /\/photos\/[\w-]+\.jpg$/.test(own.querySelector(".plan-photo")?.src), "your own plan has no card (with a photo) under Your plans");
     own?.click();
     check(!$("plan-view").hidden && $("plan-start").disabled, "your own plan's card doesn't open its preview");
     if (mine) Plans.use(mine.example ? null : mine); else Plans.use(null);
@@ -485,6 +508,7 @@
     results.push(await safely("Exercise details", async () => detailsCheck()));
     results.push(await safely("Exercises tab", exercisesCheck));
     results.push(await safely("Plans tab", plansCheck));
+    results.push(await safely("Player extras and files", extrasCheck));
     results.push(await safely("Plan links & AI message", async () => planCheck()));
     const sessions = async (plan, which) => {
       for (const i of which) {
