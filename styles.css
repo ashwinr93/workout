@@ -136,6 +136,35 @@ h1, h2, h3, p { margin: 0; }
 }
 .big-btn { background: var(--accent); color: var(--accent-ink); font-weight: 750; font-size: 18px; padding: 15px 30px; border-radius: 999px; min-width: 240px; }
 
+/* ------------------------------------------------------------------ Tabs (top-level screens only) */
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: flex; justify-content: center; gap: 8px;
+  background: rgba(13, 16, 21, .96); border-top: 1px solid var(--line);
+  padding: 6px var(--pad-r) max(8px, env(safe-area-inset-bottom, 0px)) var(--pad-l); }
+.tabbar button { flex: 0 1 140px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0; color: var(--muted); font-size: 11px; font-weight: 600; }
+.tabbar svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tabbar button[aria-current="page"] { color: var(--accent); }
+.screen.tabbed { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+
+/* ------------------------------------------------------------------ Exercises */
+.search { width: 100%; margin: 14px 0 10px; padding: 11px 14px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--text); font: inherit; font-size: 16px; }
+.search::placeholder { color: var(--faint); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.chip { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 650; }
+.filter-note { margin-top: 4px; }
+.ex-hero { position: relative; display: block; width: 100%; margin: 14px 0; border-radius: 12px; overflow: hidden; background: #000; aspect-ratio: 16/9; }
+.ex-hero img { width: 100%; height: 100%; object-fit: cover; opacity: .85; }
+.ex-hero .play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 38px; color: #fff; }
+.ex-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
+.tag { padding: 3px 10px; border-radius: 999px; background: var(--panel-2); color: var(--muted); font-size: 13px; }
+.ex-muscles { margin: 4px 0 16px; }
+.ex-cues { margin: 12px 0; padding-left: 22px; line-height: 1.5; }
+.ex-cues li { margin: 6px 0; }
+.ex-joints, .ex-links { color: var(--muted); font-size: 14px; margin-top: 10px; }
+.ex-links .link { font-size: 14px; color: var(--text); }
+#exercise .safety { margin-top: 4px; }
+
 /* ------------------------------------------------------------------ Player */
 #player { position: fixed; top: 0; left: 0; right: 0; height: 100vh; height: 100dvh;   /* the visible screen, also as a Home Screen app */
   display: flex; flex-direction: column; background: var(--bg);
@@ -219,6 +248,9 @@ h1, h2, h3, p { margin: 0; }
 
 /* ------------------------------------------------------------------ Phone, landscape (what the TV shows) */
 @media (orientation: landscape) and (max-height: 520px) {
+  .tabbar { padding-top: 3px; padding-bottom: max(4px, env(safe-area-inset-bottom, 0px)); }
+  .tabbar button span { display: none; }
+  .screen.tabbed { padding-bottom: calc(50px + env(safe-area-inset-bottom, 0px)); }
   .bar { padding: 3px 8px; gap: 6px; }
   .tool { min-height: 34px; }
   .sound { min-width: 56px; }

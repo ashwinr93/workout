@@ -6,6 +6,7 @@
             sets/reps/time are the defaults when a plan doesn't give them; rest is used as given
      measure? "m" when reps is a distance in metres (carries)
      equip  what it needs, in a few words
+     gear   what kind of kit it takes (GEAR): the Exercises filter; a list when either works
      muscles { main: [...], help: [...] }, names from MUSCLES; for stretches, what's stretched
      type   movement pattern (TYPES); "stretch" for static stretches (a day of only stretches is a stretch day)
      level  "beginner" | "intermediate"
@@ -29,6 +30,7 @@ const EX = {
   // ---------- Warm-up ----------
   catcow: {
     name: "Cat-Cow → Child's Pose", reps: "8", unit: "slow reps",
+    equip: "none", gear: ["bodyweight"],
     muscles: { main: ["lowerback", "upperback"], help: ["abs", "lats"] },
     type: "mobility", level: "beginner", easyOn: ["lowerback", "shoulders"], loads: ["wrists", "knees"],
     key: "Move slowly, with your breath",
@@ -47,6 +49,7 @@ const EX = {
   },
   armcircles: {
     name: "Arm Circles", reps: "10", unit: "each direction",
+    equip: "none", gear: ["bodyweight"],
     muscles: { main: ["delts", "reardelts"], help: ["traps", "upperback"] },
     type: "mobility", level: "beginner", easyOn: ["shoulders"], loads: [],
     key: "Palms down; start small, finish big",
@@ -64,6 +67,7 @@ const EX = {
   },
   threadneedle: {
     name: "Thread the Needle", reps: "10", unit: "each side",
+    equip: "none", gear: ["bodyweight"],
     muscles: { main: ["upperback"], help: ["reardelts", "lats", "obliques"] },
     type: "mobility", level: "beginner", easyOn: ["shoulders", "lowerback"], loads: ["wrists", "knees"],
     key: "Twist from the upper back; keep your hips still",
@@ -81,6 +85,7 @@ const EX = {
   },
   hip9090: {
     name: "90/90 Hip Swivels", reps: "8", unit: "each side",
+    equip: "none", gear: ["bodyweight"],
     muscles: { main: ["glutes", "adductors"], help: ["obliques"] },
     type: "mobility", level: "beginner", easyOn: ["lowerback"], loads: ["hips", "knees"],
     key: "Your knees move; your feet stay planted",
@@ -99,6 +104,7 @@ const EX = {
   },
   revlungetwist: {
     name: "Reverse Lunge + Twist", reps: "6", unit: "each side",
+    equip: "none", gear: ["bodyweight"],
     muscles: { main: ["quads", "glutes"], help: ["obliques", "hams", "adductors"] },
     type: "lunge", level: "beginner", easyOn: ["knees"], loads: [],
     key: "Step back, and keep the front shin vertical",
@@ -120,7 +126,7 @@ const EX = {
     name: "Neutral-Grip Incline Press", sets: 3, reps: "8–10", unit: "reps", rest: 90,
     muscles: { main: ["chest", "delts"], help: ["triceps"] },
     type: "push", level: "beginner", easyOn: ["shoulders"], loads: ["elbows"], easier: ["floorpress"],
-    equip: "dumbbells, adjustable bench",
+    equip: "dumbbells, adjustable bench", gear: ["bodyweight"], gear: ["bodyweight"], gear: ["bodyweight"], gear: ["bodyweight"], gear: ["bodyweight"], gear: ["dumbbells"],
     key: "Bench at 30°–45°, palms facing each other",
     why: "Avoids pinching the shoulder. Keep your elbows at 45°.",
     cues: [
@@ -140,7 +146,7 @@ const EX = {
     name: "Single-Arm Row", sets: 3, reps: "10–12", unit: "reps each side", rest: 60,
     muscles: { main: ["lats", "upperback"], help: ["biceps", "reardelts", "forearms"] },
     type: "pull", level: "beginner", easyOn: ["lowerback", "shoulders"], loads: [],
-    equip: "dumbbell, bench",
+    equip: "dumbbell, bench", gear: ["dumbbells"],
     key: "Pull toward your hip, not your chest",
     why: "Keep your back flat and pause for 1 second at the top.",
     cues: [
@@ -159,7 +165,7 @@ const EX = {
     name: "Floor Press", sets: 3, reps: "10–12", unit: "reps", rest: 90,
     muscles: { main: ["chest", "triceps"], help: ["delts"] },
     type: "push", level: "beginner", easyOn: ["shoulders"], loads: [], harder: ["inclinepress"],
-    equip: "dumbbells",
+    equip: "dumbbells", gear: ["dumbbells"],
     key: "Palms in; the floor limits the range",
     why: "Protects the front of the shoulder joint.",
     cues: [
@@ -178,7 +184,7 @@ const EX = {
     name: "Chest-Supported Incline Row", sets: 3, reps: "12–15", unit: "reps", rest: 60,
     muscles: { main: ["upperback", "lats"], help: ["reardelts", "biceps"] },
     type: "pull", level: "beginner", easyOn: ["lowerback"], loads: [], harder: ["bbrow"],
-    equip: "dumbbells, adjustable bench",
+    equip: "dumbbells, adjustable bench", gear: ["dumbbells"],
     key: "Keep your chest glued to the bench",
     why: "Resting your chest on the bench takes strain off the lower back.",
     cues: [
@@ -196,7 +202,7 @@ const EX = {
     name: "Face Pulls / Band Pull-Aparts", sets: 3, reps: "15–20", unit: "reps", rest: 60,
     muscles: { main: ["reardelts", "upperback"], help: ["traps"] },
     type: "pull", level: "beginner", easyOn: ["shoulders"], loads: [],
-    equip: "dumbbells or a band",
+    equip: "dumbbells or a band", gear: ["dumbbells", "bands"],
     key: "Light weight; stop at eye level",
     why: "Key for the rear shoulders and keeping the shoulder blades stable.",
     cues: [
@@ -224,7 +230,7 @@ const EX = {
     name: "Romanian Deadlift", sets: 3, reps: "8–10", unit: "reps", rest: 90,
     muscles: { main: ["hams", "glutes"], help: ["lowerback", "forearms", "adductors"] },
     type: "hinge", level: "intermediate", easyOn: ["knees"], loads: ["lowerback"], easier: ["slbridge", "sumodl"], harder: ["deadlift"],
-    equip: "dumbbells",
+    equip: "dumbbells", gear: ["dumbbells"],
     key: "Hinge at the hips with soft knees",
     why: "Puts no shear on the knee and protects the kneecap tendon.",
     cues: [
@@ -242,7 +248,7 @@ const EX = {
     name: "Box Squat to Bench", sets: 3, reps: "10–12", unit: "reps", rest: 90,
     muscles: { main: ["quads", "glutes"], help: ["adductors", "hams", "lowerback"] },
     type: "squat", level: "beginner", easyOn: [], loads: ["knees"],
-    equip: "bench or sturdy chair, dumbbells optional",
+    equip: "bench or sturdy chair, dumbbells optional", gear: ["bodyweight"],
     key: "Tap the bench, don't sit down; shins stay vertical",
     why: "Keeps the knees from pushing forward. Drive through your heels.",
     cues: [
@@ -260,7 +266,7 @@ const EX = {
     name: "Single-Leg Glute Bridge", sets: 3, reps: "12", unit: "reps each side", rest: 60,
     muscles: { main: ["glutes"], help: ["hams"] },
     type: "hinge", level: "beginner", easyOn: ["lowerback", "knees"], loads: [], harder: ["rdl"], easier: ["glutebridge"],
-    equip: "none",
+    equip: "none", gear: ["bodyweight"],
     key: "Squeeze for 2 seconds at the top",
     why: "Lying flat takes load off the spine and isolates the glutes.",
     cues: [
@@ -279,7 +285,7 @@ const EX = {
     name: "Standing Calf Raises", sets: 3, reps: "15", unit: "reps", rest: 45,
     muscles: { main: ["calves"], help: [] },
     type: "calves", level: "beginner", easyOn: ["knees"], loads: ["ankles"],
-    equip: "a step",
+    equip: "a step", gear: ["bodyweight"],
     key: "Go slowly and hold the top for 2 seconds",
     why: "Builds ankle and Achilles stability.",
     cues: [
@@ -297,7 +303,7 @@ const EX = {
     name: "Plank with Shoulder Taps", sets: 3, time: 45, rest: 60,
     muscles: { main: ["abs", "obliques"], help: ["delts", "glutes"] },
     type: "core", level: "intermediate", easyOn: ["lowerback"], loads: ["wrists", "shoulders"], easier: ["deadbug"],
-    equip: "none",
+    equip: "none", gear: ["bodyweight"],
     key: "Keep your hips square; no rocking",
     why: "Keeps the spine from twisting. Tap slowly.",
     cues: [
@@ -316,7 +322,7 @@ const EX = {
     name: "Couch Stretch", sets: 2, time: 120, perSide: true, rest: 20,
     muscles: { main: ["quads", "hipflexors"], help: [] },
     type: "stretch", level: "beginner", easyOn: [], loads: ["knees"],
-    equip: "wall or couch",
+    equip: "wall or couch", gear: ["bodyweight"],
     key: "Squeeze the glute of your back leg",
     why: "Releases tight quads and hip flexors that pull on the kneecap tendon.",
     cues: [
@@ -334,7 +340,7 @@ const EX = {
     name: "Doorway Chest Stretch", sets: 2, time: 120, rest: 20,
     muscles: { main: ["chest"], help: ["delts", "biceps"] },
     type: "stretch", level: "beginner", easyOn: ["shoulders"], loads: [],
-    equip: "doorway",
+    equip: "doorway", gear: ["bodyweight"],
     key: "Gentle stretch; there should be no shoulder pain",
     why: "Opens the chest without straining the front of the shoulder.",
     cues: [
@@ -352,7 +358,7 @@ const EX = {
     name: "Tibialis Raises", sets: 2, reps: "20", unit: "reps", rest: 30,
     muscles: { main: ["shins"], help: [] },
     type: "calves", level: "beginner", easyOn: ["knees"], loads: [],
-    equip: "a wall",
+    equip: "a wall", gear: ["bodyweight"],
     key: "Lift your toes high and lower them slowly",
     why: "Strengthens the shin muscles that slow you down, which helps protect the knees in football.",
     cues: [
@@ -372,7 +378,7 @@ const EX = {
     name: "Seated Neutral Overhead Press", sets: 3, reps: "10–12", unit: "reps", rest: 90,
     muscles: { main: ["delts"], help: ["triceps", "traps"] },
     type: "pushup", level: "intermediate", easyOn: ["lowerback"], loads: ["shoulders"], harder: ["ohp"],
-    equip: "dumbbells, bench",
+    equip: "dumbbells, bench", gear: ["dumbbells"],
     key: "Press slightly forward, not out to the sides",
     why: "Palms facing in, elbows slightly forward, core braced.",
     cues: [
@@ -389,7 +395,7 @@ const EX = {
     name: "Pullovers", sets: 3, reps: "12", unit: "reps", rest: 60,
     muscles: { main: ["lats", "chest"], help: ["triceps", "abs"] },
     type: "pullup", level: "intermediate", easyOn: ["lowerback"], loads: ["shoulders"],
-    equip: "one dumbbell",
+    equip: "one dumbbell", gear: ["dumbbells"],
     key: "Soft elbows; comfortable range only",
     why: "Only lower to a comfortable shoulder stretch.",
     cues: [
@@ -415,7 +421,7 @@ const EX = {
     name: "Incline Hammer Curls", sets: 3, reps: "12", unit: "reps", rest: 60,
     muscles: { main: ["biceps", "forearms"], help: [] },
     type: "arms", level: "beginner", easyOn: ["elbows", "wrists"], loads: [],
-    equip: "dumbbells, adjustable bench",
+    equip: "dumbbells, adjustable bench", gear: ["dumbbells"],
     key: "Palms facing in; keep your upper arms still",
     why: "The neutral grip protects the elbow and shoulder tendons.",
     cues: [
@@ -434,7 +440,7 @@ const EX = {
     name: "Overhead / Floor Triceps Extension", sets: 3, reps: "12–15", unit: "reps", rest: 60,
     muscles: { main: ["triceps"], help: [] },
     type: "arms", level: "beginner", easyOn: [], loads: ["elbows"],
-    equip: "one or two dumbbells",
+    equip: "one or two dumbbells", gear: ["dumbbells"],
     key: "Keep your elbows tucked in",
     why: "Stop right away if your shoulder pinches.",
     cues: [
@@ -461,7 +467,7 @@ const EX = {
     name: "Y-T-W Raises", sets: 2, reps: "10", unit: "reps of each letter", rest: 60,
     muscles: { main: ["reardelts", "upperback"], help: ["traps"] },
     type: "pull", level: "beginner", easyOn: ["shoulders"], loads: [],
-    equip: "none or very light dumbbells, adjustable bench",
+    equip: "none or very light dumbbells, adjustable bench", gear: ["bodyweight"],
     key: "Use 2–4 kg at most",
     why: "Rebuilds the small stabilizing muscles of the rotator cuff.",
     cues: [
@@ -482,7 +488,7 @@ const EX = {
     name: "Reverse Lunges", sets: 3, reps: "10", unit: "reps each side", rest: 90,
     muscles: { main: ["quads", "glutes"], help: ["adductors", "hams", "calves"] },
     type: "lunge", level: "intermediate", easyOn: ["knees"], loads: ["knees"], easier: ["stepup", "splitsquat"],
-    equip: "dumbbells optional",
+    equip: "dumbbells optional", gear: ["bodyweight"],
     key: "Always step backward, never forward",
     why: "Keeps the front shin vertical so there's no twisting force on the knee.",
     cues: [
@@ -500,7 +506,7 @@ const EX = {
     name: "Sumo / Goblet Deadlift", sets: 3, reps: "10–12", unit: "reps", rest: 90,
     muscles: { main: ["glutes", "adductors", "hams"], help: ["quads", "lowerback", "forearms", "traps"] },
     type: "hinge", level: "intermediate", easyOn: ["knees"], loads: ["lowerback"], harder: ["rdl"],
-    equip: "one dumbbell",
+    equip: "one dumbbell", gear: ["dumbbells"],
     key: "Wide stance; knees follow your toes",
     why: "Less compression on the knees while still loading the glutes.",
     cues: [
@@ -527,7 +533,7 @@ const EX = {
     name: "Step-Ups", sets: 3, reps: "10", unit: "reps each side", rest: 60,
     muscles: { main: ["quads", "glutes"], help: ["hams", "calves", "adductors"] },
     type: "lunge", level: "beginner", easyOn: ["knees"], loads: ["knees"], harder: ["dbrevlunge", "splitsquat"],
-    equip: "bench or sturdy step, dumbbells optional",
+    equip: "bench or sturdy step, dumbbells optional", gear: ["bodyweight"],
     key: "Use a step low enough that your knee is at 90° or less",
     why: "Push through the heel of your leading leg.",
     cues: [
@@ -545,7 +551,7 @@ const EX = {
     name: "Suitcase Carries", sets: 3, reps: "40", measure: "m", unit: "carry, switching hands halfway", rest: 60,
     muscles: { main: ["obliques", "forearms"], help: ["traps", "abs", "lowerback", "glutes"] },
     type: "carry", level: "beginner", easyOn: ["lowerback"], loads: [],
-    equip: "one heavy dumbbell, space to walk",
+    equip: "one heavy dumbbell, space to walk", gear: ["dumbbells"],
     key: "Walk tall without leaning",
     why: "Trains core and side-to-side hip stability.",
     cues: [
@@ -566,7 +572,7 @@ const EX = {
     name: "Pigeon Pose / Figure-4", sets: 1, time: 120, perSide: true, rest: 10,
     muscles: { main: ["glutes"], help: [] },
     type: "stretch", level: "intermediate", easyOn: ["hips"], loads: ["knees"],
-    equip: "none",
+    equip: "none", gear: ["bodyweight"],
     key: "Gentle stretch; no knee pain",
     why: "Stretches the glutes and the deep hip rotators.",
     cues: [
@@ -593,7 +599,7 @@ const EX = {
     name: "Cross-Body Shoulder Stretch", sets: 1, time: 30, perSide: true, rest: 10,
     muscles: { main: ["reardelts"], help: ["upperback"] },
     type: "stretch", level: "beginner", easyOn: ["shoulders"], loads: [],
-    equip: "none",
+    equip: "none", gear: ["bodyweight"],
     key: "Keep the shoulder down, away from your ear",
     why: "Stretches the back of the shoulder capsule.",
     cues: [
@@ -610,7 +616,7 @@ const EX = {
     name: "Overhead Triceps Stretch", sets: 1, time: 30, perSide: true, rest: 10,
     muscles: { main: ["triceps"], help: ["lats"] },
     type: "stretch", level: "beginner", easyOn: [], loads: [],
-    equip: "none",
+    equip: "none", gear: ["bodyweight"],
     key: "Gentle pressure; keep your ribs down",
     why: "Stretches the triceps and the back of the shoulder.",
     cues: [
@@ -627,7 +633,7 @@ const EX = {
     name: "Hamstring Doorway Stretch", sets: 1, time: 60, perSide: true, rest: 10,
     muscles: { main: ["hams"], help: ["calves"] },
     type: "stretch", level: "beginner", easyOn: ["lowerback"], loads: [],
-    equip: "doorway",
+    equip: "doorway", gear: ["bodyweight"],
     key: "Keep your lower back flat on the floor",
     why: "Stretches the hamstrings without stressing the lower back.",
     cues: [
@@ -645,7 +651,7 @@ const EX = {
   // ---------- Bodyweight and bands (batch 1) ----------
   bwsquat: {
     name: "Bodyweight Squat", sets: 3, reps: "10–12", unit: "reps", rest: 60,
-    equip: "none",
+    equip: "none", gear: ["bodyweight"],
     muscles: { main: ["quads", "glutes"], help: ["adductors", "hams"] },
     type: "squat", level: "beginner", easyOn: [], loads: ["knees"], harder: ["gobletsquat"],
     key: "Sit back and down; knees follow your toes",
@@ -663,7 +669,7 @@ const EX = {
   },
   gobletsquat: {
     name: "Goblet Squat", sets: 3, reps: "8–10", unit: "reps", rest: 90,
-    equip: "one dumbbell",
+    equip: "one dumbbell", gear: ["dumbbells"],
     muscles: { main: ["quads", "glutes"], help: ["adductors", "hams", "upperback"] },
     type: "squat", level: "beginner", easyOn: [], loads: ["knees"], easier: ["bwsquat"], harder: ["bbsquat"],
     key: "Chest tall; elbows inside your knees",
@@ -680,7 +686,7 @@ const EX = {
   },
   splitsquat: {
     name: "Split Squat", sets: 3, reps: "8", unit: "reps each side", rest: 60,
-    equip: "none, dumbbells optional",
+    equip: "none, dumbbells optional", gear: ["bodyweight"],
     muscles: { main: ["quads", "glutes"], help: ["adductors", "hams", "calves"] },
     type: "lunge", level: "beginner", easyOn: [], loads: ["knees"], easier: ["stepup"], harder: ["dbrevlunge"],
     key: "Go straight down, not forward",
@@ -697,7 +703,7 @@ const EX = {
   },
   inclinepushup: {
     name: "Incline Push-Up", sets: 3, reps: "10–12", unit: "reps", rest: 60,
-    equip: "a bench or sturdy table",
+    equip: "a bench or sturdy table", gear: ["bodyweight"],
     muscles: { main: ["chest", "triceps"], help: ["delts", "abs"] },
     type: "push", level: "beginner", easyOn: [], loads: ["wrists"], harder: ["pushup"],
     key: "Body in one straight line from head to heels",
@@ -714,7 +720,7 @@ const EX = {
   },
   pushup: {
     name: "Push-Up", sets: 3, reps: "8–10", unit: "reps", rest: 90,
-    equip: "none",
+    equip: "none", gear: ["bodyweight"],
     muscles: { main: ["chest", "triceps"], help: ["delts", "abs"] },
     type: "push", level: "intermediate", easyOn: [], loads: ["wrists", "shoulders"], easier: ["inclinepushup"],
     key: "Keep your hips in line; don't let them sag",
@@ -731,7 +737,7 @@ const EX = {
   },
   bandpulldown: {
     name: "Band Pulldown", sets: 3, reps: "12–15", unit: "reps", rest: 60,
-    equip: "a resistance band anchored high on a door",
+    equip: "a resistance band anchored high on a door", gear: ["bands"],
     muscles: { main: ["lats"], help: ["biceps", "upperback", "reardelts"] },
     type: "pullup", level: "beginner", easyOn: [], loads: [], harder: ["latpulldown"],
     key: "Elbows down to your sides; shoulders away from your ears",
@@ -748,7 +754,7 @@ const EX = {
   },
   bandrow: {
     name: "Band Seated Row", sets: 3, reps: "12–15", unit: "reps", rest: 60,
-    equip: "a resistance band",
+    equip: "a resistance band", gear: ["bands"],
     muscles: { main: ["upperback", "lats"], help: ["biceps", "reardelts"] },
     type: "pull", level: "beginner", easyOn: [], loads: [], harder: ["cablerow"],
     key: "Sit tall; don't lean back to pull",
@@ -766,7 +772,7 @@ const EX = {
   },
   glutebridge: {
     name: "Glute Bridge", sets: 3, reps: "12", unit: "reps", rest: 45,
-    equip: "none",
+    equip: "none", gear: ["bodyweight"],
     muscles: { main: ["glutes"], help: ["hams"] },
     type: "hinge", level: "beginner", easyOn: ["lowerback", "knees"], loads: [], harder: ["slbridge"],
     key: "Squeeze your glutes at the top; don't arch your back",
@@ -783,7 +789,7 @@ const EX = {
   },
   deadbug: {
     name: "Dead Bug", sets: 3, reps: "8", unit: "reps each side", rest: 45,
-    equip: "none",
+    equip: "none", gear: ["bodyweight"],
     muscles: { main: ["abs"], help: ["obliques", "hipflexors"] },
     type: "core", level: "beginner", easyOn: ["lowerback"], loads: [], harder: ["planktaps"],
     key: "Lower back stays on the floor",
@@ -800,7 +806,7 @@ const EX = {
   },
   birddog: {
     name: "Bird Dog", sets: 3, reps: "8", unit: "reps each side", rest: 45,
-    equip: "none",
+    equip: "none", gear: ["bodyweight"],
     muscles: { main: ["lowerback", "glutes"], help: ["abs", "delts"] },
     type: "core", level: "beginner", easyOn: ["lowerback"], loads: ["wrists", "knees"],
     key: "Keep your hips level; don't twist",
@@ -817,7 +823,7 @@ const EX = {
   },
   sideplank: {
     name: "Kneeling Side Plank", sets: 2, time: 30, perSide: true, rest: 30,
-    equip: "none",
+    equip: "none", gear: ["bodyweight"],
     muscles: { main: ["obliques"], help: ["abs", "glutes", "delts"] },
     type: "core", level: "beginner", easyOn: ["lowerback"], loads: [],
     key: "Hips up and forward; don't let them sag",
@@ -833,7 +839,7 @@ const EX = {
   },
   wallslide: {
     name: "Wall Slides", sets: 2, reps: "10", unit: "reps", rest: 30,
-    equip: "a wall and a small towel",
+    equip: "a wall and a small towel", gear: ["bodyweight"],
     muscles: { main: ["delts"], help: ["traps", "upperback"] },
     type: "mobility", level: "beginner", easyOn: ["shoulders"], loads: [],
     key: "Move slowly, only as high as is comfortable",
@@ -853,7 +859,7 @@ const EX = {
   // ---------- Gym machines and barbells (batch 2) ----------
   legpress: {
     name: "Leg Press", sets: 3, reps: "10–12", unit: "reps", rest: 90,
-    equip: "a leg press machine (gym)",
+    equip: "a leg press machine (gym)", gear: ["gym"],
     muscles: { main: ["quads", "glutes"], help: ["hams", "adductors", "calves"] },
     type: "squat", level: "beginner", easyOn: ["lowerback"], loads: ["knees"],
     key: "Lower back stays on the pad",
@@ -870,7 +876,7 @@ const EX = {
   },
   latpulldown: {
     name: "Lat Pulldown", sets: 3, reps: "10–12", unit: "reps", rest: 60,
-    equip: "a lat pulldown machine (gym)",
+    equip: "a lat pulldown machine (gym)", gear: ["gym"],
     muscles: { main: ["lats"], help: ["biceps", "upperback", "reardelts"] },
     type: "pullup", level: "beginner", easyOn: [], loads: [], easier: ["bandpulldown"],
     key: "Pull to your chest, never behind your neck",
@@ -887,7 +893,7 @@ const EX = {
   },
   cablerow: {
     name: "Seated Cable Row", sets: 3, reps: "10–12", unit: "reps", rest: 60,
-    equip: "a cable row machine (gym)",
+    equip: "a cable row machine (gym)", gear: ["gym"],
     muscles: { main: ["upperback", "lats"], help: ["biceps", "reardelts"] },
     type: "pull", level: "beginner", easyOn: [], loads: [], easier: ["bandrow"],
     key: "Sit tall; move your arms, not your back",
@@ -904,7 +910,7 @@ const EX = {
   },
   chestpress: {
     name: "Machine Chest Press", sets: 3, reps: "10–12", unit: "reps", rest: 90,
-    equip: "a chest press machine (gym)",
+    equip: "a chest press machine (gym)", gear: ["gym"],
     muscles: { main: ["chest", "triceps"], help: ["delts"] },
     type: "push", level: "beginner", easyOn: [], loads: [], harder: ["benchpress"],
     key: "Shoulders back; don't lock your elbows",
@@ -921,7 +927,7 @@ const EX = {
   },
   bbsquat: {
     name: "Barbell Back Squat", sets: 3, reps: "6–8", unit: "reps", rest: 120,
-    equip: "a barbell and squat rack",
+    equip: "a barbell and squat rack", gear: ["gym"],
     muscles: { main: ["quads", "glutes"], help: ["adductors", "hams", "lowerback", "abs"] },
     type: "squat", level: "intermediate", easyOn: [], loads: ["knees", "lowerback"], easier: ["gobletsquat"],
     key: "Chest up; knees out over your toes",
@@ -939,7 +945,7 @@ const EX = {
   },
   deadlift: {
     name: "Barbell Deadlift", sets: 3, reps: "5", unit: "reps", rest: 120,
-    equip: "a barbell and plates",
+    equip: "a barbell and plates", gear: ["gym"],
     muscles: { main: ["glutes", "hams", "lowerback"], help: ["quads", "traps", "forearms", "upperback"] },
     type: "hinge", level: "intermediate", easyOn: ["knees"], loads: ["lowerback"], easier: ["rdl"],
     key: "Back flat; bar stays close to your legs",
@@ -957,7 +963,7 @@ const EX = {
   },
   benchpress: {
     name: "Barbell Bench Press", sets: 3, reps: "6–8", unit: "reps", rest: 120,
-    equip: "a barbell, bench and rack",
+    equip: "a barbell, bench and rack", gear: ["gym"],
     muscles: { main: ["chest", "triceps"], help: ["delts"] },
     type: "push", level: "intermediate", easyOn: [], loads: ["shoulders"], easier: ["chestpress"],
     key: "Shoulder blades squeezed together, feet planted",
@@ -974,7 +980,7 @@ const EX = {
   },
   ohp: {
     name: "Barbell Overhead Press", sets: 3, reps: "6–8", unit: "reps", rest: 90,
-    equip: "a barbell and rack",
+    equip: "a barbell and rack", gear: ["gym"],
     muscles: { main: ["delts", "triceps"], help: ["traps", "upperback", "abs"] },
     type: "pushup", level: "intermediate", easyOn: [], loads: ["shoulders", "lowerback"], easier: ["seatedohp"],
     key: "Squeeze your glutes; don't lean back",
@@ -991,7 +997,7 @@ const EX = {
   },
   bbrow: {
     name: "Barbell Bent-Over Row", sets: 3, reps: "8–10", unit: "reps", rest: 90,
-    equip: "a barbell",
+    equip: "a barbell", gear: ["gym"],
     muscles: { main: ["upperback", "lats"], help: ["biceps", "reardelts", "lowerback", "forearms"] },
     type: "pull", level: "intermediate", easyOn: [], loads: ["lowerback"], easier: ["csrow"],
     key: "Flat back; pull to your lower ribs",
@@ -1042,6 +1048,25 @@ const TYPES = {
   pull: "pull (rowing)", pullup: "pull (overhead)", core: "core", carry: "carry", calves: "calves and shins",
   arms: "arms", mobility: "mobility", stretch: "stretch",
 };
+// Kinds of kit, for the Exercises filter. Choosing one also shows everything that needs less:
+// bodyweight moves go with any kit, and a gym has it all.
+const GEAR = {
+  bodyweight: { name: "Bodyweight", with: ["bodyweight"] },
+  bands: { name: "Bands", with: ["bodyweight", "bands"] },
+  dumbbells: { name: "Dumbbells", with: ["bodyweight", "dumbbells"] },
+  gym: { name: "Gym", with: ["bodyweight", "bands", "dumbbells", "gym"] },
+};
+// Body areas, for grouping and filtering exercises by what they mainly work
+const AREAS = {
+  legs: { name: "Legs", muscles: ["quads", "glutes", "hams", "adductors", "calves", "shins", "hipflexors"] },
+  chest: { name: "Chest", muscles: ["chest"] },
+  back: { name: "Back", muscles: ["lats", "upperback", "lowerback", "traps"] },
+  shoulders: { name: "Shoulders", muscles: ["delts", "reardelts"] },
+  arms: { name: "Arms", muscles: ["biceps", "triceps", "forearms"] },
+  core: { name: "Core", muscles: ["abs", "obliques"] },
+};
+const areasOf = (key) => Object.keys(AREAS).filter((a) => EX[key].muscles.main.some((m) => AREAS[a].muscles.includes(m)));
+
 // Joints an exercise can be easy on or load
 const JOINTS = { shoulders: "shoulders", elbows: "elbows", wrists: "wrists", lowerback: "lower back", hips: "hips", knees: "knees", ankles: "ankles" };
 

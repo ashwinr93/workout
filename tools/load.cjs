@@ -4,7 +4,7 @@
 const fs = require("fs"), path = require("path"), vm = require("vm");
 const ROOT = path.join(__dirname, "..");
 const FILES = ["library.js", "plan.js", "speech.js", "prompt.js"];
-const NAMES = ["EX", "WARMUP", "COOLDOWN", "ACTIVITIES", "variant", "isVariant", "MUSCLES", "muscleList", "TYPES", "JOINTS", "DOSE", "WEEKDAYS", "DAY_NAMES",
+const NAMES = ["EX", "WARMUP", "COOLDOWN", "ACTIVITIES", "variant", "isVariant", "MUSCLES", "muscleList", "TYPES", "JOINTS", "GEAR", "AREAS", "areasOf", "DOSE", "WEEKDAYS", "DAY_NAMES",
   "EXAMPLE_PLAN", "dose", "doseOptions", "parsePlan", "planLink", "examplePlan", "SPOKEN_NAMES", "speakable", "SAY",
   "clipId", "allPhrases", "SITE", "AI_CHATS", "chatLink", "coachPrompt"];
 const ctx = vm.createContext({ console });

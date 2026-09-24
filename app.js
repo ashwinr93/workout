@@ -10,7 +10,7 @@
  *   Workout    the session: steps, timer, moving between steps
  *   Figure     the muscle map: badges and front/back figures, male or female
  *   Plans      which plan is open: from the link, the last one used on this device, or the example
- *   UI         rendering the screens
+ *   UI         rendering the screens (tabs: My week, Exercises; an exercise's own page)
  * Data lives in library.js (exercises), plan.js (plan links), speech.js (what the coach says)
  * and prompt.js (the message that has an AI chat write a plan).
  */
@@ -464,7 +464,8 @@ const Workout = {
     clearInterval(this.tickId); this.tickId = null;
     Voice.reset(); Video.stop(); UI.stopCues();
     try { this.wakeLock?.release(); } catch {}
-    UI.show(this.day ? "day" : "home");
+    const back = this.returnTo; this.returnTo = null;
+    UI.show(back || (this.day ? "day" : "home"));
   },
   go(delta) {
     const n = this.cur + delta;
@@ -612,10 +613,11 @@ const Plans = {
   MAX_RECENT: 6,
 
   boot() {
-    const hash = location.hash.slice(1);
-    if (hash) return this.open(hash);
+    const hash = location.hash.slice(1), exKey = hash.match(/^ex\/(\w+)/)?.[1];
+    if (hash && !exKey) return this.open(hash);
     const saved = REVIEW_MODE ? null : store.get("plan", null), r = saved ? parsePlan(saved) : null;
-    this.use(r && r.plan && !r.problems.length ? r.plan : null);
+    this.use(r && r.plan && !r.problems.length ? r.plan : null, !!exKey);
+    if (exKey && EX[exKey]) UI.exercise(exKey, { from: "exercises" });
   },
   // A plan link from an AI (or a bookmark): open it, or explain what needs fixing
   open(text) {
@@ -624,33 +626,117 @@ const Plans = {
     if (r.problems.length || !r.plan) return UI.fix(r);
     this.use(r.plan);
   },
-  use(plan) {
+  use(plan, keepHash) {
     if (!plan || plan.link === EXAMPLE_PLAN.link) plan = examplePlan();
     this.current = plan;
     if (!TEST_MODE && !REVIEW_MODE) {
       store.set("plan", plan.example ? null : plan.link);
       if (!plan.example) store.set("plans", [{ link: plan.link, title: plan.title }, ...this.recent().filter((p) => p.link !== plan.link)].slice(0, this.MAX_RECENT));
-      history.replaceState(null, "", location.pathname + location.search + (plan.example ? "" : "#" + plan.link));
+      if (!keepHash) history.replaceState(null, "", this.url());
     }
     Workout.day = null;
     UI.home(); UI.show("home");
   },
+  // This page's address for the current plan (bookmarkable: the plan lives in it)
+  url() { return location.pathname + location.search + (this.current.example ? "" : "#" + this.current.link); },
   recent() { return REVIEW_MODE ? [] : store.get("plans", []); },
   link(plan = this.current) { return SITE + (plan.example ? "" : "#" + plan.link); },
 };
 // A new plan link opened while the app is already open (e.g. tapped in the AI chat)
 window.addEventListener("hashchange", () => {
   const hash = location.hash.slice(1);
+  if (hash.startsWith("ex/")) { const k = hash.slice(3); if (EX[k] && !Video.active) UI.exercise(k, { from: "exercises" }); return; }
   if (hash && hash !== Plans.current?.link && !Video.active) Plans.open(hash);
 });
 
 /* ============================================================ UI */
 const UI = {
   cueIdx: 0, cueTimer: null, exitArmed: 0, rows: [],
+  TABS: ["home", "exercises"],
 
   show(screen) {
-    for (const id of ["home", "day", "player", "create", "fix"]) $(id).hidden = id !== screen;
+    for (const id of ["home", "exercises", "exercise", "day", "player", "create", "fix"]) $(id).hidden = id !== screen;
+    const tabbed = this.TABS.includes(screen);
+    $("tabbar").hidden = !tabbed;
+    if (tabbed) this.tabNow = screen;
+    for (const b of $("tabbar").querySelectorAll("button")) b.setAttribute("aria-current", b.dataset.tab === screen ? "page" : "false");
+    if (screen !== "exercise" && !TEST_MODE && !REVIEW_MODE && Plans.current && location.hash.startsWith("#ex/")) history.replaceState(null, "", Plans.url());
     window.scrollTo(0, 0);
+  },
+  tab(name) {
+    if (name === "exercises") this.exercises();
+    this.show(name);
+  },
+
+  /* ---------- Exercises: the library, searchable and filterable */
+  exFilter: { q: "", gear: null, area: null },
+  exercises() {
+    const F = this.exFilter;
+    const chips = (list, on, attr) => list.map(([k, name]) => `<button class="chip" data-${attr}="${k}" aria-pressed="${on === k}">${esc(name)}</button>`).join("");
+    $("ex-gear").innerHTML = chips(Object.entries(GEAR).map(([k, g]) => [k, g.name]), F.gear, "gear");
+    $("ex-area").innerHTML = chips(Object.entries(AREAS).map(([k, a]) => [k, a.name]), F.area, "area");
+    $("ex-search").value = F.q;
+    this.exerciseList();
+  },
+  // What the filters leave, grouped by the body area each exercise mainly works
+  exerciseMatches() {
+    const F = this.exFilter, q = F.q.trim().toLowerCase(), allowed = F.gear && GEAR[F.gear].with;
+    const rank = (k) => ["mobility", "stretch"].includes(EX[k].type) ? 1 : 0;   // training moves first, then warm-ups and stretches
+    return Object.keys(EX).sort((a, b) => rank(a) - rank(b)).filter((k) => {
+      const ex = EX[k], v = ex.videos.map((_, vi) => variant(k, vi).name.toLowerCase());
+      return (!q || v.some((n) => n.includes(q)) || ex.name.toLowerCase().includes(q) || muscleList(ex.muscles.main).toLowerCase().includes(q))
+        && (!allowed || ex.gear.some((g) => allowed.includes(g)))
+        && (!F.area || areasOf(k).includes(F.area));
+    });
+  },
+  exerciseList() {
+    const F = this.exFilter, keys = this.exerciseMatches(), n = keys.length;
+    // "18 leg exercises you can do with dumbbells or just your body weight"
+    const kit = { bodyweight: "with just your body weight", bands: "with bands or just your body weight",
+      dumbbells: "with dumbbells or just your body weight", gym: "in a gym" }[F.gear];
+    const what = `${n} ${F.area ? AREAS[F.area].name.toLowerCase().replace(/s$/, "") + " " : ""}exercise${n === 1 ? "" : "s"}`;
+    $("ex-note").textContent = F.gear ? `${what} you can do ${kit}` : F.q || F.area ? `${what}` : `All ${n} exercises`;
+    const groups = Object.keys(AREAS).map((a) => [a, keys.filter((k) => (F.area || areasOf(k)[0]) === a && areasOf(k).includes(a))]).filter(([, ks]) => ks.length);
+    $("ex-results").innerHTML = n ? groups.map(([a, ks]) => `<div class="label section-label">${AREAS[a].name}</div>
+      <div class="ex-list">${ks.map((k) => this.libraryRow(k)).join("")}</div>`).join("")
+      : `<p class="note">No exercises match. Try fewer filters or another word.</p>`;
+    Figure.paint($("ex-results"));
+  },
+  libraryRow(key) {
+    const ex = EX[key], m = ex.muscles;
+    return `<button class="ex-row" data-ex="${key}">
+      <img src="https://i.ytimg.com/vi/${ex.videos[0].id}/mqdefault.jpg" alt="" loading="lazy">
+      <div><div class="ex-title">${esc(ex.name)}</div><div class="ex-meta">${esc(muscleList(m.main))} · ${ex.level === "beginner" ? "Beginner" : "Intermediate"}</div></div>
+      ${Figure.slot("badge", m, muscleList(m.main))}<span class="chev">›</span></button>`;
+  },
+
+  /* ---------- one exercise's own page: how to do it, what it works, easier and harder versions.
+     from: the screen to go back to; dose: the amount when opened from a day of your plan */
+  exercise(key, { from = this.tabNow || "exercises", dose: d = null } = {}) {
+    const ex = EX[key], v = variant(key, 0), lvl = (l) => (l === "beginner" ? "Beginner" : "Intermediate");
+    const levels = [...new Set(ex.videos.map((_, vi) => variant(key, vi).level))].map(lvl).join(" to ");
+    const joints = (list) => list.map((j) => JOINTS[j]).join(", ");
+    const links = (label, keys) => keys?.length ? `<p class="ex-links">${label}: ${keys.map((k) => `<button class="link" data-ex="${k}">${esc(EX[k].name)}</button>`).join(", ")}</p>` : "";
+    const variants = ex.videos.filter((vv) => vv.name).map((vv) => vv.name);
+    $("exercise-body").innerHTML = `
+      <button class="ex-hero" id="ex-try" aria-label="Try ${esc(ex.name)} with the coach"><img src="https://i.ytimg.com/vi/${ex.videos[0].id}/hqdefault.jpg" alt=""><span class="play">▶</span></button>
+      <h1 class="title">${esc(ex.name)}</h1>
+      <div class="ex-tags"><span class="tag">${levels}</span><span class="tag">${esc(ex.equip[0].toUpperCase() + ex.equip.slice(1))}</span>${d ? `<span class="tag">${esc(this.amount(d))}</span>` : ""}</div>
+      ${variants.length ? `<p class="note">Two ways to do it, each with its own demo: ${esc(variants.join(" or "))}.</p>` : ""}
+      <div class="day-muscles ex-muscles"><div class="fig-col">${Figure.slot("full", ex.muscles, muscleList(ex.muscles.main))}</div>${this.muscleGroups(ex.muscles)}</div>
+      <div class="focus"><div class="label">Focus</div><p>${esc(v.key)}</p></div>
+      <ol class="ex-cues">${v.cues.map((c) => `<li>${esc(c)}</li>`).join("")}</ol>
+      <p class="safety">${esc(v.stop)}</p>
+      ${ex.easyOn.length || ex.loads.length ? `<p class="ex-joints">${[ex.easyOn.length ? `Easy on: ${joints(ex.easyOn)}` : "", ex.loads.length ? `Puts load on: ${joints(ex.loads)}` : ""].filter(Boolean).join(" · ")}</p>` : ""}
+      ${links("Easier", ex.easier)}${links("Harder", ex.harder)}
+      <div class="card-actions"><button class="big-btn" id="ex-try2">Try it with the coach ▶</button></div>`;
+    const tryIt = () => { Workout.returnTo = "exercise"; Workout.startPreview(key, d || dose(key)); };
+    $("ex-try").onclick = $("ex-try2").onclick = tryIt;
+    $("exercise-body").onclick = (e) => { const b = e.target.closest("button[data-ex]"); if (b) this.exercise(b.dataset.ex, { from }); };
+    $("exercise-back").onclick = () => (from === "day" ? this.show("day") : this.tab(from));
+    this.show("exercise");
+    if (!TEST_MODE && !REVIEW_MODE) history.replaceState(null, "", location.pathname + location.search + "#ex/" + key);
+    Figure.paint($("exercise-body"));
   },
 
   /* ---------- home */
@@ -659,8 +745,8 @@ const UI = {
     document.title = `${plan.title} · Workout Coach`;
     $("plan-title").textContent = plan.title;
     $("plan-subtitle").textContent = plan.subtitle || this.planSummary(plan);
-    const today = new Date().getDay();
-    $("days").innerHTML = plan.days.map((day, i) => `
+    const today = new Date().getDay(), order = plan.days.map((day, i) => [day, i]).sort(([a], [b]) => ((a.d - today + 7) % 7) - ((b.d - today + 7) % 7));
+    $("days").innerHTML = order.map(([day, i]) => `
       <button class="day-card${day.d === today ? " today" : ""}" data-i="${i}">
         <span class="day-name label"><span>${DAY_NAMES[day.d]}</span>${day.d === today ? '<span class="today">Today</span>' : ""}</span>
         <span class="day-focus">${esc(day.name)}</span>
@@ -734,8 +820,7 @@ const UI = {
     $("fix-copy").onclick = async () => { $("fix-status").textContent = (await copyText(message)) ? "Copied. Paste it into your AI chat." : "Couldn't copy; select the message and copy it."; };
     $("fix-anyway").hidden = !r.plan;
     $("fix-anyway").onclick = () => Plans.use(r.plan);
-    $("fix-home").onclick = () => { history.replaceState(null, "", location.pathname + location.search); Plans.boot();
-Figure.load(); };
+    $("fix-home").onclick = () => { history.replaceState(null, "", location.pathname + location.search); Plans.boot(); };
     this.show("fix");
   },
 
@@ -750,7 +835,7 @@ Figure.load(); };
   exRow(entry) {
     const ex = EX[entry.key], m = variant(entry.key, Workout.variantOf(entry.key)).muscles;
     this.rows.push(entry);
-    return `<button class="ex-row" data-r="${this.rows.length - 1}" aria-label="Preview ${esc(ex.name)}">
+    return `<button class="ex-row" data-r="${this.rows.length - 1}" aria-label="${esc(ex.name)}: how to do it">
       <img src="https://i.ytimg.com/vi/${ex.videos[0].id}/mqdefault.jpg" alt="" loading="lazy">
       <div><div class="ex-title">${esc(ex.name)}</div><div class="ex-meta">${esc(this.amount(entry.dose))} · ${esc(muscleList(m.main))}</div></div>
       ${Figure.slot("badge", m, muscleList(m.main))}<span class="chev">›</span></button>`;
@@ -804,7 +889,7 @@ Figure.load(); };
     $("day-body").onclick = (e) => {
       const f = e.target.closest(".fig-toggle");
       if (f) { Figure.choose(f.dataset.kind); return this.day(); }
-      const r = e.target.closest(".ex-row"); if (r) { const x = this.rows[+r.dataset.r]; Workout.startPreview(x.key, x.dose); }
+      const r = e.target.closest(".ex-row"); if (r) { const x = this.rows[+r.dataset.r]; this.exercise(x.key, { from: "day", dose: x.dose }); }
     };
     Figure.paint($("day-body"));
   },
@@ -1037,6 +1122,16 @@ function debugBar() {
 /* ============================================================ boot */
 $("day-back").onclick = () => { Workout.day = null; UI.show("home"); };
 $("create-back").onclick = () => UI.show("home");
+$("tabbar").onclick = (e) => { const b = e.target.closest("button[data-tab]"); if (b) UI.tab(b.dataset.tab); };
+$("ex-search").oninput = (e) => { UI.exFilter.q = e.target.value; UI.exerciseList(); };
+const chipFilter = (id, field) => ($(id).onclick = (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  const k = b.dataset[field]; UI.exFilter[field] = UI.exFilter[field] === k ? null : k;
+  for (const c of $(id).children) c.setAttribute("aria-pressed", c === b && UI.exFilter[field] === k);
+  UI.exerciseList();
+});
+chipFilter("ex-gear", "gear"); chipFilter("ex-area", "area");
+$("ex-results").onclick = (e) => { const b = e.target.closest("[data-ex]"); if (b) UI.exercise(b.dataset.ex, { from: "exercises" }); };
 $("exit-btn").onclick = () => UI.exitButton();
 $("vid-prev").onclick = () => Video.choose(Video.idx - 1);
 $("vid-next").onclick = () => Video.choose(Video.idx + 1);

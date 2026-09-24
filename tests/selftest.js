@@ -330,6 +330,44 @@
     return { name: "Exercise details", steps: 0, lines: 0, fails };
   }
 
+  /* ---------- Exercises tab and exercise pages */
+  async function exercisesCheck() {
+    const fails = [], check = (ok, msg) => { if (!ok) fails.push(msg); };
+    for (const k of Object.keys(EX)) {
+      if (!EX[k].gear?.length || EX[k].gear.some((g) => !GEAR[g])) fails.push(`${k}: gear must list kinds from GEAR`);
+      if (!areasOf(k).length) fails.push(`${k}: main muscles fall in no body area`);
+    }
+    const F = UI.exFilter, keep = { ...F };
+    UI.tab("exercises");
+    check(!$("exercises").hidden && !$("tabbar").hidden, "Exercises tab didn't open with the tab bar");
+    check(UI.exerciseMatches().length === Object.keys(EX).length, "with no filters, not every exercise is listed");
+    Object.assign(F, { q: "", gear: "bodyweight", area: null });
+    check(UI.exerciseMatches().every((k) => EX[k].gear.includes("bodyweight")), "Bodyweight shows exercises that need kit");
+    Object.assign(F, { gear: "dumbbells" });
+    const dbs = UI.exerciseMatches();
+    check(dbs.includes("gobletsquat") && dbs.includes("bwsquat") && !dbs.includes("legpress"), "Dumbbells should show dumbbell and bodyweight exercises, not machines");
+    Object.assign(F, { gear: "gym" });
+    check(UI.exerciseMatches().length === Object.keys(EX).length, "Gym should show every exercise");
+    Object.assign(F, { gear: null, q: "squat" });
+    check(UI.exerciseMatches().includes("bbsquat") && !UI.exerciseMatches().includes("sarow"), "search for 'squat' is wrong");
+    Object.assign(F, keep); UI.exerciseList();
+    for (const k of Object.keys(EX)) {
+      UI.exercise(k, { from: "exercises" });
+      const body = $("exercise-body");
+      check(!$("exercise").hidden && $("tabbar").hidden, `${k}: exercise page didn't open`);
+      check(body.querySelectorAll(".ex-cues li").length === variant(k, 0).cues.length, `${k}: page doesn't list every cue`);
+      for (const b of body.querySelectorAll("[data-ex]")) check(!!EX[b.dataset.ex], `${k}: links to unknown exercise ${b.dataset.ex}`);
+    }
+    $("exercise-back").click();
+    check(!$("exercises").hidden, "Back from an exercise page didn't return to Exercises");
+    UI.exercise("rdl", { from: "exercises" }); $("ex-try2").click(); await settle(1);
+    check(!$("player").hidden, "Try it with the coach didn't start the preview");
+    Workout.exit(); await settle(0.5);
+    check(!$("exercise").hidden, "closing the preview didn't return to the exercise page");
+    UI.show("home");
+    return { name: "Exercises tab", steps: Object.keys(EX).length, lines: 0, fails };
+  }
+
   /* ---------- plan links, the AI message, and a recording for everything a plan can ask for */
   function planCheck() {
     const fails = [], check = (ok, msg) => { if (!ok) fails.push(msg); };
@@ -380,6 +418,7 @@
     results.push(wordingCheck());
     results.push(await safely("Muscle map", muscleCheck));
     results.push(await safely("Exercise details", async () => detailsCheck()));
+    results.push(await safely("Exercises tab", exercisesCheck));
     results.push(await safely("Plan links & AI message", async () => planCheck()));
     const sessions = async (plan, which) => {
       for (const i of which) {
