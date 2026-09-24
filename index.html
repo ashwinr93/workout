@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Workout Coach">
 <meta name="theme-color" content="#0d1015">
 <title>Workout Coach</title>
@@ -16,16 +16,19 @@
 <!-- Home: the plan's days -->
 <section id="home" class="screen">
   <div class="wrap">
-    <div class="brand-row"><div class="label brand">Workout Coach</div><button class="cta-pill" id="plan-cta" hidden>Create your own plan ›</button></div>
+    <div class="label brand">Workout Coach</div>
     <h1 class="title" id="plan-title"></h1>
     <p class="subtitle" id="plan-subtitle"></p>
     <div class="days" id="days"></div>
-    <div class="card" id="plan-card"></div>
     <div class="card" id="plan-rules">
       <div class="label" id="plan-rules-title"></div>
       <ul id="plan-rules-list"></ul>
     </div>
-    <p class="note">For the TV: turn off Rotation Lock, hold the phone sideways, then Control Center → Screen Mirroring.</p>
+    <div class="card" id="plan-card"></div>
+    <div class="cta" id="plan-cta" hidden>
+      <p>Want a week like this, built around your own goals?</p>
+      <button class="big-btn" id="plan-cta-btn">Create your own plan</button>
+    </div>
     <p class="note"><button class="link" id="diag-open">Diagnostics</button></p>
     <div class="card" id="diag" hidden>
       <div class="label">Diagnostics</div>

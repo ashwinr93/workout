@@ -37,7 +37,7 @@ For example, if I say "posture", ask what bothers me about it: shoulders roundin
 Things to find out:
 - what I want to get out of it, in my own words
 - anything that aches or has been injured, and when I notice it (link this to my goal where it fits)
-- where I'll train and what equipment I have
+- where I'll train: at home, in a gym, outdoors, or a mix. If it's a gym, assume a normal gym and only ask if there's anything I can't or don't want to use; don't make me list equipment. If it's at home, ask what I have, and "nothing" is a fine answer.
 - how many days a week, and how many minutes a session
 - how much I've trained before
 - any sport or cardio I already do (these become activity days)

@@ -56,7 +56,7 @@ There are no accounts, no tracking and no ads (every demo video is checked for a
 
 ## Get your own plan (no code needed)
 
-Tap **Create your own plan** on the home screen and pick an AI you already use (ChatGPT, Claude, Gemini, Copilot, Perplexity, Grok or Le Chat). It opens a new chat with a message that turns the AI into a coach: it asks about your goals, any aches, your equipment and your time, one question at a time, then gives you a link. Tap the link and your plan opens in the app, with the same videos, coach voice and timers.
+Tap **Create your own plan** on the home screen and pick an AI you already use (ChatGPT, Claude, Gemini, Copilot, Perplexity, Grok or Le Chat). It opens a new chat with a message that turns the AI into a coach: it asks about your goals, any aches, where you train (at home or in a gym) and how much time you have, one question at a time, then gives you a link. Tap the link and your plan opens in the app, with the same videos, coach voice and timers.
 
 - **It's free.** The AI runs on your own account; this site has no server.
 - **Your plan lives in its link.** Bookmark it or add it to your Home Screen. The app also remembers the last plan you opened on that phone.

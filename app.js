@@ -595,7 +595,7 @@ const UI = {
       </button>`).join("");
     $("days").onclick = (e) => { const b = e.target.closest(".day-card"); if (b) this.openDay(plan.days[+b.dataset.i]); };
     $("plan-cta").hidden = !plan.example;
-    $("plan-cta").onclick = () => this.create(false);
+    $("plan-cta-btn").onclick = () => this.create(false);
     this.planCard();
   },
   planSummary(plan) {
@@ -610,21 +610,17 @@ const UI = {
     const n = day.items.length;
     return `${n} ${day.kind === "stretch" ? "stretch" : "exercise"}${n === 1 ? "" : day.kind === "stretch" ? "es" : "s"}`;
   },
-  // Under the days: an invitation to make your own plan (on the example), or managing yours
+  // Under the days, on your own plan: change it, share it, start another; and plans used before on this device
   planCard() {
     const plan = Plans.current, others = [...Plans.recent().filter((p) => p.link !== plan.link), ...(plan.example ? [] : [{ example: true, title: EXAMPLE_PLAN.title }])];
-    $("plan-card").classList.toggle("invite", !!plan.example);
-    $("plan-card").innerHTML = (plan.example
-      ? `<h2 class="invite-title">Get a plan made for you</h2>
-         <p class="card-text">This week is an example. Chat with an AI you already use about your goals, any aches and what you have to train with, and it builds your own plan, with these videos and this coach.</p>
-         <ol class="steps"><li>Pick your AI</li><li>Answer a few questions</li><li>Tap the link it gives you</li></ol>
-         <div class="card-actions"><button class="big-btn" id="pc-create">Create your own plan</button></div>`
+    $("plan-card").hidden = plan.example && !others.length;
+    $("plan-card").innerHTML = (plan.example ? ""
       : `<div class="label">Your plan</div>
          <p class="card-text">Bookmark this page or add it to your Home Screen: the plan lives in its link.</p>
          <div class="card-actions"><button class="tool" id="pc-change">Change it with AI</button><button class="tool" id="pc-share">Copy link</button><button class="tool" id="pc-create">Create a new plan</button><span class="note" id="pc-status"></span></div>`)
-      + (others.length ? `<div class="label" style="margin-top:16px">Other plans on this device</div>
+      + (others.length ? `<div class="label"${plan.example ? "" : ' style="margin-top:16px"'}>Other plans on this device</div>
          <div class="plan-list">${others.map((p, i) => `<button class="link" data-i="${i}">${esc(p.title)}${p.example ? " (example)" : ""}</button>`).join("")}</div>` : "");
-    $("pc-create").onclick = () => this.create(false);
+    if ($("pc-create")) $("pc-create").onclick = () => this.create(false);
     if ($("pc-change")) $("pc-change").onclick = () => this.create(true);
     if ($("pc-share")) $("pc-share").onclick = async () => { $("pc-status").textContent = (await copyText(Plans.link())) ? "Link copied" : "Couldn't copy"; };
     $("plan-card").querySelector(".plan-list")?.addEventListener("click", (e) => {
@@ -640,7 +636,7 @@ const UI = {
     $("create-title").textContent = change ? "Change your plan" : "Create your own plan";
     $("create-intro").textContent = change
       ? "Pick an AI you use. It gets your current plan, asks what you'd like to change, and gives you a new link."
-      : "Pick an AI you already use. It asks about your goals, any aches, your equipment and your time, then gives you a link to your own plan in this app. It uses your own AI account, so it's free.";
+      : "Pick an AI you already use. It asks about your goals, any aches, where you train (at home, in a gym or anywhere) and what's there, and how much time you have. Then it gives you a link to your own plan in this app. It uses your own AI account, so it's free.";
     // Every choice is a plain link, so the phone can hand it to the AI's app when it's installed.
     // Where the chat can't take the message in its address (Gemini), the same tap copies it first.
     $("ai-list").innerHTML = AI_CHATS.map((ai, i) => `<a class="ai-btn" data-i="${i}" href="${esc(chatLink(ai, text))}" target="_blank" rel="noopener">Open ${esc(ai.name)}${
@@ -714,6 +710,9 @@ const UI = {
       $("wu-toggle").onclick = () => { W.warm = !W.warm; this.day(); };
       if ($("cd-toggle")) $("cd-toggle").onclick = () => { W.cool = !W.cool; this.day(); };
     }
+    // Only phones mirror to a TV; the tip sits where you're about to start
+    if (matchMedia("(pointer: coarse)").matches)
+      $("day-body").insertAdjacentHTML("beforeend", `<p class="note tv-tip">Want it bigger? Mirror your phone to a TV: turn off Rotation Lock, hold the phone sideways, then Control Center → Screen Mirroring.</p>`);
     $("day-body").onclick = (e) => { const r = e.target.closest(".ex-row"); if (r) { const x = this.rows[+r.dataset.r]; Workout.startPreview(x.key, x.dose); } };
   },
 
@@ -842,8 +841,10 @@ const UI = {
     $("progress").style.width = "100%";
     $("stage").hidden = true; $("finished").hidden = false;
     $("finished").innerHTML = `<div class="emoji">💪</div><h1 class="title">Workout complete</h1>
-      <p class="muted">${esc(Workout.label)} · ${mins} min</p><button class="big-btn" id="done-close">Back to the plan</button>`;
+      <p class="muted">${esc(Workout.label)} · ${mins} min</p><button class="big-btn" id="done-close">Back to the plan</button>
+      ${Plans.current.example && !Workout.preview ? '<button class="link" id="done-create">Create your own plan</button>' : ""}`;
     $("done-close").onclick = () => { Workout.day = null; Workout.exit(); };
+    if ($("done-create")) $("done-create").onclick = () => { Workout.day = null; Workout.exit(); this.create(false); };
   },
 
   exitButton() {
