@@ -48,8 +48,8 @@ Live: https://ashwinr93.github.io/workout/ (branch `main`). Staging: https://ash
 - Polish and clean engineering matter to the owner: no patch-on-patch fixes; restructure when needed.
 
 ## Working agreements
-- **Push only when the owner asks.** "Push it" / "push to prod" → push `main`. "Push to staging" → `git push --force origin HEAD:staging` (staging is just the candidate; prod is untouched). Then confirm the "Deploy Pages" run finished (`gh run list --workflow pages.yml`) and the files at that address updated.
-- **Before asking to push a visual change, send review screenshots**: `cd tests/e2e && TMPDIR=/private/tmp/claude-501/pwtmp node review.mjs --out <dir>` → `sheet-desktop.png`, `sheet-iphone-portrait.png` (the iPhone simulator's Safari), `sheet-iphone-landscape.png` (WebKit at 852×393; this Mac can't rotate the simulator). `--screens` limits the screens, `--base <url>` shoots staging or live. Anything that depends on the Home Screen app (status bar, top safe area) needs the simulator's Home Screen app by hand.
+- **Default flow: tested changes go to staging first** (`git push --force origin HEAD:staging`; prod is untouched), the owner checks them on the phone, then "push it" / "push to prod" → push `main`. Confirm each deploy: the "Deploy Pages" run finished (`gh run list --workflow pages.yml`) and the files at that address updated.
+- **Review screenshots only when the owner asks** (they slow iteration): `cd tests/e2e && TMPDIR=/private/tmp/claude-501/pwtmp node review.mjs --out <dir>` → `sheet-desktop.png`, `sheet-iphone-portrait.png` (the iPhone simulator's Safari), `sheet-iphone-landscape.png` (WebKit at 852×393; this Mac can't rotate the simulator). `--screens` limits the screens, `--base <url>` shoots staging or live. Anything that depends on the Home Screen app (status bar, top safe area) needs the simulator's Home Screen app by hand.
 - **Test before handing anything back** (below) — the owner doesn't want to find regressions by hand.
 
 ## Testing (run all before handing back; each is cheap)

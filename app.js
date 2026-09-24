@@ -577,7 +577,7 @@ const Figure = {
     if (!boxes.length) return this.svg(view, m);
     const x0 = Math.min(...boxes.map((b) => b[0])), y0 = Math.min(...boxes.map((b) => b[1]));
     const x1 = Math.max(...boxes.map((b) => b[0] + b[2])), y1 = Math.max(...boxes.map((b) => b[1] + b[3]));
-    const side = Math.max(280, 1.22 * Math.max(x1 - x0, y1 - y0));
+    const side = Math.max(420, 1.6 * Math.max(x1 - x0, y1 - y0));   // room for the body around them, for contrast
     return this.svg(view, m, [(x0 + x1 - side) / 2, (y0 + y1 - side) / 2, side, side]);
   },
   // A session's muscles: main = what its exercises mainly work (most often first), help = the rest

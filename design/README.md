@@ -13,7 +13,7 @@ Show which muscles an exercise works, for people who don't know muscle names. Ru
   - Rest screen: a larger badge beside the countdown and "Up next".
   - Day summary card and finish screen: full front and back figures, with main and helping muscles for the whole session.
   - Never draw over the YouTube video.
-- **Badges frame themselves:** zoom to a square around the bounding boxes of the *main* muscles, padded ×1.22, minimum 280 units. So any exercise, including user-created ones, gets a sensible badge. See `focus()` in the mockup code below.
+- **Badges frame themselves:** zoom to a square around the bounding boxes of the *main* muscles, padded ×1.6, minimum 420 units (the owner asked for enough surrounding body to show the contrast; ×1.22 / 280 was too tight). So any exercise, including user-created ones, gets a sensible badge. See `focus()` in the mockup code below.
 - **Male/female figure:** both traced with identical muscle names. Where the choice lives is decided below.
 - `muscle-map-male-female.png` is the approved mockup.
 
