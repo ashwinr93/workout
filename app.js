@@ -767,7 +767,7 @@ const UI = {
   },
   confirmPlan(plan) {
     $("plan-confirm-title").textContent = `Switch to ${plan.title}?`;
-    $("plan-confirm-text").textContent = `It replaces ${Plans.current.title} as your week. You can switch back anytime from Your plans.`;
+    $("plan-confirm-text").textContent = `It replaces ${Plans.current.title} as your week. You can switch back anytime from Plans.`;
     $("plan-confirm-no").textContent = `Keep ${Plans.current.title}`;
     $("plan-confirm").hidden = false;
     $("plan-confirm-yes").onclick = () => { $("plan-confirm").hidden = true; this.startPlan(plan); };
@@ -851,19 +851,13 @@ const UI = {
     const n = day.items.length;
     return `${n} ${day.kind === "stretch" ? "stretch" : "exercise"}${n === 1 ? "" : day.kind === "stretch" ? "es" : "s"}`;
   },
-  // Under the days: change or share your week, and switch back to plans you've followed before
+  // Under the days: change or share your week, or switch to another plan (the Plans tab, where your
+  // own plans and the ready-made ones are)
   planCard() {
-    const plan = Plans.current, others = Plans.recent().filter((p) => p.link !== plan.link);
-    const title = (p) => (p.link === EXAMPLE_PLAN.link ? EXAMPLE_PLAN.title : p.title);
-    $("plan-card").innerHTML = `<div class="card-actions" style="margin-top:0"><button class="tool" id="pc-change">Change this week with AI</button><button class="tool" id="pc-share">Copy link</button><span class="note" id="pc-status"></span></div>`
-      + (others.length ? `<div class="label" style="margin-top:16px">Your plans</div>
-         <div class="plan-list">${others.map((p, i) => `<button class="link" data-i="${i}">${esc(title(p))}</button>`).join("")}</div>` : "");
+    $("plan-card").innerHTML = `<div class="card-actions" style="margin-top:0"><button class="tool" id="pc-change">Change this week with AI</button><button class="tool" id="pc-share">Copy link</button><button class="tool" id="pc-switch">Switch plan</button><span class="note" id="pc-status"></span></div>`;
     $("pc-change").onclick = () => this.create(true);
     $("pc-share").onclick = async () => { $("pc-status").textContent = (await copyText(Plans.link())) ? "Link copied" : "Couldn't copy"; };
-    $("plan-card").querySelector(".plan-list")?.addEventListener("click", (e) => {
-      const b = e.target.closest("button[data-i]"); if (!b) return;
-      Plans.use(parsePlan(others[+b.dataset.i].link).plan);
-    });
+    $("pc-switch").onclick = () => this.tab("plans");
   },
 
   /* ---------- create or change a plan with an AI */

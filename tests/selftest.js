@@ -398,6 +398,8 @@
     check([...$("plans-list").querySelectorAll(".plan-tile[data-id]")].every((b) => PROGRAMS.find((p) => p.id === b.dataset.id).goals.includes("lose")), "goal filter shows other goals");
     UI.goal = null; UI.plans();
     Plans.use(null);                                           // a week to compare against
+    $("pc-switch").click();
+    check(!$("plans").hidden, "My week's Switch plan didn't open Plans");
     const before = Plans.current.link;
     UI.tab("plans"); UI.planView("gym-first");
     check(Plans.current.link === before, "opening a plan's preview changed your week");
