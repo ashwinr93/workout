@@ -976,6 +976,12 @@ const UI = {
     const m = variant(st.key, Workout.variantOf(st.key)).muscles;
     return `${esc(what)}${st.side ? ` · <span class="side">${st.side}</span>` : ""} · <span class="muscles">${esc(muscleList(m.main))}</span>`;
   },
+  // A preview's quick facts: "Beginner · One dumbbell · Easy on knees · Loads lower back"
+  exerciseFacts(key, vi) {
+    const ex = EX[key], v = variant(key, vi), joints = (l) => l.map((j) => JOINTS[j]).join(", ");
+    return [v.level === "beginner" ? "Beginner" : "Intermediate", ex.equip === "none" ? "No equipment" : ex.equip[0].toUpperCase() + ex.equip.slice(1),
+      v.easyOn.length ? `Easy on ${joints(v.easyOn)}` : "", v.loads.length ? `Loads ${joints(v.loads)}` : ""].filter(Boolean).join(" · ");
+  },
   target(d) {
     return d.time ? `<b>${fmt(d.time)}</b> ${d.perSide ? "each side" : "hold"}`
       : `<b>${esc(d.reps)}${d.measure === "m" ? " m" : ""}</b> ${esc(d.unit)}`;
@@ -996,7 +1002,7 @@ const UI = {
       <p class="safety">${esc(v.stop)}</p>
       </div>
       <div class="controls">
-        ${st.preview ? `<button class="ctl primary" id="c-done">Close preview</button>`
+        ${st.preview ? `<p class="ex-facts">${esc(this.exerciseFacts(st.key, Workout.variantOf(st.key)))}</p><button class="ctl primary close" id="c-done">Close</button>`
           : `<button class="ctl" id="c-prev" aria-label="Back">‹</button>${hold ? `<button class="ctl" id="c-pause">Pause</button>` : ""}
              <button class="ctl primary" id="c-done">${hold ? "Skip ›" : "Done ✓"}</button>`}
       </div>`;
@@ -1048,7 +1054,8 @@ const UI = {
           <div class="num" id="rest-num">${st.dur}</div>
         </div>
         ${nex ? `<div class="rest-info"><div class="upnext"><div><div class="label">Up next</div><h3>${esc(nex.name)}</h3>${detail ? `<div class="muted">${esc(detail)}</div>` : ""}</div>${Figure.slot("badge", nex.muscles, muscleList(nex.muscles.main))}</div>
-        <div class="focus"><div class="label">Focus</div><p>${esc(nex.key)}</p></div></div>` : ""}
+        <div class="focus"><div class="label">Focus</div><p>${esc(nex.key)}</p></div>
+        <p class="rest-facts">${esc(this.exerciseFacts(next.key, Workout.variantOf(next.key)))}</p></div>` : ""}
       </div>
       </div>
       <div class="controls">

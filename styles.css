@@ -238,6 +238,10 @@ h1, h2, h3, p { margin: 0; }
 .dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
 .dots i.on { background: var(--text); }
 .safety { font-size: clamp(12px, 2.5vh, 14px); color: var(--caution); line-height: 1.3; }
+/* a preview's quick facts sit in the button row, beside Close */
+.controls .ex-facts { flex: 1; align-self: center; margin: 0; font-size: clamp(12px, 2.5vh, 14px); color: var(--muted); line-height: 1.3; }
+.ctl.primary.close { flex: 0 0 auto; padding: 0 22px; }
+.rest-facts { font-size: clamp(12px, 2.5vh, 14px); color: var(--muted); line-height: 1.3; }
 .safety::before { content: "⚠︎ "; }
 
 .controls { flex-shrink: 0; display: flex; gap: 8px; }
@@ -282,6 +286,7 @@ h1, h2, h3, p { margin: 0; }
   .cues li.on { display: block; }
   .dots { display: flex; }
   .safety { font-size: 12px; line-height: 1.25; }
+  .controls .ex-facts, .rest-facts { font-size: 12px; line-height: 1.25; }
   .ctl { min-height: 40px; font-size: 15px; }
   .ctl.primary { font-size: 17px; }
   .rest-main { flex-direction: row; align-items: center; gap: 16px; }   /* ring beside "up next" on short screens */

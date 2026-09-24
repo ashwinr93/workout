@@ -267,6 +267,14 @@
       if (name.getBoundingClientRect().height > 2.5 * parseFloat(getComputedStyle(name).lineHeight || getComputedStyle(name).fontSize)) fails.push(`${key}: name wraps to 3+ lines`);
       items.forEach((_, i) => { if (oneAtATime) UI.showCue(i); fails.push(...panelProblems(`${key}${vi ? " (variant " + (vi + 1) + ")" : ""}${oneAtATime ? " cue " + (i + 1) : ""}`)); });
     }
+    // previews also show the exercise's quick facts (level, equipment, joints)
+    for (const key of Object.keys(EX)) for (let vi = 0; vi < EX[key].videos.length; vi++) {
+      store.set("demos", { [key]: vi }); Video.key = null;
+      Workout.steps = [{ type: "work", key, set: 1, sets: dose(key).sets, side: null, section: "main", dose: dose(key), preview: true }]; Workout.cur = 0; Workout.preview = true; Workout.render();
+      const items = [...$("cues").children], oneAtATime = items.filter((li) => getComputedStyle(li).display !== "none").length === 1;
+      items.forEach((_, i) => { if (oneAtATime) UI.showCue(i); fails.push(...panelProblems(`preview ${key}${vi ? " (variant " + (vi + 1) + ")" : ""}${oneAtATime ? " cue " + (i + 1) : ""}`)); });
+    }
+    Workout.preview = false;
     store.set("demos", {});
     // rest screens, with each exercise as "up next"
     for (const key of Object.keys(EX)) {

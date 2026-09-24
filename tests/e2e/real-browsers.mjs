@@ -43,7 +43,8 @@ async function runBrowser(name, launcher, opts) {
   page.on("pageerror", (e) => { if (!/doubleclick|googleads|youtube/i.test(e.message)) errors.push(e.message); });
   try {
     await page.goto(BASE);
-    await page.evaluate(() => { localStorage.clear(); localStorage.setItem("audioMode", '"coach"'); });
+    // a returning user on the owner's week (a newcomer would land on Plans)
+    await page.evaluate(() => { localStorage.clear(); localStorage.setItem("audioMode", '"coach"'); localStorage.setItem("plan", "null"); });
     await page.goto(BASE);
     if (!(await waitFor(page, () => Video.ready, 20000))) throw new Error("YouTube player never loaded");
     let aac = true; // set after the first voice clip is tried
