@@ -69,7 +69,7 @@ Setup (if the venv/models are gone — they were kept in `/private/tmp/claude-50
 ## Adding or swapping a demo video
 1. Find candidates (YouTube search); prefer short, clear, side-on demos.
 2. `node tests/e2e/ad-scan.mjs --talk <ids>` — reject any "AD"; the output tells you which have a voice (`voice: true`).
-3. Check intro/outro frames and set `start`/`end`; check the cues match what the demo does.
+3. `node tests/e2e/vet.mjs --out <dir> <ids>` — title, channel, length and a frame sheet (every ~1 s) per video: pick `start`/`end` past logos, "subscribe" end cards and chatter, and write cues from what the frames show.
 4. `node tools/credits.mjs` to update the README credits.
 5. Fill in `equip`, `type`, `level`, `easyOn`/`loads` (check each joint claim against a published source), `easier`/`harder` and `muscles` so the AI prompt describes it; record its clips (`make_audio.py`).
 6. Run the tests.

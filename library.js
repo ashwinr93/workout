@@ -259,7 +259,7 @@ const EX = {
   slbridge: {
     name: "Single-Leg Glute Bridge", sets: 3, reps: "12", unit: "reps each side", rest: 60,
     muscles: { main: ["glutes"], help: ["hams"] },
-    type: "hinge", level: "beginner", easyOn: ["lowerback", "knees"], loads: [], harder: ["rdl"],
+    type: "hinge", level: "beginner", easyOn: ["lowerback", "knees"], loads: [], harder: ["rdl"], easier: ["glutebridge"],
     equip: "none",
     key: "Squeeze for 2 seconds at the top",
     why: "Lying flat takes load off the spine and isolates the glutes.",
@@ -296,7 +296,7 @@ const EX = {
   planktaps: {
     name: "Plank with Shoulder Taps", sets: 3, time: 45, rest: 60,
     muscles: { main: ["abs", "obliques"], help: ["delts", "glutes"] },
-    type: "core", level: "intermediate", easyOn: ["lowerback"], loads: ["wrists", "shoulders"],
+    type: "core", level: "intermediate", easyOn: ["lowerback"], loads: ["wrists", "shoulders"], easier: ["deadbug"],
     equip: "none",
     key: "Keep your hips square; no rocking",
     why: "Keeps the spine from twisting. Tap slowly.",
@@ -481,7 +481,7 @@ const EX = {
   dbrevlunge: {
     name: "Reverse Lunges", sets: 3, reps: "10", unit: "reps each side", rest: 90,
     muscles: { main: ["quads", "glutes"], help: ["adductors", "hams", "calves"] },
-    type: "lunge", level: "intermediate", easyOn: ["knees"], loads: ["knees"], easier: ["stepup"],
+    type: "lunge", level: "intermediate", easyOn: ["knees"], loads: ["knees"], easier: ["stepup", "splitsquat"],
     equip: "dumbbells optional",
     key: "Always step backward, never forward",
     why: "Keeps the front shin vertical so there's no twisting force on the knee.",
@@ -526,7 +526,7 @@ const EX = {
   stepup: {
     name: "Step-Ups", sets: 3, reps: "10", unit: "reps each side", rest: 60,
     muscles: { main: ["quads", "glutes"], help: ["hams", "calves", "adductors"] },
-    type: "lunge", level: "beginner", easyOn: ["knees"], loads: ["knees"], harder: ["dbrevlunge"],
+    type: "lunge", level: "beginner", easyOn: ["knees"], loads: ["knees"], harder: ["dbrevlunge", "splitsquat"],
     equip: "bench or sturdy step, dumbbells optional",
     key: "Use a step low enough that your knee is at 90° or less",
     why: "Push through the heel of your leading leg.",
@@ -641,7 +641,214 @@ const EX = {
       { id: "VWk9QD10Xjg", start: 1, voice: true },
       { id: "b7k-9CZVYbA", label: "Alternate", end: 49, voice: true }
     ]
+  },
+  // ---------- Bodyweight and bands (batch 1) ----------
+  bwsquat: {
+    name: "Bodyweight Squat", sets: 3, reps: "10–12", unit: "reps", rest: 60,
+    equip: "none",
+    muscles: { main: ["quads", "glutes"], help: ["adductors", "hams"] },
+    type: "squat", level: "beginner", easyOn: [], loads: ["knees"], harder: ["gobletsquat"],
+    key: "Sit back and down; knees follow your toes",
+    cues: [
+      "Stand with your feet about shoulder-width apart, toes turned out slightly",
+      "Reach your arms forward as you sit your hips back and down",
+      "Keep your chest up and your knees in line with your toes",
+      "Push through your whole foot to stand tall"
+    ],
+    stop: "If your knees hurt, only go as low as feels comfortable.",
+    videos: [
+      { id: "3fl7uYmiMVw" },
+      { id: "P-yaD24bUE8", label: "Side view", start: 30, end: 39, voice: true }
+    ]
+  },
+  gobletsquat: {
+    name: "Goblet Squat", sets: 3, reps: "8–10", unit: "reps", rest: 90,
+    equip: "one dumbbell",
+    muscles: { main: ["quads", "glutes"], help: ["adductors", "hams", "upperback"] },
+    type: "squat", level: "beginner", easyOn: [], loads: ["knees"], easier: ["bwsquat"],
+    key: "Chest tall; elbows inside your knees",
+    cues: [
+      "Hold one dumbbell upright against your chest, elbows pointing down",
+      "Set your feet a little wider than your hips, toes slightly out",
+      "Sit down between your heels, keeping your chest tall",
+      "Drive through your feet to stand"
+    ],
+    stop: "If your knees or lower back hurt, don't go as deep.",
+    videos: [
+      { id: "2LnkzQ7paAc", start: 2, end: 27, voice: true }
+    ]
+  },
+  splitsquat: {
+    name: "Split Squat", sets: 3, reps: "8", unit: "reps each side", rest: 60,
+    equip: "none, dumbbells optional",
+    muscles: { main: ["quads", "glutes"], help: ["adductors", "hams", "calves"] },
+    type: "lunge", level: "beginner", easyOn: [], loads: ["knees"], easier: ["stepup"], harder: ["dbrevlunge"],
+    key: "Go straight down, not forward",
+    cues: [
+      "Stand in a long split stance, one foot forward and the back foot on its toes",
+      "Keep your hands on your hips and your chest upright",
+      "Lower straight down until your back knee nearly touches the floor",
+      "Push through your front foot to rise. Do all reps on one side, then switch"
+    ],
+    stop: "If your front knee hurts, take a longer stance and don't go as low.",
+    videos: [
+      { id: "qW5OGJ62ZjY", start: 4, end: 51, voice: true }
+    ]
+  },
+  inclinepushup: {
+    name: "Incline Push-Up", sets: 3, reps: "10–12", unit: "reps", rest: 60,
+    equip: "a bench or sturdy table",
+    muscles: { main: ["chest", "triceps"], help: ["delts", "abs"] },
+    type: "push", level: "beginner", easyOn: [], loads: ["wrists"], harder: ["pushup"],
+    key: "Body in one straight line from head to heels",
+    cues: [
+      "Put your hands on the edge of a bench, a little wider than your shoulders",
+      "Walk your feet back until your body is a straight line",
+      "Lower your chest to the bench with your elbows angled back, not flared out",
+      "Press back up, keeping your body in one piece"
+    ],
+    stop: "If your wrists or shoulders hurt, use a higher surface.",
+    videos: [
+      { id: "E--Ls5QtFqI", end: 13 }
+    ]
+  },
+  pushup: {
+    name: "Push-Up", sets: 3, reps: "8–10", unit: "reps", rest: 90,
+    equip: "none",
+    muscles: { main: ["chest", "triceps"], help: ["delts", "abs"] },
+    type: "push", level: "intermediate", easyOn: [], loads: ["wrists", "shoulders"], easier: ["inclinepushup"],
+    key: "Keep your hips in line; don't let them sag",
+    cues: [
+      "Hands under your shoulders, legs straight, body in a straight line",
+      "Brace your stomach and squeeze your glutes",
+      "Lower your chest toward the floor, elbows angled back",
+      "Push the floor away to straighten your arms"
+    ],
+    stop: "If your wrists hurt, hold dumbbell handles. If your shoulders hurt, put your hands on a bench.",
+    videos: [
+      { id: "ZR1QBUtC1GY", start: 12, end: 55, voice: true }
+    ]
+  },
+  bandpulldown: {
+    name: "Band Pulldown", sets: 3, reps: "12–15", unit: "reps", rest: 60,
+    equip: "a resistance band anchored high on a door",
+    muscles: { main: ["lats"], help: ["biceps", "upperback", "reardelts"] },
+    type: "pullup", level: "beginner", easyOn: [], loads: [],
+    key: "Elbows down to your sides; shoulders away from your ears",
+    cues: [
+      "Anchor the band high on a door and kneel facing it, arms reaching up",
+      "Pull your elbows down toward your ribs",
+      "Squeeze your shoulder blades down and together at the bottom",
+      "Let your arms rise slowly back up"
+    ],
+    stop: "If your shoulder pinches at the top, don't reach as high.",
+    videos: [
+      { id: "84D8bVJWB3s", start: 38, end: 103, voice: true }
+    ]
+  },
+  bandrow: {
+    name: "Band Seated Row", sets: 3, reps: "12–15", unit: "reps", rest: 60,
+    equip: "a resistance band",
+    muscles: { main: ["upperback", "lats"], help: ["biceps", "reardelts"] },
+    type: "pull", level: "beginner", easyOn: [], loads: [],
+    key: "Sit tall; don't lean back to pull",
+    cues: [
+      "Sit tall with your legs out in front and the band anchored low in front of you",
+      "Pull the band toward your lower ribs, elbows close to your sides",
+      "Squeeze your shoulder blades together at the end",
+      "Let your arms straighten slowly"
+    ],
+    stop: "If your lower back aches, bend your knees a little more.",
+    videos: [
+      { id: "aafaCFMvDKk", start: 10, end: 45 },
+      { id: "b3035OyY4c8", label: "Alternate", start: 14, end: 73, voice: true }
+    ]
+  },
+  glutebridge: {
+    name: "Glute Bridge", sets: 3, reps: "12", unit: "reps", rest: 45,
+    equip: "none",
+    muscles: { main: ["glutes"], help: ["hams"] },
+    type: "hinge", level: "beginner", easyOn: ["lowerback", "knees"], loads: [], harder: ["slbridge"],
+    key: "Squeeze your glutes at the top; don't arch your back",
+    cues: [
+      "Lie on your back, knees bent, feet flat and hip-width apart",
+      "Rest your arms by your sides, palms down",
+      "Press through your heels and lift your hips until your body is straight from knees to shoulders",
+      "Lower slowly back down"
+    ],
+    stop: "If your hamstrings cramp, move your feet closer to your hips.",
+    videos: [
+      { id: "tqp5XQPpTxY" }
+    ]
+  },
+  deadbug: {
+    name: "Dead Bug", sets: 3, reps: "8", unit: "reps each side", rest: 45,
+    equip: "none",
+    muscles: { main: ["abs"], help: ["obliques", "hipflexors"] },
+    type: "core", level: "beginner", easyOn: ["lowerback"], loads: [], harder: ["planktaps"],
+    key: "Lower back stays on the floor",
+    cues: [
+      "Lie on your back with your arms reaching up and knees bent over your hips",
+      "Press your lower back gently into the floor",
+      "Slowly lower one arm overhead and the opposite leg toward the floor",
+      "Bring them back and switch sides"
+    ],
+    stop: "If your lower back lifts or hurts, don't lower your arm and leg as far.",
+    videos: [
+      { id: "GbSC02oU3To", start: 10, end: 61, voice: true }
+    ]
+  },
+  birddog: {
+    name: "Bird Dog", sets: 3, reps: "8", unit: "reps each side", rest: 45,
+    equip: "none",
+    muscles: { main: ["lowerback", "glutes"], help: ["abs", "delts"] },
+    type: "core", level: "beginner", easyOn: ["lowerback"], loads: ["wrists", "knees"],
+    key: "Keep your hips level; don't twist",
+    cues: [
+      "Start on all fours, hands under shoulders and knees under hips",
+      "Brace your stomach so your back stays flat",
+      "Reach one arm forward and the opposite leg back until both are level with your body",
+      "Pause, bring them back, and switch sides"
+    ],
+    stop: "If kneeling hurts your knees, add padding. If your wrists hurt, make fists.",
+    videos: [
+      { id: "xEDnlOxeJH4", start: 10, end: 73, voice: true }
+    ]
+  },
+  sideplank: {
+    name: "Kneeling Side Plank", sets: 2, time: 30, perSide: true, rest: 30,
+    equip: "none",
+    muscles: { main: ["obliques"], help: ["abs", "glutes", "delts"] },
+    type: "core", level: "beginner", easyOn: ["lowerback"], loads: [],
+    key: "Hips up and forward; don't let them sag",
+    cues: [
+      "Lie on your side, knees bent, elbow under your shoulder",
+      "Lift your hips so your body is straight from knees to head",
+      "Keep your top hand on your hip and breathe steadily"
+    ],
+    stop: "If your shoulder hurts, lower down and rest.",
+    videos: [
+      { id: "UurF0EhHFLg", end: 36, voice: true }
+    ]
+  },
+  wallslide: {
+    name: "Wall Slides", sets: 2, reps: "10", unit: "reps", rest: 30,
+    equip: "a wall and a small towel",
+    muscles: { main: ["delts"], help: ["traps", "upperback"] },
+    type: "mobility", level: "beginner", easyOn: ["shoulders"], loads: [],
+    key: "Move slowly, only as high as is comfortable",
+    cues: [
+      "Stand facing a wall with your hands on a towel against it",
+      "Slide your hands up the wall as far as is comfortable",
+      "Keep your shoulders down, away from your ears",
+      "Slide back down slowly"
+    ],
+    stop: "If you feel a sharp pinch, stop lower down.",
+    videos: [
+      { id: "Eaj_NG5_hIo", start: 9, end: 46, voice: true }
+    ]
   }
+
 };
 
 // The optional warm-up before every session, and the cool-down stretches after it
