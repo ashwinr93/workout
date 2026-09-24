@@ -1,6 +1,6 @@
-# Workout on the big screen
+# Workout Coach
 
-**A workout plan from a PDF, turned into a coached session you follow on your TV.**
+**A workout plan turned into a coached session you follow on your TV, and a way for anyone to get their own plan by chatting with an AI.**
 Human demo videos, a calm coach voice, timers and form cues. Your phone is the remote.
 
 **Try it:** https://ashwinr93.github.io/workout/
@@ -18,7 +18,7 @@ So I turned the PDF into this. I open it on my iPhone, mirror the screen to the 
 - rest timers count down and tell me what's next;
 - my phone stays in my hand as the remote. **Done** moves to the next set.
 
-It covers the plan's warm-up, the day's exercises and the cool-down stretches, all using only the equipment I own. Every exercise names *when to back off*, because the whole point is to train around my joints, not through them.
+The plan it opens with is mine. It covers the plan's warm-up, the day's exercises and the cool-down stretches, all using only the equipment I own. Every exercise names *when to back off*, because the whole point is to train around my joints, not through them.
 
 <p>
   <img src="docs/home.png" width="32%" alt="Home screen: the week's days">
@@ -54,37 +54,50 @@ It then opens full-screen like an app, with no browser bars.
 
 There are no accounts, no tracking and no ads (every demo video is checked for ads). Nothing leaves your phone except the YouTube embeds.
 
-## Make it yours
+## Get your own plan (no code needed)
 
-The app doesn't care what your plan is. Everything specific to my routine lives in one file, [`data.js`](data.js). Change that file and you have your own coached workout: a physio routine, a yoga flow, a hotel-room travel plan, a mobility session for your parents, your team's warm-up.
+Tap **Create your own plan** on the home screen and pick an AI you already use (ChatGPT, Claude, Gemini, Copilot, Perplexity, Grok or Le Chat). It opens a new chat with a message that turns the AI into a coach: it asks about your goals, any aches, your equipment and your time, one question at a time, then gives you a link. Tap the link and your plan opens in the app, with the same videos, coach voice and timers.
 
-### The easy way: hand your plan to an AI coding assistant
+- **It's free.** The AI runs on your own account; this site has no server.
+- **Your plan lives in its link.** Bookmark it or add it to your Home Screen. The app also remembers the last plan you opened on that phone.
+- **Private.** Your answers stay in your AI chat. The link holds only exercise names and numbers, and the part after `#` is never sent to any server.
+- **Changing it later:** open your plan and tap **Change it with AI**. The AI gets your current plan and gives you a new link.
+- **Cardio and sport** become activity days (a walk, a run, your football match), with the warm-up before and the stretches after.
+- If an AI makes a mistake in the link, the app says what's wrong and gives you a message to paste back into the chat.
 
-1. **Fork this repo**, then clone your fork.
-2. Open it in [Claude Code](https://claude.com/claude-code) or another coding assistant. [`CLAUDE.md`](CLAUDE.md) already explains how the app is built and the rules that keep it good: one movement per exercise, cues that match the demo, ad-free videos, and wording that sounds natural out loud.
-3. Give it your plan (a PDF, a photo of a whiteboard, or a few lines of notes) and say something like:
+Gemini can't receive a message through a link, so for Gemini the app copies the message and you paste it in.
 
-   > Here's my workout plan (attached). Replace the plan in data.js with mine: my days, exercises, sets/reps/holds and rests. Find a short, clear, ad-free YouTube demo for each exercise, trim intros and outros, and write the cues to match what each demo shows. My equipment is: _…_. Keep the joint-safety "stop" lines for every exercise. Then run the tests.
+The AI can only choose from the app's exercise library, where every exercise has a checked demo video, cues that match it and a recorded coach voice. The library is growing.
 
-4. Publish it (below). That's it.
+## Make it yours with code
 
-### By hand
+If you'd rather run your own copy (your own exercises, videos and wording), fork this repo. There's no build step: it's plain HTML, CSS and JavaScript.
 
-Everything is in [`data.js`](data.js):
-
-| What | Where |
+| File | What's in it |
 |---|---|
-| Title, subtitle and the rules card on the home screen | `PLAN` |
-| Each exercise | `EX` (below) |
-| Which exercises happen on which day | `DAYS` (`d` is the weekday: 0 = Sunday) |
-| The optional warm-up and cool-down | `WARMUP`, `COOLDOWN` |
-| How the coach pronounces a name | `SPOKEN_NAMES` |
+| [`library.js`](library.js) | Every exercise: name, cues, safety line, demo videos, default sets/reps; the warm-up, cool-down and activities |
+| [`plan.js`](plan.js) | The plan link format, and the example plan the app opens with (`EXAMPLE_PLAN`) |
+| [`speech.js`](speech.js) | Everything the coach says, and how names are pronounced (`SPOKEN_NAMES`) |
+| [`prompt.js`](prompt.js) | The message that turns an AI chat into a coach that writes plans |
 
-An exercise looks like this:
+The easiest way is to hand the job to an AI coding assistant such as [Claude Code](https://claude.com/claude-code). [`CLAUDE.md`](CLAUDE.md) already explains how the app is built and the rules that keep it good: one movement per exercise, cues that match the demo, ad-free videos, and wording that sounds natural out loud.
+
+### A plan
+
+A plan is one line, the same one the AIs write:
+
+```
+v1/t:Home-Strength/mon:Full-Body-A:boxsquat.3x10-12,sarow.3x10,planktaps.3x30s/wed:Brisk-Walk:walk.30m/sun:Stretch:couch.1x60s
+```
+
+Each day is `mon`…`sun`, a name, then exercises as `id.SETSxREPS` (or a range like `10-12`), `id.SETSxSECONDSs` for holds, or one activity like `walk.30m`. Put yours in `EXAMPLE_PLAN` to make it the one the app opens with, or just open `your-site/#` followed by the line.
+
+### An exercise
 
 ```js
 rdl: {
-  name: "Romanian Deadlift", sets: 3, reps: "8–10", unit: "reps", rest: 90,
+  name: "Romanian Deadlift", sets: 3, reps: "8–10", unit: "reps", rest: 90,   // defaults; plans set their own
+  equip: "dumbbells", about: "hamstrings, glutes; no stress on the knee",    // what the AI sees
   key: "Hinge at the hips with soft knees",               // the Focus: the one thing that matters most
   cues: ["Stand tall with your chest up and core tight",    // in the order the demo shows them
          "Push your hips back as if touching a wall behind you", "..."],
@@ -93,7 +106,7 @@ rdl: {
 },
 ```
 
-Holds use `time: 30` (seconds) instead of `reps`. Add `perSide: true` for one side at a time. Add `voice: true` to a video when someone talks in it.
+Holds use `time: 30` (seconds) instead of `reps`. Add `perSide: true` for one side at a time, `kind: "stretch"` for stretches, and `voice: true` to a video when someone talks in it.
 
 ### The coach's voice
 
@@ -103,20 +116,20 @@ It works straight away: any phrase without a recording is spoken by the phone's 
 .venv/bin/python tools/make_audio.py --models <folder with the Kokoro model files>
 ```
 
-It records only new or changed phrases and removes clips you no longer use.
+It records only new or changed phrases (including every rep count and hold time a plan can ask for) and removes clips you no longer use.
 
 ### Publish it for free
 
-In your fork on GitHub, go to **Settings → Pages → Deploy from a branch → `main`, `/ (root)`**. A minute later it's live at `https://<you>.github.io/<repo>/`. There's no build step; it's plain HTML, CSS and JavaScript.
+In your fork on GitHub, go to **Settings → Pages → Deploy from a branch → `main`, `/ (root)`**. A minute later it's live at `https://<you>.github.io/<repo>/`. Change `SITE` in `prompt.js` to that address so the AIs link to your copy.
 
 ### Check it
 
-- Add `?selftest` to your site's address (or run `python3 -m http.server` in the folder and open `localhost:8000/?selftest`). It runs every day's session in seconds on a simulated clock and checks the timing, the sound buttons, the wording and whether the layout fits a phone. (Until you record your own voice clips, it will list the phrases without a recording.)
+- Add `?selftest` to your site's address (or run `python3 -m http.server` in the folder and open `localhost:8000/?selftest`). It runs every day's session in seconds on a simulated clock and checks the timing, the sound buttons, the wording, the plan links and whether the layout fits a phone. (Until you record your own voice clips, it will list the phrases without a recording.)
 - [`tests/e2e`](tests/e2e) has deeper checks with real browsers and real YouTube, plus an ad scanner for demo videos (`ad-scan.mjs`). [`screenshots.mjs`](tests/e2e/screenshots.mjs) regenerates the images in this README.
 
 ## A note on safety
 
-This is a player for a plan, not medical advice. The cues and "back off" lines come from my plan and the demo videos. If you have an injury, get your plan from a professional and put *their* words in `data.js`.
+This is a player for a plan, not medical advice. The cues and "back off" lines come from my plan and the demo videos, and the AI is told to send anyone with warning signs (chest pain, dizziness, recent surgery, severe pain) to a doctor or physiotherapist first. If you have an injury, get your plan from a professional.
 
 ## Demo videos
 

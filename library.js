@@ -1,7 +1,12 @@
-/* Workout data: exercises, weekly plan, and everything the coach says.
+/* The exercise library: every exercise a plan can use, with its demos and coaching text.
+   Plans (plan.js) pick exercises from here by key and set the sets/reps/holds.
 
    Exercise fields
      name, sets?, reps + unit (rep-based) or time (seconds, a hold), perSide?, rest (seconds)
+            sets/reps/time are the defaults when a plan doesn't give them; rest is used as given
+     measure? "m" when reps is a distance in metres (carries)
+     equip, about  what it needs and what it's for, in a few words (the AI prompt lists these)
+     kind?  "stretch" for static stretches (a day of only stretches is a stretch day)
      key    the one form cue that matters most (shown prominently, spoken first)
      cues   step-by-step form cues, in the order the demo shows them
      stop   when to back off (joint safety)
@@ -93,9 +98,10 @@ const EX = {
     ]
   },
 
-  // ---------- Monday: Upper A ----------
+  // ---------- Upper body ----------
   inclinepress: {
     name: "Neutral-Grip Incline Press", sets: 3, reps: "8–10", unit: "reps", rest: 90,
+    equip: "dumbbells, adjustable bench", about: "chest; shoulder-friendly",
     key: "Bench at 30°–45°, palms facing each other",
     why: "Avoids pinching the shoulder. Keep your elbows at 45°.",
     cues: [
@@ -113,6 +119,7 @@ const EX = {
   },
   sarow: {
     name: "Single-Arm Row", sets: 3, reps: "10–12", unit: "reps each side", rest: 60,
+    equip: "dumbbell, bench", about: "back",
     key: "Pull toward your hip, not your chest",
     why: "Keep your back flat and pause for 1 second at the top.",
     cues: [
@@ -129,6 +136,7 @@ const EX = {
   },
   floorpress: {
     name: "Floor Press", sets: 3, reps: "10–12", unit: "reps", rest: 90,
+    equip: "dumbbells", about: "chest; protects the front of the shoulder",
     key: "Palms in; the floor limits the range",
     why: "Protects the front of the shoulder joint.",
     cues: [
@@ -145,6 +153,7 @@ const EX = {
   },
   csrow: {
     name: "Chest-Supported Incline Row", sets: 3, reps: "12–15", unit: "reps", rest: 60,
+    equip: "dumbbells, adjustable bench", about: "back; easy on the lower back",
     key: "Keep your chest glued to the bench",
     why: "Resting your chest on the bench takes strain off the lower back.",
     cues: [
@@ -160,6 +169,7 @@ const EX = {
   },
   facepull: {
     name: "Face Pulls / Band Pull-Aparts", sets: 3, reps: "15–20", unit: "reps", rest: 60,
+    equip: "dumbbells or a band", about: "rear shoulders, posture",
     key: "Light weight; stop at eye level",
     why: "Key for the rear shoulders and keeping the shoulder blades stable.",
     cues: [
@@ -182,9 +192,10 @@ const EX = {
     ]
   },
 
-  // ---------- Tuesday: Lower A ----------
+  // ---------- Lower body and core ----------
   rdl: {
     name: "Romanian Deadlift", sets: 3, reps: "8–10", unit: "reps", rest: 90,
+    equip: "dumbbells", about: "hamstrings, glutes; no stress on the knee",
     key: "Hinge at the hips with soft knees",
     why: "Puts no shear on the knee and protects the kneecap tendon.",
     cues: [
@@ -200,6 +211,7 @@ const EX = {
   },
   boxsquat: {
     name: "Box Squat to Bench", sets: 3, reps: "10–12", unit: "reps", rest: 90,
+    equip: "bench or sturdy chair, dumbbells optional", about: "legs; knees stay back",
     key: "Tap the bench, don't sit down; shins stay vertical",
     why: "Keeps the knees from pushing forward. Drive through your heels.",
     cues: [
@@ -215,6 +227,7 @@ const EX = {
   },
   slbridge: {
     name: "Single-Leg Glute Bridge", sets: 3, reps: "12", unit: "reps each side", rest: 60,
+    equip: "none", about: "glutes; easy on the back",
     key: "Squeeze for 2 seconds at the top",
     why: "Lying flat takes load off the spine and isolates the glutes.",
     cues: [
@@ -231,6 +244,7 @@ const EX = {
   },
   calfraise: {
     name: "Standing Calf Raises", sets: 3, reps: "15", unit: "reps", rest: 45,
+    equip: "a step", about: "calves, ankles",
     key: "Go slowly and hold the top for 2 seconds",
     why: "Builds ankle and Achilles stability.",
     cues: [
@@ -246,6 +260,7 @@ const EX = {
   },
   planktaps: {
     name: "Plank with Shoulder Taps", sets: 3, time: 45, rest: 60,
+    equip: "none", about: "core",
     key: "Keep your hips square; no rocking",
     why: "Keeps the spine from twisting. Tap slowly.",
     cues: [
@@ -259,9 +274,10 @@ const EX = {
     ]
   },
 
-  // ---------- Wednesday: Active recovery ----------
+  // ---------- Mobility ----------
   couch: {
     name: "Couch Stretch", sets: 2, time: 120, perSide: true, rest: 20,
+    equip: "wall or couch", about: "front of hip and thigh", kind: "stretch",
     key: "Squeeze the glute of your back leg",
     why: "Releases tight quads and hip flexors that pull on the kneecap tendon.",
     cues: [
@@ -277,6 +293,7 @@ const EX = {
   },
   doorway: {
     name: "Doorway Chest Stretch", sets: 2, time: 120, rest: 20,
+    equip: "doorway", about: "chest", kind: "stretch",
     key: "Gentle stretch; there should be no shoulder pain",
     why: "Opens the chest without straining the front of the shoulder.",
     cues: [
@@ -292,6 +309,7 @@ const EX = {
   },
   tibraise: {
     name: "Tibialis Raises", sets: 2, reps: "20", unit: "reps", rest: 30,
+    equip: "a wall", about: "shins; helps protect the knees",
     key: "Lift your toes high and lower them slowly",
     why: "Strengthens the shin muscles that slow you down, which helps protect the knees in football.",
     cues: [
@@ -306,9 +324,10 @@ const EX = {
     ]
   },
 
-  // ---------- Friday: Upper B ----------
+  // ---------- Upper body: shoulders and arms ----------
   seatedohp: {
     name: "Seated Neutral Overhead Press", sets: 3, reps: "10–12", unit: "reps", rest: 90,
+    equip: "dumbbells, bench", about: "shoulders",
     key: "Press slightly forward, not out to the sides",
     why: "Palms facing in, elbows slightly forward, core braced.",
     cues: [
@@ -323,6 +342,7 @@ const EX = {
   },
   pullover: {
     name: "Pullovers", sets: 3, reps: "12", unit: "reps", rest: 60,
+    equip: "one dumbbell", about: "lats and chest; only to a comfortable stretch",
     key: "Soft elbows; comfortable range only",
     why: "Only lower to a comfortable shoulder stretch.",
     cues: [
@@ -346,6 +366,7 @@ const EX = {
   },
   hammercurl: {
     name: "Incline Hammer Curls", sets: 3, reps: "12", unit: "reps", rest: 60,
+    equip: "dumbbells, adjustable bench", about: "biceps; elbow-friendly",
     key: "Palms facing in; keep your upper arms still",
     why: "The neutral grip protects the elbow and shoulder tendons.",
     cues: [
@@ -362,6 +383,7 @@ const EX = {
   },
   triceps: {
     name: "Overhead / Floor Triceps Extension", sets: 3, reps: "12–15", unit: "reps", rest: 60,
+    equip: "one or two dumbbells", about: "triceps",
     key: "Keep your elbows tucked in",
     why: "Stop right away if your shoulder pinches.",
     cues: [
@@ -385,6 +407,7 @@ const EX = {
   },
   ytw: {
     name: "Y-T-W Raises", sets: 2, reps: "10", unit: "reps of each letter", rest: 60,
+    equip: "none or very light dumbbells, adjustable bench", about: "rotator cuff, posture",
     key: "Use 2–4 kg at most",
     why: "Rebuilds the small stabilizing muscles of the rotator cuff.",
     cues: [
@@ -400,9 +423,10 @@ const EX = {
     ]
   },
 
-  // ---------- Saturday: Lower B ----------
+  // ---------- Lower body: single-leg and carries ----------
   dbrevlunge: {
     name: "Reverse Lunges", sets: 3, reps: "10", unit: "reps each side", rest: 90,
+    equip: "dumbbells optional", about: "legs; knee-friendly lunge",
     key: "Always step backward, never forward",
     why: "Keeps the front shin vertical so there's no twisting force on the knee.",
     cues: [
@@ -418,6 +442,7 @@ const EX = {
   },
   sumodl: {
     name: "Sumo / Goblet Deadlift", sets: 3, reps: "10–12", unit: "reps", rest: 90,
+    equip: "one dumbbell", about: "glutes, legs; knee-friendly",
     key: "Wide stance; knees follow your toes",
     why: "Less compression on the knees while still loading the glutes.",
     cues: [
@@ -441,6 +466,7 @@ const EX = {
   },
   stepup: {
     name: "Step-Ups", sets: 3, reps: "10", unit: "reps each side", rest: 60,
+    equip: "bench or sturdy step, dumbbells optional", about: "legs, balance",
     key: "Use a step low enough that your knee is at 90° or less",
     why: "Push through the heel of your leading leg.",
     cues: [
@@ -455,7 +481,8 @@ const EX = {
     ]
   },
   suitcase: {
-    name: "Suitcase Carries", sets: 3, reps: "40 m", unit: "carry, switching hands halfway", rest: 60,
+    name: "Suitcase Carries", sets: 3, reps: "40", measure: "m", unit: "carry, switching hands halfway", rest: 60,
+    equip: "one heavy dumbbell, space to walk", about: "core, hips",
     key: "Walk tall without leaning",
     why: "Trains core and side-to-side hip stability.",
     cues: [
@@ -471,9 +498,10 @@ const EX = {
     ]
   },
 
-  // ---------- Post-workout flexibility (and Sunday) ----------
+  // ---------- Stretches ----------
   pigeon: {
     name: "Pigeon Pose / Figure-4", sets: 1, time: 120, perSide: true, rest: 10,
+    equip: "none", about: "hips, glutes", kind: "stretch",
     key: "Gentle stretch; no knee pain",
     why: "Stretches the glutes and the deep hip rotators.",
     cues: [
@@ -498,6 +526,7 @@ const EX = {
   },
   crossbody: {
     name: "Cross-Body Shoulder Stretch", sets: 1, time: 30, perSide: true, rest: 10,
+    equip: "none", about: "back of shoulder", kind: "stretch",
     key: "Keep the shoulder down, away from your ear",
     why: "Stretches the back of the shoulder capsule.",
     cues: [
@@ -512,6 +541,7 @@ const EX = {
   },
   tricepsstretch: {
     name: "Overhead Triceps Stretch", sets: 1, time: 30, perSide: true, rest: 10,
+    equip: "none", about: "triceps", kind: "stretch",
     key: "Gentle pressure; keep your ribs down",
     why: "Stretches the triceps and the back of the shoulder.",
     cues: [
@@ -526,6 +556,7 @@ const EX = {
   },
   hamstring: {
     name: "Hamstring Doorway Stretch", sets: 1, time: 60, perSide: true, rest: 10,
+    equip: "doorway", about: "hamstrings", kind: "stretch",
     key: "Keep your lower back flat on the floor",
     why: "Stretches the hamstrings without stressing the lower back.",
     cues: [
@@ -542,76 +573,22 @@ const EX = {
   }
 };
 
-EX.couchSun = { ...EX.couch, sets: 1, rest: 10 }; // Sunday / cool-down: one round each side
-
+// The optional warm-up before every session, and the cool-down stretches after it
+// (one round each side, short rests; stretches the day already has are left out)
 const WARMUP = ["catcow", "armcircles", "threadneedle", "hip9090", "revlungetwist"];
-// Post-workout flexibility (the PDF's Sunday static-stretch list), offered after every session
-const COOLDOWN = ["pigeon", "couchSun", "crossbody", "tricepsstretch", "hamstring"];
+const COOLDOWN = ["pigeon", "couch", "crossbody", "tricepsstretch", "hamstring"];
 
-// The plan's own words on the home screen. `rules` items are [bold lead, text].
-const PLAN = {
-  title: "Joint-Friendly Strength & Flexibility",
-  subtitle: "4-day upper/lower split · Dumbbells & bench · Football-optimized",
-  rulesTitle: "Core joint rules",
-  rules: [
-    ["Shoulder protection:", "use a neutral grip (palms facing each other) and 30°–45° inclines. Do 2 pulling sets for every pushing set."],
-    ["Knee protection:", "focus on the posterior chain (hamstrings and glutes) and keep your shins vertical to avoid shear on the kneecap."],
-  ],
+// Activity days: cardio or sport done on your own, with the warm-up before and the stretches after.
+// No demo video; the day screen shows the activity and a tip.
+const ACTIVITIES = {
+  walk:  { name: "Brisk walk", tip: "Walk fast enough that you can talk, but not sing." },
+  run:   { name: "Run", tip: "Easy pace: you should be able to speak in short sentences." },
+  cycle: { name: "Cycle", tip: "Steady pace, outdoors or on a bike at the gym." },
+  swim:  { name: "Swim", tip: "Steady laps with short breaks when you need them." },
+  hike:  { name: "Hike", tip: "Take the hills slowly and keep a steady breath." },
+  sport: { name: "Sport", tip: "Play as usual. Warm up before you start and stretch afterwards." },
+  class: { name: "Fitness class", tip: "Any class you enjoy: dance, spin, aerobics, a sports session." },
 };
-
-// d follows Date.getDay(): 0 = Sunday
-const DAYS = [
-  { d: 1, name: "Monday", focus: "Upper Body A", goal: "Chest/back strength + shoulder stability",
-    items: ["inclinepress", "sarow", "floorpress", "csrow", "facepull"] },
-  { d: 2, name: "Tuesday", focus: "Lower Body A", goal: "Posterior chain & knee-friendly quads",
-    items: ["rdl", "boxsquat", "slbridge", "calfraise", "planktaps"] },
-  { d: 3, name: "Wednesday", focus: "Active Recovery", goal: "Thoracic spine & hip mobility",
-    items: ["couch", "doorway", "tibraise"] },
-  { d: 4, name: "Thursday", focus: "Football Match", goal: "High-intensity cardio & agility", items: [], match: true },
-  { d: 5, name: "Friday", focus: "Upper Body B", goal: "Hypertrophy & rotator cuff care",
-    items: ["seatedohp", "pullover", "hammercurl", "triceps", "ytw"] },
-  { d: 6, name: "Saturday", focus: "Lower Body B", goal: "Single-leg balance, hips & knee prehab",
-    items: ["dbrevlunge", "sumodl", "stepup", "suitcase"] },
-  { d: 0, name: "Sunday", focus: "Rest & Recovery", goal: "Full-body static stretching",
-    items: COOLDOWN, isCooldown: true },
-];
-
-/* ---------------------------------------------------------------------
-   Narration. Every phrase is pre-recorded as audio/<clipId>.m4a by
-   tools/make_audio.py, which reads allPhrases() from this file.
-   --------------------------------------------------------------------- */
-const SPOKEN_NAMES = {
-  catcow: "Cat cow, into child's pose", armcircles: "Arm circles", threadneedle: "Thread the needle",
-  hip9090: "Ninety ninety hip swivels", revlungetwist: "Reverse lunge with a twist",
-  inclinepress: "Neutral grip incline press", sarow: "Single arm dumbbell row",
-  floorpress: "Dumbbell floor press", csrow: "Chest supported incline row",
-  facepull: "Face pulls, or band pull aparts", rdl: "Romanian deadlift",
-  boxsquat: "Box squat to the bench", slbridge: "Single leg glute bridge",
-  calfraise: "Standing calf raises", planktaps: "Plank with shoulder taps",
-  couch: "Couch stretch", couchSun: "Couch stretch", doorway: "Doorway chest stretch",
-  tibraise: "Tibialis raises", seatedohp: "Seated neutral grip overhead press",
-  pullover: "Dumbbell pullovers", hammercurl: "Incline hammer curls",
-  triceps: "Triceps extensions", ytw: "Y, T, W raises", dbrevlunge: "Dumbbell reverse lunges",
-  sumodl: "Sumo deadlift", stepup: "Step ups", suitcase: "Suitcase carries",
-  pigeon: "Pigeon pose, or figure four", crossbody: "Cross body shoulder stretch",
-  tricepsstretch: "Overhead triceps stretch", hamstring: "Hamstring doorway stretch",
-};
-
-// Written text → words that read naturally aloud
-function speakable(t) {
-  return t
-    .replace(/\s*–\s*(?=\d)/g, " to ")
-    .replace(/°/g, " degrees")
-    .replace(/≤/g, "at most ")
-    .replace(/(\d)\s*kg\b/g, "$1 kilograms")
-    .replace(/(\d)\s*cm\b/g, "$1 centimeters")
-    .replace(/(\d)\s*m\b/g, "$1 meters")
-    .replace(/Figure-4/g, "Figure four")
-    .replace(/[–—;]/g, ",");
-}
-const NUM_WORDS = ["zero", "one", "two", "three", "four", "five"];
-const sentence = (t) => (/[.!?]$/.test(t.trim()) ? t.trim() : t.trim() + ".");
-const durationWords = (sec) => sec % 60 ? `${sec} seconds` : sec === 60 ? "one minute" : `${NUM_WORDS[sec / 60]} minutes`;
 
 // An exercise as done with demo `vi`. A demo can be a different variant of the exercise
 // (figure-4 instead of pigeon) with its own name, Focus, cues and safety note; otherwise
@@ -622,52 +599,3 @@ function variant(key, vi = 0) {
     spoken: v.name ? speakable(v.name) : SPOKEN_NAMES[key] || ex.name };
 }
 const isVariant = (v) => !!(v.name || v.cues || v.key);
-
-const SAY = {
-  name: (key, vi) => sentence(variant(key, vi).spoken),
-  target: (key) => {
-    const ex = EX[key];
-    return ex.time ? sentence(`Hold for ${durationWords(ex.time)}${ex.perSide ? " each side" : ""}`)
-                   : sentence(speakable(`${ex.reps} ${ex.unit}`));
-  },
-  key: (key, vi) => sentence(speakable(variant(key, vi).key)),
-  cue: (key, i, vi) => sentence(speakable(variant(key, vi).cues[i])),
-  setOf: (s, n) => `Set ${NUM_WORDS[s]} of ${NUM_WORDS[n]}.`,
-  remember: () => "Remember,",               // leads into the Focus cue, said last
-  lastSet: () => "Last set.",
-  side: (side) => sentence(side),            // "Left side." / "Right side."
-  switchSides: () => "Switch sides.",
-  go: () => "Go.",
-  tenLeft: () => "Ten seconds left.",
-  rest: (sec) => `Rest ${durationWords(sec)}.`,
-  nextUp: () => "Next up,",
-  tenToGo: () => "Ten seconds. Get ready.",
-  done: () => "Workout complete. Nice work.",
-};
-
-// Stable short id for a phrase: FNV-1a hash of the text
-function clipId(text) {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
-  return h.toString(16).padStart(8, "0");
-}
-
-// Every phrase the app can say
-function allPhrases() {
-  const out = new Set();
-  for (const [key, ex] of Object.entries(EX)) {
-    out.add(SAY.target(key));
-    ex.videos.forEach((_, vi) => {
-      out.add(SAY.name(key, vi)); out.add(SAY.key(key, vi));
-      variant(key, vi).cues.forEach((_, i) => out.add(SAY.cue(key, i, vi)));
-    });
-    const n = ex.sets || 1;
-    for (let s = 1; s <= n; s++) out.add(SAY.setOf(s, n));
-    if (ex.rest) out.add(SAY.rest(ex.rest));
-  }
-  [SAY.side("Left side"), SAY.side("Right side"), SAY.remember(), SAY.lastSet(), SAY.switchSides(), SAY.go(), SAY.tenLeft(),
-   SAY.nextUp(), SAY.tenToGo(), SAY.done()].forEach((t) => out.add(t));
-  return [...out];
-}
-
-if (typeof module !== "undefined") module.exports = { EX, WARMUP, COOLDOWN, DAYS, SAY, variant, isVariant, clipId, allPhrases };

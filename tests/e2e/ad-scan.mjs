@@ -1,6 +1,6 @@
 // Which demo videos show YouTube ads? Plays each one in Chrome (real YouTube, no ad
 // blocker) and watches the player's own "ad-showing" state for a few seconds.
-//   node ad-scan.mjs                 all videos in data.js
+//   node ad-scan.mjs                 all videos in library.js
 //   node ad-scan.mjs ID1 ID2 ...     just these (e.g. candidates for a swap)
 // "AD" = the player's data includes ad slots for this video (the channel runs ads), or an ad played.
 import { chromium } from "playwright";
@@ -12,7 +12,7 @@ const TRIES = 1, WATCH_MS = 7000;
 let ids = process.argv.slice(2).filter((a) => !a.startsWith("-"));
 const label = {};
 if (!ids.length) {
-  const { EX } = createRequire(import.meta.url)(path.join(ROOT, "data.js"));
+  const { EX } = createRequire(import.meta.url)(path.join(ROOT, "tools/load.cjs"));
   for (const [k, e] of Object.entries(EX)) {
     e.videos.forEach((v) => (label[v.id] ??= k));
     if (e.backup) label[e.backup] ??= k + " (alt)";

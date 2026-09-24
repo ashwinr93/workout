@@ -31,9 +31,9 @@ async function open(viewport) {
 // Start a day's workout (no warm-up) and wait until its first demo is playing
 async function playFirst(page, dayName) {
   await page.evaluate((n) => {
-    const day = DAYS.find((d) => d.name === n);
+    const day = Plans.current.days.find((d) => DAY_NAMES[d.d] === n);
     UI.openDay(day);
-    Workout.start({ warm: false, cool: false, label: `${day.name} · ${day.focus}` });
+    Workout.start({ warm: false, cool: false, label: `${n} · ${day.name}` });
   }, dayName);
   await page.waitForFunction(() => Video.yt.getPlayerState() === 1, null, { timeout: 20000 });
   await sleep(4000); // past any first-frame blur
@@ -42,7 +42,7 @@ async function playFirst(page, dayName) {
 // Phone, portrait: home and a day
 let page = await open({ width: 402, height: 874 });
 await page.screenshot({ path: `${OUT}/home.png` });
-await page.evaluate(() => UI.openDay(DAYS.find((d) => d.name === "Tuesday")));
+await page.evaluate(() => UI.openDay(Plans.current.days.find((d) => DAY_NAMES[d.d] === "Tuesday")));
 await sleep(1500);
 await page.screenshot({ path: `${OUT}/day.png` });
 await page.close();

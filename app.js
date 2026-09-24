@@ -8,8 +8,10 @@
  *   Sound      which one talks — the coach, the demo video, or neither
  *   Narration  what the coach says on each step, and when
  *   Workout    the session: steps, timer, moving between steps
+ *   Plans      which plan is open: from the link, the last one used on this device, or the example
  *   UI         rendering the screens
- * Data (exercises, days, wording) lives in data.js.
+ * Data lives in library.js (exercises), plan.js (plan links), speech.js (what the coach says)
+ * and prompt.js (the message that has an AI chat write a plan).
  */
 "use strict";
 
@@ -23,6 +25,14 @@ const store = {
   get(k, fallback) { try { const v = localStorage.getItem(k); return v === null ? fallback : JSON.parse(v); } catch { return fallback; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
+// Copy text from inside a tap; falls back to a hidden text box where the clipboard API is missing
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; } catch {}
+  const t = Object.assign(document.createElement("textarea"), { value: text });
+  t.style.cssText = "position:fixed;opacity:0"; document.body.appendChild(t); t.select();
+  let ok = false; try { ok = document.execCommand("copy"); } catch {}
+  t.remove(); return ok;
+}
 
 /* ============================================================ Diag */
 const Diag = {
@@ -323,7 +333,7 @@ const Sound = {
 const Narration = {
   // Exercise step. Holds also get how long "get in position" lasts.
   work(st) {
-    const ex = EX[st.key], vi = Workout.variantOf(st.key), n = variant(st.key, vi).cues.length;
+    const vi = Workout.variantOf(st.key), n = variant(st.key, vi).cues.length;
     const cue = (c, extra) => ({ texts: [SAY.cue(st.key, c, vi)], cue: c, ...extra });
     const focus = (extra) => ({ texts: [SAY.remember(), SAY.key(st.key, vi)], ...extra });
     const name = SAY.name(st.key, vi), cues = [...Array(n).keys()];
@@ -335,10 +345,10 @@ const Narration = {
     const reminder = (extra) => (secondVisit ? focus(extra) : cue(reminderCue, extra));
     const setIntro = st.section === "warm" || st.sets < 2 ? [] : [SAY.setOf(st.set, st.sets), ...(st.set === st.sets ? [SAY.lastSet()] : [])];
 
-    if (ex.time) {
-      const hold = ex.time, side = st.side ? [SAY.side(st.side)] : [];
+    if (st.dose.time) {
+      const hold = st.dose.time, side = st.side ? [SAY.side(st.side)] : [];
       const intro = st.side === "Right side" ? [SAY.switchSides(), SAY.side("Right side")]
-        : first ? [name, ...setIntro, SAY.target(st.key), ...side]
+        : first ? [name, ...setIntro, SAY.target(st.dose), ...side]
         : [...setIntro, ...side];
       // "Get in position" lasts at least 6 s (10 s the first time) and always outlasts the intro
       const introSec = intro.reduce((t, x) => t + (Voice.manifest[clipId(x)] || 2) + 0.25, 0.6);
@@ -356,12 +366,12 @@ const Narration = {
       return { lines, ready };
     }
     if (st.section === "warm")   // warm-ups move quickly: name and target, setup cue, one every ~7 s, then the Focus
-      return { lines: [{ texts: [name, SAY.target(st.key)] }, cue(0, { gap: 0.8 }),
+      return { lines: [{ texts: [name, SAY.target(st.dose)] }, cue(0, { gap: 0.8 }),
         ...cues.slice(1).map((c, k) => cue(c, { at: 8 + k * 7, gap: 2 })), focus({ at: 8 + (n - 1) * 7, gap: 2 })] };
     if (first)                   // setup while you pick up the weights, a cue every ~9 s while you lift, then the Focus
-      return { lines: [{ texts: [name, ...setIntro, SAY.target(st.key)] }, cue(0, { gap: 0.8 }),
+      return { lines: [{ texts: [name, ...setIntro, SAY.target(st.dose)] }, cue(0, { gap: 0.8 }),
         ...cues.slice(1).map((c, k) => cue(c, { at: 12 + k * 9, gap: 2 })), focus({ at: 12 + (n - 1) * 9, gap: 2 })] };
-    return { lines: [{ texts: [...setIntro, SAY.target(st.key)] }, reminder({ at: 8, gap: 2 })] };
+    return { lines: [{ texts: [...setIntro, SAY.target(st.dose)] }, reminder({ at: 8, gap: 2 })] };
   },
 
   rest(st, next) {
@@ -404,23 +414,24 @@ const Workout = {
   },
   nextWork() { return this.steps.slice(this.cur + 1).find((s) => s.type === "work") || null; },
 
-  // Cool-down stretches not already in the day (Wednesday already has the couch stretch)
-  cooldownFor(day) {
-    if (day.isCooldown) return [];
-    const base = (k) => (k === "couchSun" ? "couch" : k), own = new Set(day.items.map(base));
-    return COOLDOWN.filter((k) => !own.has(base(k)));
+  // The day's parts, each exercise with its dose: warm-up, the day's own exercises (a stretch day's
+  // are cool-down stretches), then the cool-down stretches the day doesn't already have
+  parts(day, warm = true, cool = true) {
+    const own = new Set(day.items.map((i) => i.key)), main = day.kind === "stretch" ? "cool" : "main";
+    const entry = (key, item, section) => ({ key, section, dose: dose(key, item, section) });
+    return {
+      warm: warm ? WARMUP.map((key) => entry(key, {}, "warm")) : [],
+      main: day.items.map((i) => entry(i.key, i, main)),
+      cool: cool && day.kind !== "stretch" ? COOLDOWN.filter((k) => !own.has(k)).map((key) => entry(key, {}, "cool")) : [],
+    };
   },
   build(day, warm, cool) {
-    const plan = [...(warm ? WARMUP.map((key) => ({ key, section: "warm" })) : []),
-      ...day.items.map((key) => ({ key, section: day.isCooldown ? "cool" : "main" })),
-      ...(cool ? this.cooldownFor(day).map((key) => ({ key, section: "cool" })) : [])];
-    const steps = [];
-    plan.forEach(({ key, section }, i) => {
-      const ex = EX[key], sets = ex.sets || 1;
-      for (let set = 1; set <= sets; set++) {
-        for (const side of ex.time && ex.perSide ? ["Left side", "Right side"] : [null]) steps.push({ type: "work", key, set, sets, side, section });
-        const last = i === plan.length - 1 && set === sets;
-        if (!last && ex.rest) steps.push({ type: "rest", dur: ex.rest });
+    const p = this.parts(day, warm, cool), plan = [...p.warm, ...p.main, ...p.cool], steps = [];
+    plan.forEach(({ key, section, dose: d }, i) => {
+      for (let set = 1; set <= d.sets; set++) {
+        for (const side of d.time && d.perSide ? ["Left side", "Right side"] : [null]) steps.push({ type: "work", key, set, sets: d.sets, side, section, dose: d });
+        const last = i === plan.length - 1 && set === d.sets;
+        if (!last && d.rest) steps.push({ type: "rest", dur: d.rest });
       }
     });
     return steps;
@@ -430,8 +441,8 @@ const Workout = {
     this.begin(this.build(this.day, warm, cool), label, false);
     log("start workout:", label, "sound:", Sound.mode);
   },
-  startPreview(key) {
-    this.begin([{ type: "work", key, set: 1, sets: EX[key].sets || 1, side: null, section: "main", preview: true }], "Preview", true);
+  startPreview(key, d = dose(key)) {
+    this.begin([{ type: "work", key, set: 1, sets: d.sets, side: null, section: "main", dose: d, preview: true }], "Preview", true);
   },
   begin(steps, label, preview) {
     Sound.sessionDefault();
@@ -464,8 +475,8 @@ const Workout = {
     if (st.type === "work") {
       Video.showExercise(st.key);
       const plan = Narration.work(st);
-      this.timer = EX[st.key].time && !st.preview
-        ? { phase: "ready", left: plan.ready, total: EX[st.key].time, paused: false, t0: Date.now() }
+      this.timer = st.dose.time && !st.preview
+        ? { phase: "ready", left: plan.ready, total: st.dose.time, paused: false, t0: Date.now() }
         : { phase: null };
       UI.work(st);
       Voice.plan(plan.lines);
@@ -484,7 +495,7 @@ const Workout = {
     UI.finished(mins);
     Voice.sayNow([SAY.done()]);
     const history = store.get("log", []);
-    history.push({ day: this.day?.name, at: Date.now(), mins });
+    history.push({ day: this.label, at: Date.now(), mins });
     store.set("log", history.slice(-60));
   },
 
@@ -517,76 +528,192 @@ document.addEventListener("visibilitychange", () => {
   setTimeout(() => Video.resume(), 300);        // iOS pauses video in the background
 });
 
+/* ============================================================ Plans: which plan is open
+   A plan arrives in the link (#v1/…). The last one opened is remembered on the device, so the plain
+   address brings you back to it; with none, the example plan (the owner's week) opens. */
+const Plans = {
+  current: null,
+  MAX_RECENT: 6,
+
+  boot() {
+    const hash = location.hash.slice(1);
+    if (hash) return this.open(hash);
+    const saved = store.get("plan", null), r = saved ? parsePlan(saved) : null;
+    this.use(r && r.plan && !r.problems.length ? r.plan : null);
+  },
+  // A plan link from an AI (or a bookmark): open it, or explain what needs fixing
+  open(text) {
+    const r = parsePlan(text);
+    log("plan link:", r.plan ? r.plan.title : "none", "problems:", r.problems.length, "fixes:", r.fixes.join("; "));
+    if (r.problems.length || !r.plan) return UI.fix(r);
+    this.use(r.plan);
+  },
+  use(plan) {
+    if (!plan || plan.link === EXAMPLE_PLAN.link) plan = examplePlan();
+    this.current = plan;
+    if (!TEST_MODE) {
+      store.set("plan", plan.example ? null : plan.link);
+      if (!plan.example) store.set("plans", [{ link: plan.link, title: plan.title }, ...this.recent().filter((p) => p.link !== plan.link)].slice(0, this.MAX_RECENT));
+      history.replaceState(null, "", location.pathname + location.search + (plan.example ? "" : "#" + plan.link));
+    }
+    Workout.day = null;
+    UI.home(); UI.show("home");
+  },
+  recent() { return store.get("plans", []); },
+  link(plan = this.current) { return SITE + (plan.example ? "" : "#" + plan.link); },
+};
+// A new plan link opened while the app is already open (e.g. tapped in the AI chat)
+window.addEventListener("hashchange", () => {
+  const hash = location.hash.slice(1);
+  if (hash && hash !== Plans.current?.link && !Video.active) Plans.open(hash);
+});
+
 /* ============================================================ UI */
 const UI = {
-  cueIdx: 0, cueTimer: null, exitArmed: 0,
+  cueIdx: 0, cueTimer: null, exitArmed: 0, rows: [],
 
   show(screen) {
-    for (const id of ["home", "day", "player"]) $(id).hidden = id !== screen;
+    for (const id of ["home", "day", "player", "create", "fix"]) $(id).hidden = id !== screen;
     window.scrollTo(0, 0);
   },
 
   /* ---------- home */
   home() {
-    document.title = PLAN.title;
-    $("plan-title").textContent = PLAN.title;
-    $("plan-subtitle").textContent = PLAN.subtitle;
-    $("plan-rules").hidden = !PLAN.rules.length;
-    $("plan-rules-title").textContent = PLAN.rulesTitle;
-    $("plan-rules-list").innerHTML = PLAN.rules.map(([lead, text]) => `<li><b>${esc(lead)}</b> ${esc(text)}</li>`).join("");
+    const plan = Plans.current;
+    document.title = `${plan.title} · Workout Coach`;
+    $("plan-title").textContent = plan.title;
+    $("plan-subtitle").textContent = plan.subtitle || this.planSummary(plan);
+    $("plan-rules").hidden = !plan.rules?.length;
+    $("plan-rules-title").textContent = plan.rulesTitle || "";
+    $("plan-rules-list").innerHTML = (plan.rules || []).map(([lead, text]) => `<li><b>${esc(lead)}</b> ${esc(text)}</li>`).join("");
     const today = new Date().getDay();
-    $("days").innerHTML = DAYS.map((day, i) => `
+    $("days").innerHTML = plan.days.map((day, i) => `
       <button class="day-card${day.d === today ? " today" : ""}" data-i="${i}">
-        <span class="day-name label"><span>${day.name}</span>${day.d === today ? '<span class="today">Today</span>' : ""}</span>
-        <span class="day-focus">${esc(day.focus)}</span>
-        <span class="goal">${esc(day.goal)}</span>
+        <span class="day-name label"><span>${DAY_NAMES[day.d]}</span>${day.d === today ? '<span class="today">Today</span>' : ""}</span>
+        <span class="day-focus">${esc(day.name)}</span>
+        <span class="goal">${esc(day.goal || this.daySummary(day))}</span>
       </button>`).join("");
-    $("days").onclick = (e) => { const b = e.target.closest(".day-card"); if (b) this.openDay(DAYS[+b.dataset.i]); };
+    $("days").onclick = (e) => { const b = e.target.closest(".day-card"); if (b) this.openDay(plan.days[+b.dataset.i]); };
+    $("plan-banner").hidden = !plan.example;
+    $("plan-banner").onclick = () => this.create(false);
+    this.planCard();
+  },
+  planSummary(plan) {
+    const count = (kind, word) => { const n = plan.days.filter((d) => d.kind === kind).length; return n ? `${n} ${word} day${n === 1 ? "" : "s"}` : ""; };
+    return [count("workout", "workout"), count("activity", "activity"), count("stretch", "stretch")].filter(Boolean).join(" · ");
+  },
+  daySummary(day) {
+    if (day.kind === "activity") {
+      const act = ACTIVITIES[day.activity.key].name, mins = day.activity.mins ? `${day.activity.mins} min` : "";
+      return [act.toLowerCase() === day.name.toLowerCase() ? "" : act, mins].filter(Boolean).join(" · ") || act;
+    }
+    const n = day.items.length;
+    return `${n} ${day.kind === "stretch" ? "stretch" : "exercise"}${n === 1 ? "" : day.kind === "stretch" ? "es" : "s"}`;
+  },
+  // Under the days: make your own plan (on the example), or manage yours
+  planCard() {
+    const plan = Plans.current, others = [...Plans.recent().filter((p) => p.link !== plan.link), ...(plan.example ? [] : [{ example: true, title: EXAMPLE_PLAN.title }])];
+    $("plan-card").innerHTML = (plan.example
+      ? `<div class="label">Your own plan</div>
+         <p class="card-text">Tell an AI about your goals, any aches and what you have to train with. It builds a plan for you that plays here, with the same videos and coach.</p>
+         <div class="card-actions"><button class="big-btn" id="pc-create">Create your own plan</button></div>`
+      : `<div class="label">Your plan</div>
+         <p class="card-text">Bookmark this page or add it to your Home Screen: the plan lives in its link.</p>
+         <div class="card-actions"><button class="tool" id="pc-change">Change it with AI</button><button class="tool" id="pc-share">Copy link</button><button class="tool" id="pc-create">Create a new plan</button><span class="note" id="pc-status"></span></div>`)
+      + (others.length ? `<div class="label" style="margin-top:16px">Other plans on this device</div>
+         <div class="plan-list">${others.map((p, i) => `<button class="link" data-i="${i}">${esc(p.title)}${p.example ? " (example)" : ""}</button>`).join("")}</div>` : "");
+    $("pc-create").onclick = () => this.create(false);
+    if ($("pc-change")) $("pc-change").onclick = () => this.create(true);
+    if ($("pc-share")) $("pc-share").onclick = async () => { $("pc-status").textContent = (await copyText(Plans.link())) ? "Link copied" : "Couldn't copy"; };
+    $("plan-card").querySelector(".plan-list")?.addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-i]"); if (!b) return;
+      const p = others[+b.dataset.i];
+      Plans.use(p.example ? null : parsePlan(p.link).plan);
+    });
+  },
+
+  /* ---------- create or change a plan with an AI */
+  create(change) {
+    const text = coachPrompt(change ? Plans.current.link : null);
+    $("create-title").textContent = change ? "Change your plan" : "Create your own plan";
+    $("create-intro").textContent = change
+      ? "Pick an AI you use. It gets your current plan, asks what you'd like to change, and gives you a new link."
+      : "Pick an AI you already use. It asks about your goals, any aches, your equipment and your time, then gives you a link to your own plan in this app. It uses your own AI account, so it's free.";
+    $("ai-list").innerHTML = AI_CHATS.map((ai, i) => ai.paste
+      ? `<button class="ai-btn" data-i="${i}">Open ${esc(ai.name)}<small>Copies the message; paste it in</small></button>`
+      : `<a class="ai-btn" href="${esc(chatLink(ai, text))}" target="_blank" rel="noopener">Open ${esc(ai.name)}</a>`).join("");
+    $("ai-list").onclick = async (e) => {
+      const b = e.target.closest("button.ai-btn"); if (!b) return;
+      const ai = AI_CHATS[+b.dataset.i];
+      const copied = await copyText(text);
+      $("create-status").textContent = copied ? `Message copied. Paste it into ${ai.name}'s message box and send.` : "Couldn't copy the message. Use the button below.";
+      window.open(ai.url, "_blank", "noopener");
+    };
+    $("copy-prompt").onclick = async () => { $("create-status").textContent = (await copyText(text)) ? "Message copied. Paste it into any AI chat." : "Couldn't copy the message."; };
+    $("create-status").textContent = "";
+    this.show("create");
+  },
+
+  /* ---------- a plan link with mistakes: say what, and give the person a message for their AI */
+  fix(r) {
+    const message = "The workout app couldn't read parts of my plan link:\n"
+      + r.problems.map((p) => `- ${p}`).join("\n")
+      + "\nPlease fix only those parts, using the exercises and amounts from your instructions, and give me the corrected link.";
+    $("fix-msg").textContent = message;
+    $("fix-status").textContent = "";
+    $("fix-copy").onclick = async () => { $("fix-status").textContent = (await copyText(message)) ? "Copied. Paste it into your AI chat." : "Couldn't copy; select the message and copy it."; };
+    $("fix-anyway").hidden = !r.plan;
+    $("fix-anyway").onclick = () => Plans.use(r.plan);
+    $("fix-home").onclick = () => { history.replaceState(null, "", location.pathname + location.search); Plans.boot(); };
+    this.show("fix");
   },
 
   /* ---------- day */
   openDay(day) {
     Object.assign(Workout, { day, warm: true, cool: true });
-    $("day-kicker").textContent = day.name;
-    $("day-title").textContent = day.focus;
+    $("day-kicker").textContent = DAY_NAMES[day.d];
+    $("day-title").textContent = day.name;
     this.day();
     this.show("day");
   },
-  describe(ex) {
-    const amount = ex.time ? `${fmt(ex.time)}${ex.perSide ? " each side" : ""}` : `${ex.reps} ${ex.unit}`;
-    return (ex.sets > 1 ? `${ex.sets} × ${amount}` : amount) + (ex.rest ? ` · rest ${ex.rest}s` : "");
+  describe(d) {
+    const amount = d.time ? `${fmt(d.time)}${d.perSide ? " each side" : ""}` : amountText(d);
+    return (d.sets > 1 ? `${d.sets} × ${amount}` : amount) + (d.rest ? ` · rest ${d.rest}s` : "");
   },
-  exRow(key) {
-    const ex = EX[key];
-    return `<button class="ex-row" data-key="${key}">
+  exRow(entry) {
+    const ex = EX[entry.key];
+    this.rows.push(entry);
+    return `<button class="ex-row" data-r="${this.rows.length - 1}">
       <img src="https://i.ytimg.com/vi/${ex.videos[0].id}/mqdefault.jpg" alt="" loading="lazy">
-      <div><div class="ex-title">${esc(ex.name)}</div><div class="ex-meta">${esc(this.describe(ex))}</div></div>
+      <div><div class="ex-title">${esc(ex.name)}</div><div class="ex-meta">${esc(this.describe(entry.dose))}</div></div>
       <span class="chev">Preview ›</span></button>`;
   },
-  section(label, keys) { return keys.length ? `<div class="label section-label">${label}</div><div class="ex-list">${keys.map((k) => this.exRow(k)).join("")}</div>` : ""; },
+  section(label, entries) { return entries.length ? `<div class="label section-label">${label}</div><div class="ex-list">${entries.map((e) => this.exRow(e)).join("")}</div>` : ""; },
   toggle(id, on, title, sub) {
     return `<button class="toggle" id="${id}" aria-pressed="${on}"><span class="switch"></span><span><b>${title}</b><small>${sub}</small></span></button>`;
   },
   day() {
-    const W = Workout, day = W.day, cool = W.cooldownFor(day);
-    if (day.match) {
-      $("day-body").innerHTML = `<div class="match-card"><b>Match day ⚽</b><p class="muted" style="margin-top:6px">No lifting today. Do the dynamic warm-up before kick-off, then the cool-down stretches once you're home.</p></div>`
-        + this.section("Pre-match warm-up", WARMUP) + this.section("Post-match cool-down", cool);
-      $("start-bar").innerHTML = `<button class="big-btn" id="start-pre">Pre-match warm-up ▶</button><button class="big-btn" id="start-post">Post-match cool-down ▶</button>`;
-      $("start-pre").onclick = () => W.start({ warm: true, cool: false, label: "Pre-match warm-up" });
-      $("start-post").onclick = () => W.start({ warm: false, cool: true, label: "Post-match cool-down" });
+    const W = Workout, day = W.day, all = W.parts(day), p = W.parts(day, W.warm, W.cool), label = `${DAY_NAMES[day.d]} · ${day.name}`;
+    this.rows = [];
+    if (day.kind === "activity") {
+      const act = ACTIVITIES[day.activity.key];
+      $("day-body").innerHTML = `<div class="match-card"><b>${esc(this.daySummary(day))}</b><p class="muted" style="margin-top:6px">${esc(act.tip)} No lifting today: do the warm-up before you start and the cool-down stretches afterwards.</p></div>`
+        + this.section("Warm-up before", all.warm) + this.section("Cool-down after", all.cool);
+      $("start-bar").innerHTML = `<button class="big-btn" id="start-pre">Warm-up ▶</button><button class="big-btn" id="start-post">Cool-down ▶</button>`;
+      $("start-pre").onclick = () => W.start({ warm: true, cool: false, label: `${label} · warm-up` });
+      $("start-post").onclick = () => W.start({ warm: false, cool: true, label: `${label} · cool-down` });
     } else {
       $("day-body").innerHTML = `<div class="toggles">${this.toggle("wu-toggle", W.warm, "Include dynamic warm-up", `${WARMUP.length} moves · 6–8 min`)}${
-        cool.length ? this.toggle("cd-toggle", W.cool, "Include post-workout flexibility", `${cool.length} stretches · about ${cool.length * 3} min`) : ""}</div>`
-        + (W.warm ? this.section("Warm-up", WARMUP) : "")
-        + this.section(day.isCooldown ? "Static flexibility" : "Workout", day.items)
-        + (W.cool ? this.section("Post-workout flexibility", cool) : "");
+        all.cool.length ? this.toggle("cd-toggle", W.cool, "Include post-workout flexibility", `${all.cool.length} stretches · about ${all.cool.length * 3} min`) : ""}</div>`
+        + this.section("Warm-up", p.warm)
+        + this.section(day.kind === "stretch" ? "Stretches" : "Workout", p.main)
+        + this.section("Post-workout flexibility", p.cool);
       $("start-bar").innerHTML = `<button class="big-btn" id="start-btn">Start workout ▶</button>`;
-      $("start-btn").onclick = () => W.start({ warm: W.warm, cool: W.cool && cool.length > 0, label: `${day.name} · ${day.focus}` });
+      $("start-btn").onclick = () => W.start({ warm: W.warm, cool: W.cool, label });
       $("wu-toggle").onclick = () => { W.warm = !W.warm; this.day(); };
       if ($("cd-toggle")) $("cd-toggle").onclick = () => { W.cool = !W.cool; this.day(); };
     }
-    $("day-body").onclick = (e) => { const r = e.target.closest(".ex-row"); if (r) Workout.startPreview(r.dataset.key); };
+    $("day-body").onclick = (e) => { const r = e.target.closest(".ex-row"); if (r) { const x = this.rows[+r.dataset.r]; Workout.startPreview(x.key, x.dose); } };
   },
 
   /* ---------- player: top bar */
@@ -620,24 +747,24 @@ const UI = {
   },
 
   /* ---------- player: exercise */
-  context(st, ex) {
-    const what = st.preview ? `Preview${ex.sets > 1 ? ` · ${ex.sets} sets` : ""}`
+  context(st) {
+    const what = st.preview ? `Preview${st.sets > 1 ? ` · ${st.sets} sets` : ""}`
       : st.section === "warm" ? "Warm-up"
       : st.section === "cool" ? `Cool-down${st.sets > 1 ? ` · set ${st.set} of ${st.sets}` : ""}`
       : `Set ${st.set} of ${st.sets}`;
     return `${esc(what)}${st.side ? ` · <span class="side">${st.side}</span>` : ""}`;
   },
-  target(ex) {
-    const m = String(ex.reps).match(/^([\d–-]+(?:\s?m)?)\s*(.*)$/);
-    return m ? `<b>${esc(m[1])}</b> ${esc([m[2], ex.unit].filter(Boolean).join(" "))}` : `<b>${esc(ex.reps)}</b> ${esc(ex.unit)}`;
+  target(d) {
+    return d.time ? `<b>${fmt(d.time)}</b> ${d.perSide ? "each side" : "hold"}`
+      : `<b>${esc(d.reps)}${d.measure === "m" ? " m" : ""}</b> ${esc(d.unit)}`;
   },
   work(st) {
-    const ex = EX[st.key], v = variant(st.key, Workout.variantOf(st.key)), hold = ex.time && !st.preview;
+    const v = variant(st.key, Workout.variantOf(st.key)), hold = st.dose.time && !st.preview;
     $("panel").innerHTML = `<div class="panel-body">
-      <div class="context">${this.context(st, ex)}</div>
+      <div class="context">${this.context(st)}</div>
       <h2 class="name">${esc(v.name)}</h2>
       ${hold ? `<div class="hold" id="hold"><span class="clock" id="clock"></span><span class="state" id="hold-state"></span></div>`
-             : `<div class="target">${ex.time ? `<b>${fmt(ex.time)}</b> ${ex.perSide ? "each side" : "hold"}` : this.target(ex)}</div>`}
+             : `<div class="target">${this.target(st.dose)}</div>`}
       <div class="focus"><div class="label">Focus</div><p>${esc(v.key)}</p></div>
       <div class="form">
         <ul class="cues" id="cues">${v.cues.map((c, i) => `<li${i ? "" : ' class="on"'}>${esc(c)}</li>`).join("")}</ul>
@@ -714,7 +841,7 @@ const UI = {
     $("progress").style.width = "100%";
     $("stage").hidden = true; $("finished").hidden = false;
     $("finished").innerHTML = `<div class="emoji">💪</div><h1 class="title">Workout complete</h1>
-      <p class="muted">${esc(Workout.label)} · ${mins} min</p><button class="big-btn" id="done-close">Back to days</button>`;
+      <p class="muted">${esc(Workout.label)} · ${mins} min</p><button class="big-btn" id="done-close">Back to the plan</button>`;
     $("done-close").onclick = () => { Workout.day = null; Workout.exit(); };
   },
 
@@ -803,6 +930,7 @@ function debugBar() {
 
 /* ============================================================ boot */
 $("day-back").onclick = () => { Workout.day = null; UI.show("home"); };
+$("create-back").onclick = () => UI.show("home");
 $("exit-btn").onclick = () => UI.exitButton();
 $("vid-prev").onclick = () => Video.choose(Video.idx - 1);
 $("vid-next").onclick = () => Video.choose(Video.idx + 1);
@@ -817,6 +945,6 @@ $("diag-check").onclick = () => Diagnostics.phoneCheck();
 log("--- page loaded", navigator.userAgent.replace(/^Mozilla\/5.0 /, ""), "standalone:", !!navigator.standalone);
 Voice.load();
 Video.load();
-UI.home();
+Plans.boot();
 if (QUERY.has("debug")) debugBar();
 if (TEST_MODE) document.body.appendChild(Object.assign(document.createElement("script"), { src: "tests/selftest.js" }));

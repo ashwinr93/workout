@@ -1,6 +1,6 @@
 """Pre-record every phrase the workout coach says.
 
-Reads the phrases from data.js (via node), speaks each one with the Kokoro
+Reads the phrases from the app (allPhrases() in speech.js, via node), speaks each one with the Kokoro
 neural voice, and writes audio/<clipId>.m4a plus audio/manifest.json
 (clipId -> duration in seconds). Clips that already exist are skipped, so
 re-running after editing a cue only records the changed phrases.
@@ -31,7 +31,7 @@ PAD_S = 0.08       # a little silence either side
 
 
 def load_phrases():
-    js = 'const d=require("./data.js"); console.log(JSON.stringify(d.allPhrases().map(t=>[d.clipId(t),t])))'
+    js = 'const d=require("./tools/load.cjs"); console.log(JSON.stringify(d.allPhrases().map(t=>[d.clipId(t),t])))'
     return json.loads(subprocess.check_output(["node", "-e", js], cwd=ROOT))
 
 

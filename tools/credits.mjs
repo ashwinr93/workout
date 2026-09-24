@@ -1,16 +1,15 @@
-// Rebuilds the "Demo videos" credits in README.md from the videos in data.js.
+// Rebuilds the "Demo videos" credits in README.md from the videos in library.js.
 // Channel names come from YouTube's public oEmbed endpoint.
 //   node tools/credits.mjs
 import fs from "node:fs";
 import path from "node:path";
-import vm from "node:vm";
+import { createRequire } from "node:module";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const README = path.join(ROOT, "README.md");
 const START = "<!-- credits:start -->", END = "<!-- credits:end -->";
 
-const ctx = {};
-vm.runInNewContext(fs.readFileSync(path.join(ROOT, "data.js"), "utf8") + ";this.EX = EX;", ctx);
+const ctx = createRequire(import.meta.url)(path.join(ROOT, "tools/load.cjs"));
 
 // video id → exercise names it demonstrates (variant names included)
 const uses = new Map();

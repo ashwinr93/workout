@@ -67,16 +67,16 @@
   };
   Video.ready = true;
 
-  const openDay = (i) => UI.openDay(DAYS[i]);
+  const openDay = (i) => UI.openDay(Plans.current.days[i]);
   const useSound = (mode) => { Sound.mode = mode; UI.soundButtons(); };
 
   /* ---------- what each step must say */
   function expected(st) {
     if (st.type === "rest") return [SAY.rest(st.dur), ...(st.dur >= 20 ? [SAY.tenToGo()] : [])];
-    const ex = EX[st.key], vi = Workout.variantOf(st.key), must = [], first = st.set === 1 && st.side !== "Right side";
+    const hold = st.dose.time, vi = Workout.variantOf(st.key), must = [], first = st.set === 1 && st.side !== "Right side";
     if (st.side === "Right side") must.push(SAY.switchSides());
-    const n = variant(st.key, vi).cues.length, every = ex.time && Math.max(7, Math.min(25, (ex.time - 13) / (n + 1)));
-    const fits = (slot) => !ex.time || 3 + slot * every < ex.time - 8;
+    const n = variant(st.key, vi).cues.length, every = hold && Math.max(7, Math.min(25, (hold - 13) / (n + 1)));
+    const fits = (slot) => !hold || 3 + slot * every < hold - 8;
     if (first) {
       must.push(SAY.name(st.key, vi));
       for (let c = 0; c < n; c++) if (fits(c)) must.push(SAY.cue(st.key, c, vi));
@@ -84,9 +84,10 @@
     } else {
       if (st.section !== "warm" && st.sets > 1 && st.side !== "Right side") must.push(SAY.setOf(st.set, st.sets));
       const secondVisit = (st.set === 2 && st.side !== "Right side") || (st.set === 1 && st.side === "Right side");
-      if (secondVisit && (!ex.time || ex.time >= 30)) must.push(SAY.remember(), SAY.key(st.key, vi));   // Focus is the first reminder
+      if (secondVisit && (!hold || hold >= 30)) must.push(SAY.remember(), SAY.key(st.key, vi));   // Focus is the first reminder
     }
-    if (ex.time) { must.push(SAY.go()); if (ex.time >= 30) must.push(SAY.tenLeft()); }
+    if (first) must.push(SAY.target(st.dose));
+    if (hold) { must.push(SAY.go()); if (hold >= 30) must.push(SAY.tenLeft()); }
     return must;
   }
 
@@ -103,7 +104,7 @@
       if (W.cur !== lastCur) { lastCur = W.cur; stepStart = Date.now(); }
       const st = W.step();
       if ((Date.now() - stepStart) / 1000 > 400) { fails.push(`step ${W.cur + 1} stuck`); W.go(1); continue; }
-      if (st.type === "work" && !EX[st.key].time && Voice.idle() && Date.now() - Voice.lastEnd > 1500) W.go(1);
+      if (st.type === "work" && !st.dose.time && Voice.idle() && Date.now() - Voice.lastEnd > 1500) W.go(1);
     }
     await settle(5);
     W.steps.forEach((st, i) => {
@@ -260,7 +261,7 @@
     openDay(0); Workout.start({ warm: true, cool: true, label: "layout" });
     for (const key of Object.keys(EX)) for (let vi = 0; vi < EX[key].videos.length; vi++) for (const set of [1, 2]) for (const side of [null, "Left side"]) {
       store.set("demos", { [key]: vi }); Video.key = null;
-      Workout.steps = [{ type: "work", key, set, sets: EX[key].sets || 1, side, section: "main" }]; Workout.cur = 0; Workout.render();
+      Workout.steps = [{ type: "work", key, set, sets: dose(key).sets, side, section: "main", dose: dose(key) }]; Workout.cur = 0; Workout.render();
       const items = [...$("cues").children], oneAtATime = items.filter((li) => getComputedStyle(li).display !== "none").length === 1;
       const name = $("panel").querySelector(".name");
       if (name.getBoundingClientRect().height > 2.5 * parseFloat(getComputedStyle(name).lineHeight || getComputedStyle(name).fontSize)) fails.push(`${key}: name wraps to 3+ lines`);
@@ -269,7 +270,7 @@
     store.set("demos", {});
     // rest screens, with each exercise as "up next"
     for (const key of Object.keys(EX)) {
-      Workout.steps = [{ type: "rest", dur: 90 }, { type: "work", key, set: 2, sets: 3, side: "Left side", section: "main" }]; Workout.cur = 0; Workout.render();
+      Workout.steps = [{ type: "rest", dur: 90 }, { type: "work", key, set: 2, sets: 3, side: "Left side", section: "main", dose: dose(key) }]; Workout.cur = 0; Workout.render();
       fails.push(...panelProblems(`rest before ${key}`));
     }
     Workout.exit();
@@ -292,20 +293,64 @@
     return { name: "Wording", steps: 0, lines: 0, fails };
   }
 
-  async function run({ days = DAYS.map((_, i) => i), previews = true, layout = true } = {}) {
+  /* ---------- plan links, the AI message, and a recording for everything a plan can ask for */
+  function planCheck() {
+    const fails = [], check = (ok, msg) => { if (!ok) fails.push(msg); };
+    const ex = parsePlan(EXAMPLE_PLAN.link);
+    check(!ex.problems.length && !ex.fixes.length, `example plan link has problems: ${[...ex.problems, ...ex.fixes].join("; ")}`);
+    check(ex.plan?.link === EXAMPLE_PLAN.link, "example plan link doesn't come back unchanged");
+    check(ex.plan?.days.map((d) => d.kind).join() === "workout,workout,workout,activity,workout,workout,stretch", "example plan's days aren't Mon–Sun with Thursday an activity and Sunday stretches");
+    // forgiving: spaces, case, near-miss names, odd numbers
+    const loose = parsePlan(`${SITE}#V1/t:My Plan/Monday:Leg Day: Box-Squat.3x9–11, sarow.9x25, planktaps.3x33, rdl.3x10s/wed:walk.32m`);
+    check(!loose.problems.length, `forgiving link reported problems: ${loose.problems.join("; ")}`);
+    const mon = loose.plan?.days[0], items = mon?.items || [];
+    check(loose.plan?.title === "My Plan" && mon?.name === "Leg Day", "titles with spaces weren't read");
+    check(items[0]?.key === "boxsquat" && items[0]?.reps === "8–10", "near-miss name or odd range wasn't fixed");
+    check(items[1]?.sets === 5 && items[1]?.reps === "20", "too many sets/reps weren't brought into range");
+    check(items[2]?.time === 35, "a hold wasn't rounded to 5 seconds");
+    check(items[3]?.reps === EX.rdl.reps, "seconds on a rep exercise didn't fall back to its reps");
+    check(loose.plan?.days[1]?.kind === "activity" && loose.plan.days[1].activity.mins === 30, "activity minutes weren't read");
+    // what can't be fixed is reported
+    const bad = parsePlan("v1/t:X/mon:A:bulgariansplitsquat.3x8,sarow.3x10/tue:B:walk.30m,sarow.3x10/fun:C:sarow/mon:D:rdl");
+    check(bad.problems.length === 4, `expected 4 problems, got ${bad.problems.length}: ${bad.problems.join("; ")}`);
+    check(bad.plan?.days.length === 2, "the usable days of a link with problems weren't kept");
+    check(parsePlan("").plan === null && parsePlan("").problems.length === 1, "an empty link wasn't reported");
+    check(parsePlan("v2/t:X/mon:A:sarow").problems.some((p) => /newer version/.test(p)), "a newer link version wasn't reported");
+    // the AI message lists every exercise, and its example link is valid
+    const prompt = coachPrompt(), exampleLink = prompt.match(/^Example:\n(\S+)/m)?.[1];
+    for (const k of Object.keys(EX)) if (!WARMUP.includes(k)) check(new RegExp(`^${k} - `, "m").test(prompt), `the AI message doesn't list ${k}`);
+    const exP = parsePlan(exampleLink || "");
+    check(exampleLink && !exP.problems.length && !exP.fixes.length, `the AI message's example link isn't valid: ${[...exP.problems, ...exP.fixes].join("; ")}`);
+    check(coachPrompt(EXAMPLE_PLAN.link).includes(EXAMPLE_PLAN.link), "the change-my-plan message doesn't include the plan");
+    // every phrase any plan can make the coach say is recorded
+    const missing = allPhrases().filter((t) => !Voice.manifest[clipId(t)]);
+    missing.slice(0, 5).forEach((t) => fails.push(`no recording for "${t}"`));
+    if (missing.length > 5) fails.push(`…and ${missing.length - 5} more phrases with no recording`);
+    return { name: "Plan links & AI message", steps: 0, lines: 0, fails };
+  }
+  // A plan that isn't the example: other amounts, a stretch day and an activity day
+  const USER_PLAN = "v1/t:Test-Plan/mon:Full-Body:sarow.4x6-8,planktaps.2x20s,suitcase.2x60,boxsquat.5x15-20,couch.1x15s/wed:Walk:walk.30m/sat:Stretch:pigeon.2x30s,hamstring.1x15s";
+
+  async function run({ days = Plans.current.days.map((_, i) => i), previews = true, layout = true } = {}) {
     SELFTEST.done = false;
+    Plans.use(null);                                            // the example plan (nothing saved in test mode)
     const results = [];
     const safely = async (name, f) => { try { return await f(); } catch (e) { return { name, steps: 0, lines: 0, fails: ["test crashed: " + e.message] }; } };
     results.push(wordingCheck());
-    for (const i of days) {
-      const day = DAYS[i];
-      if (day.match) {
-        results.push(await safely("Thu pre-match", () => runSession(day, { warm: true, cool: false, label: "Thu pre-match" })));
-        results.push(await safely("Thu post-match", () => runSession(day, { warm: false, cool: true, label: "Thu post-match" })));
-      } else {
-        const label = `${day.name.slice(0, 3)} ${day.focus}`;
-        results.push(await safely(label, () => runSession(day, { warm: true, cool: true, label })));
+    results.push(await safely("Plan links & AI message", async () => planCheck()));
+    const sessions = async (plan, which) => {
+      for (const i of which) {
+        const day = plan.days[i], name = `${DAY_NAMES[day.d].slice(0, 3)} ${day.name}`;
+        if (day.kind === "activity") {
+          results.push(await safely(`${name} warm-up`, () => runSession(day, { warm: true, cool: false, label: `${name} warm-up` })));
+          results.push(await safely(`${name} cool-down`, () => runSession(day, { warm: false, cool: true, label: `${name} cool-down` })));
+        } else results.push(await safely(name, () => runSession(day, { warm: true, cool: true, label: name })));
       }
+    };
+    await sessions(Plans.current, days);
+    if (days.length) {
+      const user = parsePlan(USER_PLAN).plan;
+      await sessions(user, user.days.map((_, i) => i).filter((i) => user.days[i].kind !== "activity"));
     }
     if (previews) {
       results.push(await safely("Previews", runPreviews));
@@ -328,6 +373,6 @@
     return SELFTEST.report;
   }
 
-  window.SELFTEST = { run, layoutCheck, wordingCheck, done: false, report: "", timers };
+  window.SELFTEST = { run, layoutCheck, wordingCheck, planCheck, done: false, report: "", timers };
   if (QUERY.get("selftest") !== "manual") rawTimeout(() => run(), 300);
 })();

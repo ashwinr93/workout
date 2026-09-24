@@ -49,7 +49,7 @@ async function runBrowser(name, launcher, opts) {
     let aac = true; // set after the first voice clip is tried
 
     // 1. How long each demo takes to start playing (muted autoplay)
-    const keys = await page.evaluate(() => Object.keys(EX).filter((k) => k !== "couchSun"));
+    const keys = await page.evaluate(() => Object.keys(EX));
     const sample = QUICK || name !== "Chrome" ? keys.filter((_, i) => i % 6 === 0) : keys;
     const slow = [], dead = [];
     for (const key of sample) {
