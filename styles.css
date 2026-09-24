@@ -107,8 +107,8 @@ h1, h2, h3, p { margin: 0; }
 /* day card: the figures with the swap icon under them; the key sits beside the figures (not the
    icon) and is sized to stay within their height */
 .day-muscles { display: grid; grid-template-columns: auto 1fr; column-gap: 18px; row-gap: 4px; align-items: center;
-  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; }
-.day-muscles .fig.full { --h: 160px; }
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 20px 10px; margin-bottom: 10px; }
+.day-muscles .fig.full { --h: 136px; margin-top: 10px; }   /* room above and below: the figure shouldn't touch the card's edges */
 .day-muscles .fig-toggle { justify-self: center; }
 .day-muscles .muscle-groups { grid-column: 2; grid-row: 1; }
 .day-muscles .label { font-size: 10px; }
