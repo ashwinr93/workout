@@ -497,9 +497,10 @@
     + "/fri:Batch-2:legpress.2x10,latpulldown.2x10-12,cablerow.2x10,chestpress.2x10,bbsquat.2x6-8,deadlift.2x5,benchpress.2x6-8,ohp.2x6-8,bbrow.2x8-10"
     + "/sat:Stretch:pigeon.2x30s,hamstring.1x15s";
 
-  async function run({ days = Plans.current.days.map((_, i) => i), previews = true, layout = true } = {}) {
+  async function run({ days, previews = true, layout = true } = {}) {
     SELFTEST.done = false;
     Plans.use(null);                                            // the example plan (nothing saved in test mode)
+    days ??= Plans.current.days.map((_, i) => i);               // (after: a new visitor has no plan until now)
     const results = [];
     const safely = async (name, f) => { try { return await f(); } catch (e) { return { name, steps: 0, lines: 0, fails: ["test crashed: " + e.message] }; } };
     await Figure.load();                                        // badges and figures are part of the layout
