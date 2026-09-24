@@ -541,18 +541,25 @@ document.addEventListener("visibilitychange", () => {
 const Figure = {
   COLORS: { body: "#6b7280", main: "#3ddc97", help: "#1f9e6a" },
   kind: store.get("figure", "male") === "female" ? "female" : "male",
-  data: null, loading: null,
+  data: null, fetched: {},                        // kind → promise of that figure
 
-  load() {
-    return this.loading ||= fetch(`figures/${this.kind}.json`).then((r) => r.json())
-      .then((d) => { this.data = d; this.paint(); })
-      .catch((e) => { this.loading = null; log("figure not loaded:", e.message); });
+  get(kind) {
+    return this.fetched[kind] ||= fetch(`figures/${kind}.json`).then((r) => r.json())
+      .catch((e) => { delete this.fetched[kind]; log("figure not loaded:", e.message); });
   },
+  // The chosen figure; the other one is fetched afterwards so switching is instant
+  load() {
+    return this.get(this.kind).then((d) => {
+      if (d) { this.data = d; this.paint(); }
+      this.get(this.kind === "male" ? "female" : "male");
+    });
+  },
+  // Switching: the current figure stays on screen until the new one is ready
   choose(kind) {
     if (kind === this.kind) return;
-    Object.assign(this, { kind, data: null, loading: null });
+    this.kind = kind;
     store.set("figure", kind);
-    this.load();
+    return this.load();
   },
   // type: "badge" (a circle framed on the main muscles) or "full" (front and back)
   slot(type, muscles, label = "") {
