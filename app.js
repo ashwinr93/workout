@@ -578,8 +578,8 @@ const Figure = {
     }
   },
   svg(view, m, box = this.data[view].box) {
-    const C = this.COLORS, fill = (n) => (m.main.includes(n) ? C.main : m.help.includes(n) ? C.help : C.body);
-    return `<svg viewBox="${box.map((v) => Math.round(v)).join(" ")}" aria-hidden="true">${this.data[view].parts.map(([n, d]) => `<path d="${d}" fill="${fill(n)}"/>`).join("")}</svg>`;
+    const role = (n) => (m.main.includes(n) ? "main" : m.help.includes(n) ? "help" : "body");   // the class lets a screen recolour them
+    return `<svg viewBox="${box.map((v) => Math.round(v)).join(" ")}" aria-hidden="true">${this.data[view].parts.map(([n, d]) => `<path class="${role(n)}" d="${d}" fill="${this.COLORS[role(n)]}"/>`).join("")}</svg>`;
   },
   // A square around the main muscles, on the view where they take up the most room
   badge(m) {
@@ -692,15 +692,22 @@ const UI = {
     $("plans-goals").innerHTML = chip("", "All").replace('aria-pressed="false"', `aria-pressed="${!this.goal}"`) + Object.entries(GOALS).map(([k, n]) => chip(k, n)).join("");
     const lvl = (l) => (l === "beginner" ? "Beginner" : "Intermediate");
     const list = PROGRAMS.filter((p) => !this.goal || p.goals.includes(this.goal));
+    // each plan is a block in its goal's colour, with the muscles its week works
     $("plans-list").innerHTML = list.map((p) => {
-      const plan = this.programPlan(p), mine = Plans.current?.link === plan.link;
-      return `<button class="plan-tile" data-id="${p.id}">
-        <span class="plan-tile-head"><b>${esc(plan.title)}</b><span class="pill${p.level === "beginner" ? "" : " quiet"}">${lvl(p.level)}</span></span>
-        <span class="muted">${esc(this.programSummary(p, plan))}</span>${mine ? '<span class="mine">Your week</span>' : ""}</button>`;
+      const plan = this.programPlan(p), mine = Plans.current?.link === plan.link, m = this.planMuscles(plan);
+      return `<button class="plan-tile goal-${p.goals[0]}" data-id="${p.id}" aria-label="${esc(`${plan.title}: ${p.goals.map((g) => GOALS[g]).join(", ")}`)}">${Figure.slot("full", m, muscleList(m.main))}
+        <span class="plan-tile-text"><b>${esc(plan.title)}</b>
+        <span class="plan-tile-meta">${lvl(p.level)} · ${esc(this.programDays(plan))} · ${p.mins} min</span>
+        <span class="plan-tile-meta">${esc(p.gear)}</span></span>${mine ? '<span class="mine">Your week</span>' : ""}</button>`;
     }).join("") + `<div class="plan-tile create-tile"><b>None of these quite fit?</b>
         <span class="muted">Tell an AI your goals, any aches and what you train with, and it builds a plan for you.</span>
         <button class="link-accent" id="plans-create-2">Create your own with AI ›</button></div>`;
     $("plans-create-2").onclick = () => this.create(false);
+    Figure.paint($("plans-list"));
+  },
+  // What a plan's week mainly works (its exercises' main muscles)
+  planMuscles(plan) {
+    return { main: Figure.session(plan.days.flatMap((d) => d.items || [])).main, help: [] };
   },
   programPlan(p) {
     if (p.link === EXAMPLE_PLAN.link) return examplePlan();
@@ -708,23 +715,24 @@ const UI = {
     if (p.title) plan.title = p.title;
     return plan;
   },
-  programSummary(p, plan) {
+  programDays(plan) {
     const train = plan.days.filter((d) => d.kind !== "activity").length, acts = plan.days.filter((d) => d.kind === "activity").length;
-    return [`${train} day${train === 1 ? "" : "s"}${acts ? ` + ${acts} ${plan.days.find((d) => d.kind === "activity").activity.key === "walk" ? "walk" : "activity"}${acts === 1 ? "" : "s"}` : ""}`,
-      `${p.mins} min`, p.gear].join(" · ");
+    return `${train} day${train === 1 ? "" : "s"}${acts ? ` + ${acts} ${plan.days.find((d) => d.kind === "activity").activity.key === "walk" ? "walk" : "activity"}${acts === 1 ? "" : "s"}` : ""}`;
   },
+  programSummary(p, plan) { return [this.programDays(plan), `${p.mins} min`, p.gear].join(" · "); },
   // One plan's preview: browsing never changes your week; "Start this plan" does, after asking
   planView(id) {
     const p = PROGRAMS.find((x) => x.id === id), plan = this.programPlan(p), mine = Plans.current?.link === plan.link;
     const lvl = p.level === "beginner" ? "Beginner" : "Intermediate";
-    const dayCard = (d) => `<div class="card plan-day"><div class="label">${DAY_NAMES[d.d]}</div><b>${esc(d.name)}</b>
-      <div class="muted">${d.kind === "activity" ? esc(this.daySummary(d)) : d.items.map((i) => `<button class="link" data-ex="${i.key}">${esc(EX[i.key].name)}</button>`).join(" · ")}</div></div>`;
+    // each day opens its day screen (muscles, exercises to preview, even a try-out session)
+    const dayCard = (d, i) => `<button class="card plan-day" data-day="${i}"><span><span class="label">${DAY_NAMES[d.d]}</span><b>${esc(d.name)}</b>
+      <span class="muted">${esc(d.kind === "activity" ? this.daySummary(d) : d.items.map((x) => EX[x.key].name).join(" · "))}</span></span><span class="chev">›</span></button>`;
     $("plan-view-body").innerHTML = `<h1 class="title">${esc(plan.title)}</h1>
       <div class="ex-tags"><span class="tag">${lvl}</span><span class="tag">${esc(this.programSummary(p, plan))}</span></div>
       <p class="card-text">${esc(p.about)}</p>
       ${plan.days.map(dayCard).join("")}
       <p class="note"><button class="link" id="plan-adjust">Adjust it to suit you with AI</button></p>`;
-    $("plan-view-body").onclick = (e) => { const b = e.target.closest("button[data-ex]"); if (b) this.preview(b.dataset.ex); };
+    $("plan-view-body").onclick = (e) => { const b = e.target.closest("button[data-day]"); if (b) this.openDay(plan.days[+b.dataset.day], "plan-view"); };
     $("plan-adjust").onclick = () => this.create(true, plan.link);
     $("plan-start").textContent = mine ? "This is your week" : "Start this plan";
     $("plan-start").disabled = mine;
@@ -870,7 +878,10 @@ const UI = {
   },
 
   /* ---------- day */
-  openDay(day) {
+  // from: the screen its back button returns to (your week, or the plan being previewed)
+  openDay(day, from = "home") {
+    this.dayFrom = from;
+    $("day-back").textContent = from === "home" ? "‹ Days" : "‹ Plan";
     Object.assign(Workout, { day, warm: true, cool: true });
     $("day-kicker").textContent = DAY_NAMES[day.d];
     $("day-title").textContent = day.name;
@@ -914,8 +925,12 @@ const UI = {
     for (const g of [...groups].reverse()) while (key.offsetHeight > fig.offsetHeight && g.n > 1) { g.n--; show(g); }
   },
   section(label, entries) { return entries.length ? `<div class="label section-label">${label}</div><div class="ex-list">${entries.map((e) => this.exRow(e)).join("")}</div>` : ""; },
-  toggle(id, on, title, sub) {
-    return `<button class="toggle" id="${id}" aria-pressed="${on}"><span class="switch"></span><span><b>${title}</b><small>${sub}</small></span></button>`;
+  // An optional part of the day (warm-up, cool-down): its section header carries the switch, and
+  // its exercises are listed only while it's on
+  optional(id, on, label, sub, entries, what) {
+    return `<div class="section-head"><span class="label">${label}</span><small>${sub}</small>
+      <button class="switch" id="${id}" aria-pressed="${on}" aria-label="Include the ${what}"></button></div>
+      ${on ? `<div class="ex-list">${entries.map((e) => this.exRow(e)).join("")}</div>` : ""}`;
   },
   day() {
     const W = Workout, day = W.day, all = W.parts(day), p = W.parts(day, W.warm, W.cool), label = `${DAY_NAMES[day.d]} · ${day.name}`;
@@ -928,11 +943,10 @@ const UI = {
       $("start-pre").onclick = () => W.start({ warm: true, cool: false, label: `${label} · warm-up` });
       $("start-post").onclick = () => W.start({ warm: false, cool: true, label: `${label} · cool-down` });
     } else {
-      $("day-body").innerHTML = this.dayMuscles(all.main) + `<div class="toggles">${this.toggle("wu-toggle", W.warm, "Include dynamic warm-up", `${WARMUP.length} moves · 6–8 min`)}${
-        all.cool.length ? this.toggle("cd-toggle", W.cool, "Include post-workout flexibility", `${all.cool.length} stretches · about ${all.cool.length * 3} min`) : ""}</div>`
-        + this.section("Warm-up", p.warm)
+      $("day-body").innerHTML = this.dayMuscles(all.main)
+        + this.optional("wu-toggle", W.warm, "Warm-up", `${WARMUP.length} moves · 6–8 min`, all.warm, "warm-up")
         + this.section(day.kind === "stretch" ? "Stretches" : "Workout", p.main)
-        + this.section("Post-workout flexibility", p.cool);
+        + (all.cool.length ? this.optional("cd-toggle", W.cool, "Cool-down stretches", `${all.cool.length} · about ${all.cool.length * 3} min`, all.cool, "cool-down stretches") : "");
       $("start-bar").innerHTML = `<button class="big-btn" id="start-btn">Start workout ▶</button>`;
       $("start-btn").onclick = () => W.start({ warm: W.warm, cool: W.cool, label });
       $("wu-toggle").onclick = () => { W.warm = !W.warm; this.day(); };
@@ -1189,7 +1203,7 @@ function debugBar() {
 }
 
 /* ============================================================ boot */
-$("day-back").onclick = () => { Workout.day = null; UI.show("home"); };
+$("day-back").onclick = () => { Workout.day = null; UI.show(UI.dayFrom); };
 $("plans-create").onclick = () => UI.create(false);
 $("plans-goals").onclick = (e) => { const b = e.target.closest("button[data-goal]"); if (b) { UI.goal = b.dataset.goal || null; UI.plans(); } };
 $("plans-list").onclick = (e) => { const b = e.target.closest(".plan-tile[data-id]"); if (b) UI.planView(b.dataset.id); };

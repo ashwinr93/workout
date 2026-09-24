@@ -407,10 +407,14 @@
     check(Plans.current.title === "Gym First Steps" && !$("home").hidden, "Start this plan didn't make it your week");
     UI.planView("gym-first");
     check($("plan-start").disabled, "your own week's preview still offers to start it");
-    $("plan-view-body").querySelector('[data-ex="legpress"]').click(); await settle(1);
-    check(!$("player").hidden && Workout.step().key === "legpress", "tapping an exercise in a plan didn't play its preview");
+    $("plan-view-body").querySelector("[data-day]").click();
+    check(!$("day").hidden && Workout.day?.name === "Legs and Push", "tapping a day in a plan didn't open that day");
+    $("day-body").querySelector(".ex-row[data-r]").click(); await settle(1);
+    check(!$("player").hidden && Workout.step().preview, "tapping an exercise on a plan's day didn't play its preview");
     Workout.exit(); await settle(0.5);
-    check(!$("plan-view").hidden, "closing the preview didn't return to the plan");
+    check(!$("day").hidden, "closing the preview didn't return to the day");
+    $("day-back").click();
+    check(!$("plan-view").hidden, "back from a plan's day didn't return to the plan");
     if (mine) Plans.use(mine.example ? null : mine); else Plans.use(null);
     return { name: "Plans tab", steps: PROGRAMS.length, lines: 0, fails: fails.filter(Boolean) };
   }

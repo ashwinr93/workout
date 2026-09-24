@@ -76,16 +76,13 @@ h1, h2, h3, p { margin: 0; }
 
 .day-head { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
 .back { padding: 10px 14px; border-radius: 10px; background: var(--panel-2); }
-.toggles { display: flex; flex-direction: column; gap: 8px; }
-.toggle {
-  display: flex; align-items: center; gap: 12px; background: var(--panel); border: 1px solid var(--line);
-  border-radius: 12px; padding: 12px 14px; width: 100%; text-align: left;
-}
-.toggle .switch { width: 42px; height: 24px; border-radius: 12px; background: var(--line); position: relative; flex: none; transition: background .15s; }
-.toggle .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left .15s; }
-.toggle[aria-pressed="true"] .switch { background: var(--accent); }
-.toggle[aria-pressed="true"] .switch::after { left: 21px; }
-.toggle small { display: block; color: var(--muted); font-size: 13px; }
+/* an optional section (warm-up, cool-down): the switch sits in its header */
+.section-head { display: flex; align-items: center; gap: 10px; margin: 20px 0 8px; }
+.section-head small { flex: 1; color: var(--muted); font-size: 13px; }
+.switch { width: 42px; height: 24px; border-radius: 12px; background: var(--line); position: relative; flex: none; transition: background .15s; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left .15s; }
+.switch[aria-pressed="true"] { background: var(--accent); }
+.switch[aria-pressed="true"]::after { left: 21px; }
 
 .section-label { margin: 20px 0 8px; }
 .ex-list { display: flex; flex-direction: column; gap: 8px; }
@@ -97,7 +94,7 @@ h1, h2, h3, p { margin: 0; }
 .ex-row .ex-title { font-weight: 600; }
 .ex-row .ex-meta { color: var(--muted); font-size: 13px; }
 .ex-row > div { flex: 1; min-width: 0; }
-.ex-row .chev { color: var(--faint); font-size: 18px; flex: none; }
+.ex-row .chev, .plan-day .chev { color: var(--faint); font-size: 18px; flex: none; }
 
 /* ------------------------------------------------------------------ Muscle map (Figure in app.js) */
 .fig { display: inline-block; flex: none; }
@@ -159,16 +156,28 @@ h1, h2, h3, p { margin: 0; }
 .plans-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
 .link-accent { color: var(--accent); font-weight: 650; font-size: 15px; }
 .plan-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; margin-top: 6px; }
-.plan-tile { display: flex; flex-direction: column; gap: 4px; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
-.plan-tile-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 16px; }
-.pill { flex: none; font-size: 12px; padding: 2px 9px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
-.pill.quiet { background: var(--panel-2); color: var(--muted); }
-.plan-tile .mine { align-self: flex-start; margin-top: 4px; font-size: 12px; color: var(--accent); font-weight: 650; }
-.create-tile { border-style: dashed; border-color: #3a4250; }
+/* plan cards: a colour block per goal, the week's muscles tinted to match */
+.plan-cards { grid-auto-rows: 1fr; }
+.goal-strong { --g1: #1f7a52; --g2: #0f3d2a; --tint: #9fffd0; }
+.goal-lose   { --g1: #c2502c; --g2: #5a2213; --tint: #ffd0bd; }
+.goal-move   { --g1: #2c62a6; --g2: #132c4d; --tint: #cfe6ff; }
+.plan-tile { position: relative; display: flex; align-items: center; gap: 14px; text-align: left; border-radius: var(--radius); padding: 14px 16px; color: #fff;
+  background: linear-gradient(135deg, var(--g1), var(--g2)); }
+.plan-tile .fig.full { --h: 96px; }
+.plan-tile .fig path.body { fill: rgba(0, 0, 0, .28); }
+.plan-tile .fig path.main { fill: var(--tint); }
+.plan-tile-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.plan-tile-text b { font-size: 17px; line-height: 1.2; margin-bottom: 2px; }
+.plan-tile-meta { font-size: 13px; color: rgba(255, 255, 255, .78); line-height: 1.35; }
+.plan-tile .mine { position: absolute; top: 10px; right: 10px; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(255, 255, 255, .92); color: var(--g2); }
+.plan-tile:has(.mine) .plan-tile-text b { padding-right: 64px; }   /* clear of the corner badge */
+.create-tile { flex-direction: column; align-items: stretch; gap: 4px; color: var(--text); background: var(--panel); border: 1px dashed #3a4250; }
 .create-tile .link-accent { align-self: flex-start; margin-top: 6px; }
-.plan-day { margin-top: 10px; }
+.plan-day { margin-top: 10px; width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; }
+.plan-day > span:first-child { flex: 1; min-width: 0; }
+.plan-day .label { display: block; }
 .plan-day b { display: block; margin: 2px 0 4px; font-size: 16px; }
-.plan-day .link { font-size: 14px; color: var(--muted); }
+.plan-day .muted { display: block; font-size: 14px; }
 #plan-start:disabled { background: var(--panel-2); color: var(--muted); }
 .sheet-wrap { position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, .6); display: flex; align-items: flex-end; justify-content: center; }
 .sheet { width: 100%; max-width: 520px; background: var(--panel); border: 1px solid var(--line); border-radius: 18px 18px 0 0;
