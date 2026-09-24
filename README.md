@@ -125,7 +125,7 @@ In your fork on GitHub, go to **Settings → Pages → Deploy from a branch → 
 ### Check it
 
 - Add `?selftest` to your site's address (or run `python3 -m http.server` in the folder and open `localhost:8000/?selftest`). It runs every day's session in seconds on a simulated clock and checks the timing, the sound buttons, the wording, the plan links and whether the layout fits a phone. (Until you record your own voice clips, it will list the phrases without a recording.)
-- [`tests/e2e`](tests/e2e) has deeper checks with real browsers and real YouTube, plus an ad scanner for demo videos (`ad-scan.mjs`). [`screenshots.mjs`](tests/e2e/screenshots.mjs) regenerates the images in this README.
+- [`tests/e2e`](tests/e2e) has deeper checks with real browsers and real YouTube, plus an ad scanner for demo videos (`ad-scan.mjs`). [`screenshots.mjs`](tests/e2e/screenshots.mjs) regenerates the images in this README. [`review.mjs`](tests/e2e/review.mjs) takes every screen on desktop, iPhone portrait and landscape before you publish a visual change.
 
 ## A note on safety
 

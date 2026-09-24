@@ -4,7 +4,7 @@ A static web app that plays a weekly workout plan with YouTube demo videos, a pr
 
 Anyone can get their own plan without code: **Create your own plan** opens an AI chat (their own account) with a message from `prompt.js`; the AI interviews them and writes the plan as a link (`#v1/…`), which the app reads. Audience: beginners to moderately experienced people (not bodybuilders), at home or in a gym, including shy gym-goers.
 
-Live: https://ashwinr93.github.io/workout/ — GitHub Pages from `ashwinr93/workout`, branch `main`. `gh` is logged in as ashwinr93.
+Live: https://ashwinr93.github.io/workout/ (branch `main`). Staging: https://ashwinr93.github.io/workout/staging/ (branch `staging`). Both are published by `.github/workflows/pages.yml` (GitHub Pages, source "GitHub Actions"); a push to either branch redeploys both. Staging keeps its saved data under separate keys (`STORE_PREFIX`). `gh` is logged in as ashwinr93.
 
 ## Files
 
@@ -13,7 +13,7 @@ Live: https://ashwinr93.github.io/workout/ — GitHub Pages from `ashwinr93/work
 | `index.html` | Markup only (home, day, create-a-plan, fix-a-link, player screens) |
 | `styles.css` | Design tokens and layout; compact rules for landscape phone (`max-height: 520px`) and portrait phone |
 | `library.js` | The exercise library (`EX`), `WARMUP`, `COOLDOWN`, `ACTIVITIES` (walk, run, sport…), `variant()` |
-| `plan.js` | The plan link format: `DOSE` (the amounts a plan may use), `parsePlan()` (forgiving reader → plan, problems, fixes), `planLink()`, `dose()` (plan numbers over library defaults), `EXAMPLE_PLAN` (the owner's week as a link, plus its subtitle, rules card and day goals) |
+| `plan.js` | The plan link format: `DOSE` (the amounts a plan may use), `parsePlan()` (forgiving reader → plan, problems, fixes), `planLink()`, `dose()` (plan numbers over library defaults), `EXAMPLE_PLAN` (the owner's week as a link, plus its subtitle and day goals) |
 | `speech.js` | All narration wording: `SAY`, `SPOKEN_NAMES`, `speakable()`, `clipId()`, `allPhrases()` (every phrase any plan can produce) |
 | `prompt.js` | `coachPrompt()` (the AI message, generated from the library), `AI_CHATS` (prefill links; Gemini is copy-and-open), `SITE` |
 | `app.js` | The app, one owner per concern: `Diag`, `Beep`, `Voice` (coach), `Video` (YouTube), `Sound` (who talks), `Narration` (what's said when), `Workout` (steps/timer), `Plans` (which plan is open), `UI`, `Diagnostics` (phone check) |
@@ -22,7 +22,8 @@ Live: https://ashwinr93.github.io/workout/ — GitHub Pages from `ashwinr93/work
 | `tools/credits.mjs` | Rebuilds the README's "Demo videos" credits from `library.js` (run after adding/swapping a video) |
 | `tools/make_audio.py` | Records every phrase from `allPhrases()` with the Kokoro voice `af_heart` |
 | `tests/selftest.js` | Fast self-test (virtual clock, fake YouTube); runs with `index.html?selftest` |
-| `tests/e2e/` | Playwright: `real-browsers.mjs` (real YouTube, real clicks), `ad-scan.mjs` (ads + which demos have a voice), `screenshots.mjs` (regenerates `docs/*.png` for the README) |
+| `tests/review.js` | `index.html?review=<screen>` opens one screen for screenshots (home, home-end, day, day-end, create, player; a plan link after `#`); nothing is saved |
+| `tests/e2e/` | Playwright: `real-browsers.mjs` (real YouTube, real clicks), `ad-scan.mjs` (ads + which demos have a voice), `review.mjs` (review screenshots, below), `screenshots.mjs` (regenerates `docs/*.png` for the README) |
 | `README.md` | Public story, usage tips and "make it yours" guide — keep it true when behaviour changes; re-run `screenshots.mjs` after visual changes |
 
 ### Exercise data (`EX` in `library.js`)
@@ -45,7 +46,8 @@ Live: https://ashwinr93.github.io/workout/ — GitHub Pages from `ashwinr93/work
 - Polish and clean engineering matter to the owner: no patch-on-patch fixes; restructure when needed.
 
 ## Working agreements
-- **Push only when the owner asks** ("push it"). Then confirm the Pages build finished and the live files updated.
+- **Push only when the owner asks.** "Push it" / "push to prod" → push `main`. "Push to staging" → `git push --force origin HEAD:staging` (staging is just the candidate; prod is untouched). Then confirm the "Deploy Pages" run finished (`gh run list --workflow pages.yml`) and the files at that address updated.
+- **Before asking to push a visual change, send review screenshots**: `cd tests/e2e && TMPDIR=/private/tmp/claude-501/pwtmp node review.mjs --out <dir>` → `sheet-desktop.png`, `sheet-iphone-portrait.png` (the iPhone simulator's Safari), `sheet-iphone-landscape.png` (WebKit at 852×393; this Mac can't rotate the simulator). `--screens` limits the screens, `--base <url>` shoots staging or live. Anything that depends on the Home Screen app (status bar, top safe area) needs the simulator's Home Screen app by hand.
 - **Test before handing anything back** (below) — the owner doesn't want to find regressions by hand.
 
 ## Testing (run all before handing back; each is cheap)

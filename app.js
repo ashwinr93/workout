@@ -21,9 +21,12 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 const fmt = (sec) => { sec = Math.max(0, Math.round(sec)); return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`; };
 const QUERY = new URLSearchParams(location.search);
 const TEST_MODE = QUERY.has("selftest");
+const REVIEW_MODE = QUERY.has("review");         // screenshots for review (tests/review.js): nothing is saved
+// Staging (…/workout/staging/) shares the live site's origin, so its saved data gets its own keys
+const STORE_PREFIX = /\/staging\//.test(location.pathname) ? "staging:" : "";
 const store = {
-  get(k, fallback) { try { const v = localStorage.getItem(k); return v === null ? fallback : JSON.parse(v); } catch { return fallback; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  get(k, fallback) { try { const v = localStorage.getItem(STORE_PREFIX + k); return v === null ? fallback : JSON.parse(v); } catch { return fallback; } },
+  set(k, v) { try { localStorage.setItem(STORE_PREFIX + k, JSON.stringify(v)); } catch {} },
 };
 // Copy text from inside a tap; falls back to a hidden text box where the clipboard API is missing
 async function copyText(text) {
@@ -42,7 +45,7 @@ const Diag = {
     const text = parts.map((p) => (typeof p === "string" ? p : JSON.stringify(p))).join(" ");
     this.lines.push(`${new Date().toTimeString().slice(0, 8)} ${text}`);
     if (this.lines.length > 500) this.lines.splice(0, this.lines.length - 500);
-    if (TEST_MODE) return;                      // test runs never touch the saved log
+    if (TEST_MODE || REVIEW_MODE) return;       // test and review runs never touch the saved log
     clearTimeout(this.saveTimer);               // write at most about once a second
     this.saveTimer = setTimeout(() => store.set("diag", this.lines), 1000);
   },
@@ -538,7 +541,7 @@ const Plans = {
   boot() {
     const hash = location.hash.slice(1);
     if (hash) return this.open(hash);
-    const saved = store.get("plan", null), r = saved ? parsePlan(saved) : null;
+    const saved = REVIEW_MODE ? null : store.get("plan", null), r = saved ? parsePlan(saved) : null;
     this.use(r && r.plan && !r.problems.length ? r.plan : null);
   },
   // A plan link from an AI (or a bookmark): open it, or explain what needs fixing
@@ -551,7 +554,7 @@ const Plans = {
   use(plan) {
     if (!plan || plan.link === EXAMPLE_PLAN.link) plan = examplePlan();
     this.current = plan;
-    if (!TEST_MODE) {
+    if (!TEST_MODE && !REVIEW_MODE) {
       store.set("plan", plan.example ? null : plan.link);
       if (!plan.example) store.set("plans", [{ link: plan.link, title: plan.title }, ...this.recent().filter((p) => p.link !== plan.link)].slice(0, this.MAX_RECENT));
       history.replaceState(null, "", location.pathname + location.search + (plan.example ? "" : "#" + plan.link));
@@ -559,7 +562,7 @@ const Plans = {
     Workout.day = null;
     UI.home(); UI.show("home");
   },
-  recent() { return store.get("plans", []); },
+  recent() { return REVIEW_MODE ? [] : store.get("plans", []); },
   link(plan = this.current) { return SITE + (plan.example ? "" : "#" + plan.link); },
 };
 // A new plan link opened while the app is already open (e.g. tapped in the AI chat)
@@ -950,3 +953,4 @@ Video.load();
 Plans.boot();
 if (QUERY.has("debug")) debugBar();
 if (TEST_MODE) document.body.appendChild(Object.assign(document.createElement("script"), { src: "tests/selftest.js" }));
+if (REVIEW_MODE) document.body.appendChild(Object.assign(document.createElement("script"), { src: "tests/review.js" }));

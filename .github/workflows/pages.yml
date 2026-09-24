@@ -1,0 +1,37 @@
+# Publishes the site to GitHub Pages: branch main at /workout/ (live) and branch staging at
+# /workout/staging/ (for trying changes on a phone before they go live). Either push redeploys both.
+name: Deploy Pages
+on:
+  push:
+    branches: [main, staging]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: site
+      - name: Add staging
+        run: |
+          if git ls-remote --exit-code --heads "https://github.com/${{ github.repository }}" staging; then
+            git clone --depth 1 --branch staging "https://github.com/${{ github.repository }}" site/staging
+          fi
+          rm -rf site/.git site/.github site/staging/.git site/staging/.github
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v4

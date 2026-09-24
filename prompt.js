@@ -2,7 +2,11 @@
    person and writes their plan as a link (plan.js). It is built from the library, so it always
    lists exactly the exercises the app has. */
 
-const SITE = "https://ashwinr93.github.io/workout/";
+// Plan links point back at the copy of the app that made the message (live site, staging or a
+// local server); outside a browser (the tools), at the live site
+const SITE = typeof location !== "undefined" && /^https?:/.test(location.protocol)
+  ? location.origin + location.pathname.replace(/[^/]*$/, "")
+  : "https://ashwinr93.github.io/workout/";
 
 // Chats that accept a message in the address (checked by hand, Sep 2026). Gemini doesn't:
 // the app copies the message and opens Gemini for the person to paste.
