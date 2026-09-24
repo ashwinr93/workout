@@ -8,6 +8,7 @@
  *   Sound      which one talks — the coach, the demo video, or neither
  *   Narration  what the coach says on each step, and when
  *   Workout    the session: steps, timer, moving between steps
+ *   Figure     the muscle map: badges and front/back figures, male or female
  *   Plans      which plan is open: from the link, the last one used on this device, or the example
  *   UI         rendering the screens
  * Data lives in library.js (exercises), plan.js (plan links), speech.js (what the coach says)
@@ -497,6 +498,7 @@ const Workout = {
     const mins = Math.round((Date.now() - this.startedAt) / 60000);
     UI.finished(mins);
     Voice.sayNow([SAY.done()]);
+    if (REVIEW_MODE) return;
     const history = store.get("log", []);
     history.push({ day: this.label, at: Date.now(), mins });
     store.set("log", history.slice(-60));
@@ -530,6 +532,66 @@ document.addEventListener("visibilitychange", () => {
   Workout.keepAwake();
   setTimeout(() => Video.resume(), 300);        // iOS pauses video in the background
 });
+
+/* ============================================================ Figure: the muscle map
+   Body art traced from the owner's images (figures/<male|female>.json, see design/README.md):
+   front (f) and back (b) views, each a list of [muscle, svg path, bounding box]. Screens write an
+   empty slot (Figure.slot) and paint() fills every slot once the figure chosen on this device
+   has loaded, and again when the choice changes. */
+const Figure = {
+  COLORS: { body: "#6b7280", main: "#3ddc97", help: "#1f9e6a" },
+  kind: store.get("figure", "male") === "female" ? "female" : "male",
+  data: null, loading: null,
+
+  load() {
+    return this.loading ||= fetch(`figures/${this.kind}.json`).then((r) => r.json())
+      .then((d) => { this.data = d; this.paint(); })
+      .catch((e) => { this.loading = null; log("figure not loaded:", e.message); });
+  },
+  choose(kind) {
+    if (kind === this.kind) return;
+    Object.assign(this, { kind, data: null, loading: null });
+    store.set("figure", kind);
+    this.load();
+  },
+  // type: "badge" (a circle framed on the main muscles) or "full" (front and back)
+  slot(type, muscles, label = "") {
+    return `<span class="fig ${type}" data-fig="${type}" data-m="${esc(JSON.stringify(muscles))}" role="img" aria-label="${esc(label)}"></span>`;
+  },
+  paint(root = document) {
+    if (!this.data) return;
+    for (const el of root.querySelectorAll("[data-fig]")) {
+      const m = JSON.parse(el.dataset.m);
+      el.innerHTML = el.dataset.fig === "badge" ? this.badge(m) : this.svg("f", m) + this.svg("b", m);
+    }
+  },
+  svg(view, m, box = this.data[view].box) {
+    const C = this.COLORS, fill = (n) => (m.main.includes(n) ? C.main : m.help.includes(n) ? C.help : C.body);
+    return `<svg viewBox="${box.map((v) => Math.round(v)).join(" ")}" aria-hidden="true">${this.data[view].parts.map(([n, d]) => `<path d="${d}" fill="${fill(n)}"/>`).join("")}</svg>`;
+  },
+  // A square around the main muscles, on the view where they take up the most room
+  badge(m) {
+    const main = (view) => this.data[view].parts.filter(([n]) => m.main.includes(n)).map((p) => p[2]);
+    const area = (view) => main(view).reduce((a, [, , w, h]) => a + w * h, 0);
+    const view = area("f") >= area("b") ? "f" : "b", boxes = main(view);
+    if (!boxes.length) return this.svg(view, m);
+    const x0 = Math.min(...boxes.map((b) => b[0])), y0 = Math.min(...boxes.map((b) => b[1]));
+    const x1 = Math.max(...boxes.map((b) => b[0] + b[2])), y1 = Math.max(...boxes.map((b) => b[1] + b[3]));
+    const side = Math.max(280, 1.22 * Math.max(x1 - x0, y1 - y0));
+    return this.svg(view, m, [(x0 + x1 - side) / 2, (y0 + y1 - side) / 2, side, side]);
+  },
+  // A session's muscles: main = what its exercises mainly work (most often first), help = the rest
+  session(entries) {
+    const count = {}, help = new Set();
+    for (const e of entries) {
+      const m = variant(e.key, Workout.variantOf(e.key)).muscles;
+      m.main.forEach((k) => { count[k] = (count[k] || 0) + 1; });
+      m.help.forEach((k) => help.add(k));
+    }
+    const main = Object.keys(count).sort((a, b) => count[b] - count[a]);
+    return { main, help: [...help].filter((k) => !count[k]) };
+  },
+};
 
 /* ============================================================ Plans: which plan is open
    A plan arrives in the link (#v1/…). The last one opened is remembered on the device, so the plain
@@ -661,7 +723,8 @@ const UI = {
     $("fix-copy").onclick = async () => { $("fix-status").textContent = (await copyText(message)) ? "Copied. Paste it into your AI chat." : "Couldn't copy; select the message and copy it."; };
     $("fix-anyway").hidden = !r.plan;
     $("fix-anyway").onclick = () => Plans.use(r.plan);
-    $("fix-home").onclick = () => { history.replaceState(null, "", location.pathname + location.search); Plans.boot(); };
+    $("fix-home").onclick = () => { history.replaceState(null, "", location.pathname + location.search); Plans.boot();
+Figure.load(); };
     this.show("fix");
   },
 
@@ -673,17 +736,24 @@ const UI = {
     this.day();
     this.show("day");
   },
-  describe(d) {
-    const amount = d.time ? `${fmt(d.time)}${d.perSide ? " each side" : ""}` : amountText(d);
-    return (d.sets > 1 ? `${d.sets} × ${amount}` : amount) + (d.rest ? ` · rest ${d.rest}s` : "");
-  },
   exRow(entry) {
-    const ex = EX[entry.key];
+    const ex = EX[entry.key], m = variant(entry.key, Workout.variantOf(entry.key)).muscles;
     this.rows.push(entry);
-    return `<button class="ex-row" data-r="${this.rows.length - 1}">
+    return `<button class="ex-row" data-r="${this.rows.length - 1}" aria-label="Preview ${esc(ex.name)}">
       <img src="https://i.ytimg.com/vi/${ex.videos[0].id}/mqdefault.jpg" alt="" loading="lazy">
-      <div><div class="ex-title">${esc(ex.name)}</div><div class="ex-meta">${esc(this.describe(entry.dose))}</div></div>
-      <span class="chev">Preview ›</span></button>`;
+      <div><div class="ex-title">${esc(ex.name)}</div><div class="ex-meta">${esc(this.amount(entry.dose))} · ${esc(muscleList(m.main))}</div></div>
+      ${Figure.slot("badge", m, muscleList(m.main))}<span class="chev">›</span></button>`;
+  },
+  amount(d) {
+    const amount = d.time ? `${fmt(d.time)}${d.perSide ? " each side" : ""}` : amountText(d);
+    return d.sets > 1 ? `${d.sets} × ${amount}` : amount;
+  },
+  // Front and back figures for the day's own exercises, and the figure switch
+  dayMuscles(entries) {
+    const s = Figure.session(entries);
+    return `<div class="day-muscles">${Figure.slot("full", s, muscleList(s.main))}
+      <div><p class="main-muscles">${esc(muscleList(s.main))}</p>${s.help.length ? `<p class="help-muscles">${esc(muscleList(s.help))}</p>` : ""}
+      <div class="fig-switch" role="group" aria-label="Figure">${["male", "female"].map((k) => `<button data-kind="${k}" aria-pressed="${Figure.kind === k}">${k === "male" ? "Male" : "Female"}</button>`).join("")}</div></div></div>`;
   },
   section(label, entries) { return entries.length ? `<div class="label section-label">${label}</div><div class="ex-list">${entries.map((e) => this.exRow(e)).join("")}</div>` : ""; },
   toggle(id, on, title, sub) {
@@ -700,7 +770,7 @@ const UI = {
       $("start-pre").onclick = () => W.start({ warm: true, cool: false, label: `${label} · warm-up` });
       $("start-post").onclick = () => W.start({ warm: false, cool: true, label: `${label} · cool-down` });
     } else {
-      $("day-body").innerHTML = `<div class="toggles">${this.toggle("wu-toggle", W.warm, "Include dynamic warm-up", `${WARMUP.length} moves · 6–8 min`)}${
+      $("day-body").innerHTML = this.dayMuscles(all.main) + `<div class="toggles">${this.toggle("wu-toggle", W.warm, "Include dynamic warm-up", `${WARMUP.length} moves · 6–8 min`)}${
         all.cool.length ? this.toggle("cd-toggle", W.cool, "Include post-workout flexibility", `${all.cool.length} stretches · about ${all.cool.length * 3} min`) : ""}</div>`
         + this.section("Warm-up", p.warm)
         + this.section(day.kind === "stretch" ? "Stretches" : "Workout", p.main)
@@ -713,7 +783,12 @@ const UI = {
     // Only phones mirror to a TV; the tip sits where you're about to start
     if (matchMedia("(pointer: coarse)").matches)
       $("day-body").insertAdjacentHTML("beforeend", `<p class="note tv-tip">Want it bigger? Mirror your phone to a TV: turn off Rotation Lock, hold the phone sideways, then Control Center → Screen Mirroring.</p>`);
-    $("day-body").onclick = (e) => { const r = e.target.closest(".ex-row"); if (r) { const x = this.rows[+r.dataset.r]; Workout.startPreview(x.key, x.dose); } };
+    $("day-body").onclick = (e) => {
+      const k = e.target.closest(".fig-switch button");
+      if (k) { Figure.choose(k.dataset.kind); return this.day(); }
+      const r = e.target.closest(".ex-row"); if (r) { const x = this.rows[+r.dataset.r]; Workout.startPreview(x.key, x.dose); }
+    };
+    Figure.paint($("day-body"));
   },
 
   /* ---------- player: top bar */
@@ -752,7 +827,8 @@ const UI = {
       : st.section === "warm" ? "Warm-up"
       : st.section === "cool" ? `Cool-down${st.sets > 1 ? ` · set ${st.set} of ${st.sets}` : ""}`
       : `Set ${st.set} of ${st.sets}`;
-    return `${esc(what)}${st.side ? ` · <span class="side">${st.side}</span>` : ""}`;
+    const m = variant(st.key, Workout.variantOf(st.key)).muscles;
+    return `${esc(what)}${st.side ? ` · <span class="side">${st.side}</span>` : ""} · <span class="muscles">${esc(muscleList(m.main))}</span>`;
   },
   target(d) {
     return d.time ? `<b>${fmt(d.time)}</b> ${d.perSide ? "each side" : "hold"}`
@@ -762,9 +838,10 @@ const UI = {
     const v = variant(st.key, Workout.variantOf(st.key)), hold = st.dose.time && !st.preview;
     $("panel").innerHTML = `<div class="panel-body">
       <div class="context">${this.context(st)}</div>
-      <h2 class="name">${esc(v.name)}</h2>
-      ${hold ? `<div class="hold" id="hold"><span class="clock" id="clock"></span><span class="state" id="hold-state"></span></div>`
-             : `<div class="target">${this.target(st.dose)}</div>`}
+      <div class="head"><div class="head-text"><h2 class="name">${esc(v.name)}</h2>
+        ${hold ? `<div class="hold" id="hold"><span class="clock" id="clock"></span><span class="state" id="hold-state"></span></div>`
+               : `<div class="target">${this.target(st.dose)}</div>`}</div>
+        ${Figure.slot("badge", v.muscles, muscleList(v.muscles.main))}</div>
       <div class="focus"><div class="label">Focus</div><p>${esc(v.key)}</p></div>
       <div class="form">
         <ul class="cues" id="cues">${v.cues.map((c, i) => `<li${i ? "" : ' class="on"'}>${esc(c)}</li>`).join("")}</ul>
@@ -783,6 +860,7 @@ const UI = {
     $("cues").onclick = () => this.showCue(this.cueIdx + 1, true);   // tap for the next cue
     this.cueIdx = 0; this.restartCues();
     this.timer();
+    Figure.paint($("panel"));
   },
   timer() {
     const t = Workout.timer;
@@ -823,7 +901,7 @@ const UI = {
             <circle id="rest-arc" cx="60" cy="60" r="54" fill="none" stroke="var(--rest)" stroke-width="8" stroke-linecap="round" stroke-dasharray="${this.ringLength}" stroke-dashoffset="0"/></svg>
           <div class="num" id="rest-num">${st.dur}</div>
         </div>
-        ${nex ? `<div class="rest-info"><div class="upnext"><div class="label">Up next</div><h3>${esc(nex.name)}</h3>${detail ? `<div class="muted">${esc(detail)}</div>` : ""}</div>
+        ${nex ? `<div class="rest-info"><div class="upnext"><div><div class="label">Up next</div><h3>${esc(nex.name)}</h3>${detail ? `<div class="muted">${esc(detail)}</div>` : ""}</div>${Figure.slot("badge", nex.muscles, muscleList(nex.muscles.main))}</div>
         <div class="focus"><div class="label">Focus</div><p>${esc(nex.key)}</p></div></div>` : ""}
       </div>
       </div>
@@ -835,16 +913,24 @@ const UI = {
     $("c-prev").onclick = () => Workout.go(-1);
     $("c-add").onclick = () => Workout.addRest(15);
     $("c-skip").onclick = () => Workout.go(1);
+    Figure.paint($("panel"));
   },
 
   finished(mins) {
     $("progress").style.width = "100%";
     $("stage").hidden = true; $("finished").hidden = false;
-    $("finished").innerHTML = `<div class="emoji">💪</div><h1 class="title">Workout complete</h1>
-      <p class="muted">${esc(Workout.label)} · ${mins} min</p><button class="big-btn" id="done-close">Back to the plan</button>
+    // what the session worked: its main exercises (a warm-up or stretch-only session: all of it)
+    const work = Workout.steps.filter((st) => st.type === "work"), main = work.filter((st) => st.section === "main");
+    const worked = Figure.session((main.length ? main : work).filter((st, i, all) => all.findIndex((x) => x.key === st.key) === i));
+    $("finished").innerHTML = `<h1 class="title">Workout complete</h1>
+      <p class="muted">${esc(Workout.label)} · ${mins} min</p>
+      ${Figure.slot("full", worked, muscleList(worked.main))}
+      <p class="main-muscles">${esc(muscleList(worked.main))}</p>
+      <button class="big-btn" id="done-close">Back to the plan</button>
       ${Plans.current.example && !Workout.preview ? '<button class="link" id="done-create">Create your own plan</button>' : ""}`;
     $("done-close").onclick = () => { Workout.day = null; Workout.exit(); };
     if ($("done-create")) $("done-create").onclick = () => { Workout.day = null; Workout.exit(); this.create(false); };
+    Figure.paint($("finished"));
   },
 
   exitButton() {
@@ -948,6 +1034,7 @@ log("--- page loaded", navigator.userAgent.replace(/^Mozilla\/5.0 /, ""), "stand
 Voice.load();
 Video.load();
 Plans.boot();
+Figure.load();
 if (QUERY.has("debug")) debugBar();
 if (TEST_MODE) document.body.appendChild(Object.assign(document.createElement("script"), { src: "tests/selftest.js" }));
 if (REVIEW_MODE) document.body.appendChild(Object.assign(document.createElement("script"), { src: "tests/review.js" }));

@@ -293,6 +293,23 @@
     return { name: "Wording", steps: 0, lines: 0, fails };
   }
 
+  /* ---------- the muscle map: every exercise names its muscles, and both figures have every muscle */
+  async function muscleCheck() {
+    const fails = [], figures = {};
+    for (const kind of ["male", "female"]) figures[kind] = await fetch(`figures/${kind}.json`).then((r) => r.json());
+    for (const [kind, F] of Object.entries(figures)) {
+      const names = new Set([...F.f.parts, ...F.b.parts].map((p) => p[0]));
+      for (const m of Object.keys(MUSCLES)) if (!names.has(m)) fails.push(`${kind} figure has no "${m}"`);
+    }
+    for (const key of Object.keys(EX)) EX[key].videos.forEach((_, vi) => {
+      const m = variant(key, vi).muscles, where = `${key}${vi ? ` (demo ${vi + 1})` : ""}`;
+      if (!m?.main?.length) return fails.push(`${where}: no main muscles`);
+      for (const n of [...m.main, ...m.help]) if (!MUSCLES[n]) fails.push(`${where}: unknown muscle "${n}"`);
+      if (m.main.some((n) => m.help.includes(n))) fails.push(`${where}: a muscle is both main and helping`);
+    });
+    return { name: "Muscle map", steps: 0, lines: 0, fails };
+  }
+
   /* ---------- plan links, the AI message, and a recording for everything a plan can ask for */
   function planCheck() {
     const fails = [], check = (ok, msg) => { if (!ok) fails.push(msg); };
@@ -336,7 +353,9 @@
     Plans.use(null);                                            // the example plan (nothing saved in test mode)
     const results = [];
     const safely = async (name, f) => { try { return await f(); } catch (e) { return { name, steps: 0, lines: 0, fails: ["test crashed: " + e.message] }; } };
+    await Figure.load();                                        // badges and figures are part of the layout
     results.push(wordingCheck());
+    results.push(await safely("Muscle map", muscleCheck));
     results.push(await safely("Plan links & AI message", async () => planCheck()));
     const sessions = async (plan, which) => {
       for (const i of which) {

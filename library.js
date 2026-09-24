@@ -6,6 +6,7 @@
             sets/reps/time are the defaults when a plan doesn't give them; rest is used as given
      measure? "m" when reps is a distance in metres (carries)
      equip, about  what it needs and what it's for, in a few words (the AI prompt lists these)
+     muscles { main: [...], help: [...] }, names from MUSCLES; for stretches, what's stretched
      kind?  "stretch" for static stretches (a day of only stretches is a stretch day)
      key    the one form cue that matters most (shown prominently, spoken first)
      cues   step-by-step form cues, in the order the demo shows them
@@ -13,7 +14,7 @@
      videos main demo first, then alternates:
             { id: YouTube id, label?, start?/end? (seconds, trims intros/outros),
               voice?: true if someone talks in it (otherwise the coach speaks even in Video mode),
-              name?/key?/cues?/stop?: set when the demo is a different variant of the exercise
+              name?/key?/cues?/stop?/muscles?: set when the demo is a different variant of the exercise
                 (e.g. figure-4 vs pigeon); the screen and the coach then follow that demo }
    Every demo is ad-free and checked by tests/e2e/ad-scan.mjs.
 */
@@ -22,6 +23,7 @@ const EX = {
   // ---------- Warm-up ----------
   catcow: {
     name: "Cat-Cow → Child's Pose", reps: "8", unit: "slow reps",
+    muscles: { main: ["lowerback", "upperback"], help: ["abs", "lats"] },
     key: "Move slowly, with your breath",
     why: "Loosens the spine and shoulders without putting load on the joints.",
     cues: [
@@ -38,6 +40,7 @@ const EX = {
   },
   armcircles: {
     name: "Arm Circles", reps: "10", unit: "each direction",
+    muscles: { main: ["delts", "reardelts"], help: ["traps", "upperback"] },
     key: "Palms down; start small, finish big",
     why: "Warms up the shoulders without any load.",
     cues: [
@@ -53,6 +56,7 @@ const EX = {
   },
   threadneedle: {
     name: "Thread the Needle", reps: "10", unit: "each side",
+    muscles: { main: ["upperback"], help: ["reardelts", "lats", "obliques"] },
     key: "Twist from the upper back; keep your hips still",
     why: "Rotates the upper back and makes room at the top of the shoulder.",
     cues: [
@@ -68,6 +72,7 @@ const EX = {
   },
   hip9090: {
     name: "90/90 Hip Swivels", reps: "8", unit: "each side",
+    muscles: { main: ["glutes", "adductors"], help: ["obliques"] },
     key: "Your knees move; your feet stay planted",
     why: "Rotates the hips in both directions without twisting the knee.",
     cues: [
@@ -84,6 +89,7 @@ const EX = {
   },
   revlungetwist: {
     name: "Reverse Lunge + Twist", reps: "6", unit: "each side",
+    muscles: { main: ["quads", "glutes"], help: ["obliques", "hams", "adductors"] },
     key: "Step back, and keep the front shin vertical",
     why: "Stepping backward keeps the front shin vertical, which protects the front knee.",
     cues: [
@@ -101,6 +107,7 @@ const EX = {
   // ---------- Upper body ----------
   inclinepress: {
     name: "Neutral-Grip Incline Press", sets: 3, reps: "8–10", unit: "reps", rest: 90,
+    muscles: { main: ["chest", "delts"], help: ["triceps"] },
     equip: "dumbbells, adjustable bench", about: "chest; shoulder-friendly",
     key: "Bench at 30°–45°, palms facing each other",
     why: "Avoids pinching the shoulder. Keep your elbows at 45°.",
@@ -119,6 +126,7 @@ const EX = {
   },
   sarow: {
     name: "Single-Arm Row", sets: 3, reps: "10–12", unit: "reps each side", rest: 60,
+    muscles: { main: ["lats", "upperback"], help: ["biceps", "reardelts", "forearms"] },
     equip: "dumbbell, bench", about: "back",
     key: "Pull toward your hip, not your chest",
     why: "Keep your back flat and pause for 1 second at the top.",
@@ -136,6 +144,7 @@ const EX = {
   },
   floorpress: {
     name: "Floor Press", sets: 3, reps: "10–12", unit: "reps", rest: 90,
+    muscles: { main: ["chest", "triceps"], help: ["delts"] },
     equip: "dumbbells", about: "chest; protects the front of the shoulder",
     key: "Palms in; the floor limits the range",
     why: "Protects the front of the shoulder joint.",
@@ -153,6 +162,7 @@ const EX = {
   },
   csrow: {
     name: "Chest-Supported Incline Row", sets: 3, reps: "12–15", unit: "reps", rest: 60,
+    muscles: { main: ["upperback", "lats"], help: ["reardelts", "biceps"] },
     equip: "dumbbells, adjustable bench", about: "back; easy on the lower back",
     key: "Keep your chest glued to the bench",
     why: "Resting your chest on the bench takes strain off the lower back.",
@@ -169,6 +179,7 @@ const EX = {
   },
   facepull: {
     name: "Face Pulls / Band Pull-Aparts", sets: 3, reps: "15–20", unit: "reps", rest: 60,
+    muscles: { main: ["reardelts", "upperback"], help: ["traps"] },
     equip: "dumbbells or a band", about: "rear shoulders, posture",
     key: "Light weight; stop at eye level",
     why: "Key for the rear shoulders and keeping the shoulder blades stable.",
@@ -195,6 +206,7 @@ const EX = {
   // ---------- Lower body and core ----------
   rdl: {
     name: "Romanian Deadlift", sets: 3, reps: "8–10", unit: "reps", rest: 90,
+    muscles: { main: ["hams", "glutes"], help: ["lowerback", "forearms", "adductors"] },
     equip: "dumbbells", about: "hamstrings, glutes; no stress on the knee",
     key: "Hinge at the hips with soft knees",
     why: "Puts no shear on the knee and protects the kneecap tendon.",
@@ -211,6 +223,7 @@ const EX = {
   },
   boxsquat: {
     name: "Box Squat to Bench", sets: 3, reps: "10–12", unit: "reps", rest: 90,
+    muscles: { main: ["quads", "glutes"], help: ["adductors", "hams", "lowerback"] },
     equip: "bench or sturdy chair, dumbbells optional", about: "legs; knees stay back",
     key: "Tap the bench, don't sit down; shins stay vertical",
     why: "Keeps the knees from pushing forward. Drive through your heels.",
@@ -227,6 +240,7 @@ const EX = {
   },
   slbridge: {
     name: "Single-Leg Glute Bridge", sets: 3, reps: "12", unit: "reps each side", rest: 60,
+    muscles: { main: ["glutes"], help: ["hams"] },
     equip: "none", about: "glutes; easy on the back",
     key: "Squeeze for 2 seconds at the top",
     why: "Lying flat takes load off the spine and isolates the glutes.",
@@ -244,6 +258,7 @@ const EX = {
   },
   calfraise: {
     name: "Standing Calf Raises", sets: 3, reps: "15", unit: "reps", rest: 45,
+    muscles: { main: ["calves"], help: [] },
     equip: "a step", about: "calves, ankles",
     key: "Go slowly and hold the top for 2 seconds",
     why: "Builds ankle and Achilles stability.",
@@ -260,6 +275,7 @@ const EX = {
   },
   planktaps: {
     name: "Plank with Shoulder Taps", sets: 3, time: 45, rest: 60,
+    muscles: { main: ["abs", "obliques"], help: ["delts", "glutes"] },
     equip: "none", about: "core",
     key: "Keep your hips square; no rocking",
     why: "Keeps the spine from twisting. Tap slowly.",
@@ -277,6 +293,7 @@ const EX = {
   // ---------- Mobility ----------
   couch: {
     name: "Couch Stretch", sets: 2, time: 120, perSide: true, rest: 20,
+    muscles: { main: ["quads", "hipflexors"], help: [] },
     equip: "wall or couch", about: "front of hip and thigh", kind: "stretch",
     key: "Squeeze the glute of your back leg",
     why: "Releases tight quads and hip flexors that pull on the kneecap tendon.",
@@ -293,6 +310,7 @@ const EX = {
   },
   doorway: {
     name: "Doorway Chest Stretch", sets: 2, time: 120, rest: 20,
+    muscles: { main: ["chest"], help: ["delts", "biceps"] },
     equip: "doorway", about: "chest", kind: "stretch",
     key: "Gentle stretch; there should be no shoulder pain",
     why: "Opens the chest without straining the front of the shoulder.",
@@ -309,6 +327,7 @@ const EX = {
   },
   tibraise: {
     name: "Tibialis Raises", sets: 2, reps: "20", unit: "reps", rest: 30,
+    muscles: { main: ["shins"], help: [] },
     equip: "a wall", about: "shins; helps protect the knees",
     key: "Lift your toes high and lower them slowly",
     why: "Strengthens the shin muscles that slow you down, which helps protect the knees in football.",
@@ -327,6 +346,7 @@ const EX = {
   // ---------- Upper body: shoulders and arms ----------
   seatedohp: {
     name: "Seated Neutral Overhead Press", sets: 3, reps: "10–12", unit: "reps", rest: 90,
+    muscles: { main: ["delts"], help: ["triceps", "traps"] },
     equip: "dumbbells, bench", about: "shoulders",
     key: "Press slightly forward, not out to the sides",
     why: "Palms facing in, elbows slightly forward, core braced.",
@@ -342,6 +362,7 @@ const EX = {
   },
   pullover: {
     name: "Pullovers", sets: 3, reps: "12", unit: "reps", rest: 60,
+    muscles: { main: ["lats", "chest"], help: ["triceps", "abs"] },
     equip: "one dumbbell", about: "lats and chest; only to a comfortable stretch",
     key: "Soft elbows; comfortable range only",
     why: "Only lower to a comfortable shoulder stretch.",
@@ -366,6 +387,7 @@ const EX = {
   },
   hammercurl: {
     name: "Incline Hammer Curls", sets: 3, reps: "12", unit: "reps", rest: 60,
+    muscles: { main: ["biceps", "forearms"], help: [] },
     equip: "dumbbells, adjustable bench", about: "biceps; elbow-friendly",
     key: "Palms facing in; keep your upper arms still",
     why: "The neutral grip protects the elbow and shoulder tendons.",
@@ -383,6 +405,7 @@ const EX = {
   },
   triceps: {
     name: "Overhead / Floor Triceps Extension", sets: 3, reps: "12–15", unit: "reps", rest: 60,
+    muscles: { main: ["triceps"], help: [] },
     equip: "one or two dumbbells", about: "triceps",
     key: "Keep your elbows tucked in",
     why: "Stop right away if your shoulder pinches.",
@@ -407,6 +430,7 @@ const EX = {
   },
   ytw: {
     name: "Y-T-W Raises", sets: 2, reps: "10", unit: "reps of each letter", rest: 60,
+    muscles: { main: ["reardelts", "upperback"], help: ["traps"] },
     equip: "none or very light dumbbells, adjustable bench", about: "rotator cuff, posture",
     key: "Use 2–4 kg at most",
     why: "Rebuilds the small stabilizing muscles of the rotator cuff.",
@@ -426,6 +450,7 @@ const EX = {
   // ---------- Lower body: single-leg and carries ----------
   dbrevlunge: {
     name: "Reverse Lunges", sets: 3, reps: "10", unit: "reps each side", rest: 90,
+    muscles: { main: ["quads", "glutes"], help: ["adductors", "hams", "calves"] },
     equip: "dumbbells optional", about: "legs; knee-friendly lunge",
     key: "Always step backward, never forward",
     why: "Keeps the front shin vertical so there's no twisting force on the knee.",
@@ -442,6 +467,7 @@ const EX = {
   },
   sumodl: {
     name: "Sumo / Goblet Deadlift", sets: 3, reps: "10–12", unit: "reps", rest: 90,
+    muscles: { main: ["glutes", "adductors", "hams"], help: ["quads", "lowerback", "forearms", "traps"] },
     equip: "one dumbbell", about: "glutes, legs; knee-friendly",
     key: "Wide stance; knees follow your toes",
     why: "Less compression on the knees while still loading the glutes.",
@@ -455,6 +481,7 @@ const EX = {
     videos: [
       { id: "xK4ED_yQcoU", name: "Sumo Deadlift", label: "Sumo", voice: true },
       { id: "TC2jOPCNYhU", name: "Goblet Deadlift", label: "Goblet", end: 33,
+        muscles: { main: ["glutes", "hams"], help: ["quads", "lowerback", "forearms"] },
         key: "Chest up, back flat; knees follow your toes",
         cues: [
           "Stand with feet a little wider than your hips, one dumbbell on the floor between them",
@@ -466,6 +493,7 @@ const EX = {
   },
   stepup: {
     name: "Step-Ups", sets: 3, reps: "10", unit: "reps each side", rest: 60,
+    muscles: { main: ["quads", "glutes"], help: ["hams", "calves", "adductors"] },
     equip: "bench or sturdy step, dumbbells optional", about: "legs, balance",
     key: "Use a step low enough that your knee is at 90° or less",
     why: "Push through the heel of your leading leg.",
@@ -482,6 +510,7 @@ const EX = {
   },
   suitcase: {
     name: "Suitcase Carries", sets: 3, reps: "40", measure: "m", unit: "carry, switching hands halfway", rest: 60,
+    muscles: { main: ["obliques", "forearms"], help: ["traps", "abs", "lowerback", "glutes"] },
     equip: "one heavy dumbbell, space to walk", about: "core, hips",
     key: "Walk tall without leaning",
     why: "Trains core and side-to-side hip stability.",
@@ -501,6 +530,7 @@ const EX = {
   // ---------- Stretches ----------
   pigeon: {
     name: "Pigeon Pose / Figure-4", sets: 1, time: 120, perSide: true, rest: 10,
+    muscles: { main: ["glutes"], help: [] },
     equip: "none", about: "hips, glutes", kind: "stretch",
     key: "Gentle stretch; no knee pain",
     why: "Stretches the glutes and the deep hip rotators.",
@@ -526,6 +556,7 @@ const EX = {
   },
   crossbody: {
     name: "Cross-Body Shoulder Stretch", sets: 1, time: 30, perSide: true, rest: 10,
+    muscles: { main: ["reardelts"], help: ["upperback"] },
     equip: "none", about: "back of shoulder", kind: "stretch",
     key: "Keep the shoulder down, away from your ear",
     why: "Stretches the back of the shoulder capsule.",
@@ -541,6 +572,7 @@ const EX = {
   },
   tricepsstretch: {
     name: "Overhead Triceps Stretch", sets: 1, time: 30, perSide: true, rest: 10,
+    muscles: { main: ["triceps"], help: ["lats"] },
     equip: "none", about: "triceps", kind: "stretch",
     key: "Gentle pressure; keep your ribs down",
     why: "Stretches the triceps and the back of the shoulder.",
@@ -556,6 +588,7 @@ const EX = {
   },
   hamstring: {
     name: "Hamstring Doorway Stretch", sets: 1, time: 60, perSide: true, rest: 10,
+    muscles: { main: ["hams"], help: ["calves"] },
     equip: "doorway", about: "hamstrings", kind: "stretch",
     key: "Keep your lower back flat on the floor",
     why: "Stretches the hamstrings without stressing the lower back.",
@@ -596,6 +629,17 @@ const ACTIVITIES = {
 function variant(key, vi = 0) {
   const ex = EX[key], v = ex.videos[vi] || {};
   return { name: v.name || ex.name, key: v.key || ex.key, cues: v.cues || ex.cues, stop: v.stop || ex.stop,
-    spoken: v.name ? speakable(v.name) : SPOKEN_NAMES[key] || ex.name };
+    muscles: v.muscles || ex.muscles, spoken: v.name ? speakable(v.name) : SPOKEN_NAMES[key] || ex.name };
 }
 const isVariant = (v) => !!(v.name || v.cues || v.key);
+
+// The muscles the figures can highlight (figures/*.json), with the names shown on screen: the real
+// ones people hear in a gym, so seeing them next to the highlighted body part teaches them
+const MUSCLES = {
+  traps: "Traps", delts: "Delts", reardelts: "Rear delts", chest: "Chest", upperback: "Upper back",
+  lats: "Lats", lowerback: "Lower back", biceps: "Biceps", triceps: "Triceps", forearms: "Forearms",
+  abs: "Abs", obliques: "Obliques", glutes: "Glutes", hipflexors: "Hip flexors", adductors: "Adductors",
+  quads: "Quads", hams: "Hamstrings", calves: "Calves", shins: "Shins",
+};
+// ["hams", "glutes"] → "Hamstrings, glutes"
+const muscleList = (keys) => keys.map((k, i) => (i ? MUSCLES[k].toLowerCase() : MUSCLES[k])).join(", ");
