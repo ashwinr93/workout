@@ -594,8 +594,8 @@ const UI = {
         <span class="goal">${esc(day.goal || this.daySummary(day))}</span>
       </button>`).join("");
     $("days").onclick = (e) => { const b = e.target.closest(".day-card"); if (b) this.openDay(plan.days[+b.dataset.i]); };
-    $("plan-banner").hidden = !plan.example;
-    $("plan-banner").onclick = () => this.create(false);
+    $("plan-cta").hidden = !plan.example;
+    $("plan-cta").onclick = () => this.create(false);
     this.planCard();
   },
   planSummary(plan) {
@@ -610,12 +610,14 @@ const UI = {
     const n = day.items.length;
     return `${n} ${day.kind === "stretch" ? "stretch" : "exercise"}${n === 1 ? "" : day.kind === "stretch" ? "es" : "s"}`;
   },
-  // Under the days: make your own plan (on the example), or manage yours
+  // Under the days: an invitation to make your own plan (on the example), or managing yours
   planCard() {
     const plan = Plans.current, others = [...Plans.recent().filter((p) => p.link !== plan.link), ...(plan.example ? [] : [{ example: true, title: EXAMPLE_PLAN.title }])];
+    $("plan-card").classList.toggle("invite", !!plan.example);
     $("plan-card").innerHTML = (plan.example
-      ? `<div class="label">Your own plan</div>
-         <p class="card-text">Tell an AI about your goals, any aches and what you have to train with. It builds a plan for you that plays here, with the same videos and coach.</p>
+      ? `<h2 class="invite-title">Get a plan made for you</h2>
+         <p class="card-text">This week is an example. Chat with an AI you already use about your goals, any aches and what you have to train with, and it builds your own plan, with these videos and this coach.</p>
+         <ol class="steps"><li>Pick your AI</li><li>Answer a few questions</li><li>Tap the link it gives you</li></ol>
          <div class="card-actions"><button class="big-btn" id="pc-create">Create your own plan</button></div>`
       : `<div class="label">Your plan</div>
          <p class="card-text">Bookmark this page or add it to your Home Screen: the plan lives in its link.</p>
@@ -639,15 +641,14 @@ const UI = {
     $("create-intro").textContent = change
       ? "Pick an AI you use. It gets your current plan, asks what you'd like to change, and gives you a new link."
       : "Pick an AI you already use. It asks about your goals, any aches, your equipment and your time, then gives you a link to your own plan in this app. It uses your own AI account, so it's free.";
-    $("ai-list").innerHTML = AI_CHATS.map((ai, i) => ai.paste
-      ? `<button class="ai-btn" data-i="${i}">Open ${esc(ai.name)}<small>Copies the message; paste it in</small></button>`
-      : `<a class="ai-btn" href="${esc(chatLink(ai, text))}" target="_blank" rel="noopener">Open ${esc(ai.name)}</a>`).join("");
-    $("ai-list").onclick = async (e) => {
-      const b = e.target.closest("button.ai-btn"); if (!b) return;
-      const ai = AI_CHATS[+b.dataset.i];
-      const copied = await copyText(text);
-      $("create-status").textContent = copied ? `Message copied. Paste it into ${ai.name}'s message box and send.` : "Couldn't copy the message. Use the button below.";
-      window.open(ai.url, "_blank", "noopener");
+    // Every choice is a plain link, so the phone can hand it to the AI's app when it's installed.
+    // Where the chat can't take the message in its address (Gemini), the same tap copies it first.
+    $("ai-list").innerHTML = AI_CHATS.map((ai, i) => `<a class="ai-btn" data-i="${i}" href="${esc(chatLink(ai, text))}" target="_blank" rel="noopener">Open ${esc(ai.name)}${
+      ai.paste ? " <small>Copies the message; paste it in</small>" : ""}</a>`).join("");
+    $("ai-list").onclick = (e) => {
+      const a = e.target.closest("a.ai-btn"), ai = a && AI_CHATS[+a.dataset.i];
+      if (!ai?.paste) return;
+      copyText(text).then((ok) => { $("create-status").textContent = ok ? `Message copied. Paste it into ${ai.name}'s message box and send.` : "Couldn't copy the message. Use the button below."; });
     };
     $("copy-prompt").onclick = async () => { $("create-status").textContent = (await copyText(text)) ? "Message copied. Paste it into any AI chat." : "Couldn't copy the message."; };
     $("create-status").textContent = "";
