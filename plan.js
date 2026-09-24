@@ -42,11 +42,6 @@ const EXAMPLE_PLAN = {
     + "/sun:Rest-and-Recovery:pigeon.1x120s,couch.1x120s,crossbody.1x30s,tricepsstretch.1x30s,hamstring.1x60s",
   title: "Joint-Friendly Strength & Flexibility",
   subtitle: "4-day upper/lower split · Dumbbells & bench · Football-optimized",
-  rulesTitle: "Core joint rules",
-  rules: [   // [bold lead, text]
-    ["Shoulder protection:", "use a neutral grip (palms facing each other) and 30°–45° inclines. Do 2 pulling sets for every pushing set."],
-    ["Knee protection:", "focus on the posterior chain (hamstrings and glutes) and keep your shins vertical to avoid shear on the kneecap."],
-  ],
   goals: {
     mon: "Chest/back strength + shoulder stability",
     tue: "Posterior chain & knee-friendly quads",
@@ -197,8 +192,8 @@ function planLink(plan) {
 // The example plan, with its extra text
 function examplePlan() {
   const { plan } = parsePlan(EXAMPLE_PLAN.link);
-  const { title, subtitle, rulesTitle, rules, goals } = EXAMPLE_PLAN;
-  Object.assign(plan, { title, subtitle, rulesTitle, rules, example: true, link: EXAMPLE_PLAN.link });
+  const { title, subtitle, goals } = EXAMPLE_PLAN;
+  Object.assign(plan, { title, subtitle, example: true, link: EXAMPLE_PLAN.link });
   plan.days.forEach((d) => { d.goal = goals[d.key]; });
   return plan;
 }

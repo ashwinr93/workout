@@ -586,9 +586,6 @@ const UI = {
     document.title = `${plan.title} · Workout Coach`;
     $("plan-title").textContent = plan.title;
     $("plan-subtitle").textContent = plan.subtitle || this.planSummary(plan);
-    $("plan-rules").hidden = !plan.rules?.length;
-    $("plan-rules-title").textContent = plan.rulesTitle || "";
-    $("plan-rules-list").innerHTML = (plan.rules || []).map(([lead, text]) => `<li><b>${esc(lead)}</b> ${esc(text)}</li>`).join("");
     const today = new Date().getDay();
     $("days").innerHTML = plan.days.map((day, i) => `
       <button class="day-card${day.d === today ? " today" : ""}" data-i="${i}">
