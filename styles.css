@@ -111,10 +111,10 @@ h1, h2, h3, p { margin: 0; }
 .fig-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: none; }
 .fig-toggle { color: var(--faint); padding: 6px; border-radius: 8px; line-height: 0; }
 /* the key: a bar drawn like the muscles it stands for (solid main, striped helping) */
-.muscle-group { position: relative; padding: 2px 0 2px 13px; text-align: left; }
+.muscle-group { position: relative; padding: 2px 0 2px 16px; text-align: left; }
 .muscle-group + .muscle-group { margin-top: 14px; }
-.muscle-group::before { content: ""; position: absolute; left: 0; top: 2px; bottom: 2px; width: 3px; border-radius: 2px; background: #3ddc97; }
-.muscle-group.help::before { background: repeating-linear-gradient(to bottom, #3ddc97 0 4px, #4b5260 4px 8px); }
+.muscle-group::before { content: ""; position: absolute; left: 0; top: 2px; bottom: 2px; width: 6px; border-radius: 3px; background: #3ddc97; }
+.muscle-group.help::before { background: repeating-linear-gradient(-45deg, #3ddc97 0 1px, #4b5260 1px 3px); }   /* the figure's stripes, at this size */
 .muscle-group .names { margin-top: 3px; line-height: 1.4; }
 .muscle-group.help .names { color: var(--muted); }
 .finished .muscle-groups { max-width: 340px; }
