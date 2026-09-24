@@ -533,15 +533,17 @@ document.addEventListener("visibilitychange", () => {
   setTimeout(() => Video.resume(), 300);        // iOS pauses video in the background
 });
 
+const SWAP_ICON = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4 3 8l4 4"/><path d="M3 8h14"/><path d="m17 20 4-4-4-4"/><path d="M21 16H7"/></svg>`;
+
 /* ============================================================ Figure: the muscle map
    Body art traced from the owner's images (figures/<male|female>.json, see design/README.md):
    front (f) and back (b) views, each a list of [muscle, svg path, bounding box]. Screens write an
    empty slot (Figure.slot) and paint() fills every slot once the figure chosen on this device
    has loaded, and again when the choice changes. */
 const Figure = {
-  // Three tones that stay apart on a small figure: bright main, mid helping, a body grey dark
-  // enough that the helping green doesn't blend into it
-  COLORS: { body: "#4b5260", main: "#3ddc97", help: "#1d8f62" },
+  // Main muscles solid green; helping muscles striped green (the #fig-help pattern in index.html),
+  // so the two read apart at a glance instead of by comparing two shades of green
+  COLORS: { body: "#4b5260", main: "#3ddc97", help: "url(#fig-help)" },
   kind: store.get("figure", "male") === "female" ? "female" : "male",
   data: null, fetched: {},                        // kind → promise of that figure
 
@@ -757,19 +759,19 @@ Figure.load(); };
     const amount = d.time ? `${fmt(d.time)}${d.perSide ? " each side" : ""}` : amountText(d);
     return d.sets > 1 ? `${d.sets} × ${amount}` : amount;
   },
-  // Front and back figures for the day's own exercises. Under them, a quiet link to view the
-  // other figure: a way of looking at the picture, not a workout setting (remembered on the device)
+  // Front and back figures for the day's own exercises, with a small swap icon under them to view
+  // the other figure (a way of looking at the picture, not a workout setting; remembered on the device)
   dayMuscles(entries) {
     const s = Figure.session(entries), other = Figure.kind === "male" ? "female" : "male";
     return `<div class="day-muscles"><div class="fig-col">${Figure.slot("full", s, muscleList(s.main))}
-      <button class="link fig-toggle" data-kind="${other}">Show ${other} figure</button></div>
-      <div>${this.muscleKey("Main", "main", s.main)}${s.help.length ? this.muscleKey("Helping", "help", s.help) : ""}</div></div>`;
+      <button class="fig-toggle" data-kind="${other}" aria-label="Show ${other} figure" title="Show ${other} figure">${SWAP_ICON}</button></div>
+      ${this.muscleGroups(s)}</div>`;
   },
-  // One line of the figure's key, in the same colour as those muscles on the figure
-  muscleKey(label, tone, keys) {
-    // each name stays whole, and a wrapped line starts with its "·" instead of ending on one
-    const items = keys.map((k) => esc(MUSCLES[k]).replace(/ /g, "&nbsp;")).join(" ·&nbsp;");
-    return `<p class="muscle-line" style="color:${Figure.COLORS[tone]}">${label}: ${items}</p>`;
+  // The figure's key: each group marked by a bar drawn like its muscles (solid main, striped helping)
+  muscleGroups(m) {
+    const group = (label, tone, keys) => keys.length
+      ? `<div class="muscle-group ${tone}"><div class="label">${label}</div><div class="names">${esc(muscleList(keys))}</div></div>` : "";
+    return `<div class="muscle-groups">${group("Main", "main", m.main)}${group("Helping", "help", m.help)}</div>`;
   },
   section(label, entries) { return entries.length ? `<div class="label section-label">${label}</div><div class="ex-list">${entries.map((e) => this.exRow(e)).join("")}</div>` : ""; },
   toggle(id, on, title, sub) {
@@ -941,7 +943,7 @@ Figure.load(); };
     $("finished").innerHTML = `<h1 class="title">Workout complete</h1>
       <p class="muted">${esc(Workout.label)} · ${mins} min</p>
       ${Figure.slot("full", worked, muscleList(worked.main))}
-      <div class="muscle-key">${this.muscleKey("Main", "main", worked.main)}${worked.help.length ? this.muscleKey("Helping", "help", worked.help) : ""}</div>
+      ${this.muscleGroups(worked)}
       <button class="big-btn" id="done-close">Back to the plan</button>
       ${Plans.current.example && !Workout.preview ? '<button class="link" id="done-create">Create your own plan</button>' : ""}`;
     $("done-close").onclick = () => { Workout.day = null; Workout.exit(); };

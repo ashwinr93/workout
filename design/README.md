@@ -6,7 +6,7 @@ Status: built into the app (Sep 2026). The app reads `figures/male.json` and `fi
 Show which muscles an exercise works, for people who don't know muscle names. Rules the owner signed off on after many rounds:
 
 - **Artwork:** traced from the owner's ChatGPT images, `male-front-back.png` and `female-front-back.png` (flat grey body, black lines between muscles, front on the left and back on the right). **Never hand-draw the body in SVG.** The owner rejected about 6 hand-drawn versions (blocky, short, feminine stance on the male figure, stick calves). Tracing the image-model art is what worked.
-- **Colours:** body grey `#4b5260`, main muscles `#3ddc97` (the app's accent), helping muscles `#1d8f62` (the first palette, body `#6b7280` / helping `#1f9e6a`, made helping muscles blend into the body). No outlines: the thin dark lines are just gaps between shapes showing the background.
+- **Colours:** body grey `#4b5260`, main muscles solid `#3ddc97` (the app's accent), helping muscles striped in the same green (two shades of green, first `#1f9e6a` then `#1d8f62`, were too hard to tell apart on a small figure). No outlines: the thin dark lines are just gaps between shapes showing the background.
 - **Where it appears (little text where space is tight):**
   - Exercise rows (day screen): a 44px **circular badge** at the right, plus the muscle names in the existing meta line, e.g. "3 × 8–10 · Hamstrings, glutes".
   - Player: the muscle names added to the existing set label ("Set 1 of 3 · Chest, shoulders") and a badge (~76px) beside the exercise name. Nothing else on the panel moves.
