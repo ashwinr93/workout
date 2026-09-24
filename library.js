@@ -177,7 +177,7 @@ const EX = {
   csrow: {
     name: "Chest-Supported Incline Row", sets: 3, reps: "12–15", unit: "reps", rest: 60,
     muscles: { main: ["upperback", "lats"], help: ["reardelts", "biceps"] },
-    type: "pull", level: "beginner", easyOn: ["lowerback"], loads: [],
+    type: "pull", level: "beginner", easyOn: ["lowerback"], loads: [], harder: ["bbrow"],
     equip: "dumbbells, adjustable bench",
     key: "Keep your chest glued to the bench",
     why: "Resting your chest on the bench takes strain off the lower back.",
@@ -223,7 +223,7 @@ const EX = {
   rdl: {
     name: "Romanian Deadlift", sets: 3, reps: "8–10", unit: "reps", rest: 90,
     muscles: { main: ["hams", "glutes"], help: ["lowerback", "forearms", "adductors"] },
-    type: "hinge", level: "intermediate", easyOn: ["knees"], loads: ["lowerback"], easier: ["slbridge", "sumodl"],
+    type: "hinge", level: "intermediate", easyOn: ["knees"], loads: ["lowerback"], easier: ["slbridge", "sumodl"], harder: ["deadlift"],
     equip: "dumbbells",
     key: "Hinge at the hips with soft knees",
     why: "Puts no shear on the knee and protects the kneecap tendon.",
@@ -371,7 +371,7 @@ const EX = {
   seatedohp: {
     name: "Seated Neutral Overhead Press", sets: 3, reps: "10–12", unit: "reps", rest: 90,
     muscles: { main: ["delts"], help: ["triceps", "traps"] },
-    type: "pushup", level: "intermediate", easyOn: ["lowerback"], loads: ["shoulders"],
+    type: "pushup", level: "intermediate", easyOn: ["lowerback"], loads: ["shoulders"], harder: ["ohp"],
     equip: "dumbbells, bench",
     key: "Press slightly forward, not out to the sides",
     why: "Palms facing in, elbows slightly forward, core braced.",
@@ -665,7 +665,7 @@ const EX = {
     name: "Goblet Squat", sets: 3, reps: "8–10", unit: "reps", rest: 90,
     equip: "one dumbbell",
     muscles: { main: ["quads", "glutes"], help: ["adductors", "hams", "upperback"] },
-    type: "squat", level: "beginner", easyOn: [], loads: ["knees"], easier: ["bwsquat"],
+    type: "squat", level: "beginner", easyOn: [], loads: ["knees"], easier: ["bwsquat"], harder: ["bbsquat"],
     key: "Chest tall; elbows inside your knees",
     cues: [
       "Hold one dumbbell upright against your chest, elbows pointing down",
@@ -733,7 +733,7 @@ const EX = {
     name: "Band Pulldown", sets: 3, reps: "12–15", unit: "reps", rest: 60,
     equip: "a resistance band anchored high on a door",
     muscles: { main: ["lats"], help: ["biceps", "upperback", "reardelts"] },
-    type: "pullup", level: "beginner", easyOn: [], loads: [],
+    type: "pullup", level: "beginner", easyOn: [], loads: [], harder: ["latpulldown"],
     key: "Elbows down to your sides; shoulders away from your ears",
     cues: [
       "Anchor the band high on a door and kneel facing it, arms reaching up",
@@ -750,7 +750,7 @@ const EX = {
     name: "Band Seated Row", sets: 3, reps: "12–15", unit: "reps", rest: 60,
     equip: "a resistance band",
     muscles: { main: ["upperback", "lats"], help: ["biceps", "reardelts"] },
-    type: "pull", level: "beginner", easyOn: [], loads: [],
+    type: "pull", level: "beginner", easyOn: [], loads: [], harder: ["cablerow"],
     key: "Sit tall; don't lean back to pull",
     cues: [
       "Sit tall with your legs out in front and the band anchored low in front of you",
@@ -848,7 +848,164 @@ const EX = {
       { id: "Eaj_NG5_hIo", start: 9, end: 46, voice: true }
     ]
   }
+,
 
+  // ---------- Gym machines and barbells (batch 2) ----------
+  legpress: {
+    name: "Leg Press", sets: 3, reps: "10–12", unit: "reps", rest: 90,
+    equip: "a leg press machine (gym)",
+    muscles: { main: ["quads", "glutes"], help: ["hams", "adductors", "calves"] },
+    type: "squat", level: "beginner", easyOn: ["lowerback"], loads: ["knees"],
+    key: "Lower back stays on the pad",
+    cues: [
+      "Sit with your back flat against the pad",
+      "Place your feet hip-width apart in the middle of the platform",
+      "Lower the platform until your knees bend to about a right angle",
+      "Press through your heels to push it back, without locking your knees"
+    ],
+    stop: "If your knees or lower back hurt, don't lower the platform as far.",
+    videos: [
+      { id: "p5dCqF7wWUw", start: 26, end: 57, voice: true }
+    ]
+  },
+  latpulldown: {
+    name: "Lat Pulldown", sets: 3, reps: "10–12", unit: "reps", rest: 60,
+    equip: "a lat pulldown machine (gym)",
+    muscles: { main: ["lats"], help: ["biceps", "upperback", "reardelts"] },
+    type: "pullup", level: "beginner", easyOn: [], loads: [], easier: ["bandpulldown"],
+    key: "Pull to your chest, never behind your neck",
+    cues: [
+      "Sit with your thighs under the pads and grip the handles a little wider than your shoulders",
+      "Lean back slightly and pull down to your upper chest",
+      "Squeeze your shoulder blades down and together",
+      "Let the handles rise slowly until your arms are straight"
+    ],
+    stop: "If your shoulders pinch, use a narrower grip and don't reach as high.",
+    videos: [
+      { id: "oMJmAHRZXBk", start: 34, end: 71, voice: true }
+    ]
+  },
+  cablerow: {
+    name: "Seated Cable Row", sets: 3, reps: "10–12", unit: "reps", rest: 60,
+    equip: "a cable row machine (gym)",
+    muscles: { main: ["upperback", "lats"], help: ["biceps", "reardelts"] },
+    type: "pull", level: "beginner", easyOn: [], loads: [], easier: ["bandrow"],
+    key: "Sit tall; move your arms, not your back",
+    cues: [
+      "Sit tall with your feet on the platform and knees slightly bent",
+      "Pull the handle to your stomach, elbows close to your sides",
+      "Squeeze your shoulder blades together",
+      "Reach forward slowly to straighten your arms"
+    ],
+    stop: "If your lower back aches, bend your knees more and stay upright.",
+    videos: [
+      { id: "f_r95UajQcg", end: 30, voice: true }
+    ]
+  },
+  chestpress: {
+    name: "Machine Chest Press", sets: 3, reps: "10–12", unit: "reps", rest: 90,
+    equip: "a chest press machine (gym)",
+    muscles: { main: ["chest", "triceps"], help: ["delts"] },
+    type: "push", level: "beginner", easyOn: [], loads: [], harder: ["benchpress"],
+    key: "Shoulders back; don't lock your elbows",
+    cues: [
+      "Set the seat so the handles are in line with your chest",
+      "Grip the handles and press them out until your arms are almost straight",
+      "Keep your shoulder blades back against the seat",
+      "Bring the handles back slowly"
+    ],
+    stop: "If the front of your shoulder hurts, don't let the handles come as far back.",
+    videos: [
+      { id: "sqNwDkUU_Ps", start: 26, end: 56, voice: true }
+    ]
+  },
+  bbsquat: {
+    name: "Barbell Back Squat", sets: 3, reps: "6–8", unit: "reps", rest: 120,
+    equip: "a barbell and squat rack",
+    muscles: { main: ["quads", "glutes"], help: ["adductors", "hams", "lowerback", "abs"] },
+    type: "squat", level: "intermediate", easyOn: [], loads: ["knees", "lowerback"], easier: ["gobletsquat"],
+    key: "Chest up; knees out over your toes",
+    cues: [
+      "Squeeze your shoulder blades together to make a shelf and rest the bar across your upper back",
+      "Stand up to lift the bar and take small steps back",
+      "Set your feet about shoulder-width apart, toes turned out slightly",
+      "Keep your eyes and chest up and push your knees out as you go down",
+      "Press through the ground to stand back up"
+    ],
+    stop: "Squat inside a rack with the safety bars set. If your knees or back hurt, lower the weight and the depth.",
+    videos: [
+      { id: "ZaSetOZFo-k", start: 16, end: 55, voice: true }
+    ]
+  },
+  deadlift: {
+    name: "Barbell Deadlift", sets: 3, reps: "5", unit: "reps", rest: 120,
+    equip: "a barbell and plates",
+    muscles: { main: ["glutes", "hams", "lowerback"], help: ["quads", "traps", "forearms", "upperback"] },
+    type: "hinge", level: "intermediate", easyOn: ["knees"], loads: ["lowerback"], easier: ["rdl"],
+    key: "Back flat; bar stays close to your legs",
+    cues: [
+      "Stand with the bar over the middle of your feet",
+      "Push your hips back and bend your knees to grip the bar just outside your legs",
+      "Lift your chest and flatten your back to take the slack out of the bar",
+      "Push the floor away and stand tall, keeping the bar close to your legs",
+      "Lower it the same way"
+    ],
+    stop: "If your lower back rounds or hurts, stop and lighten the weight.",
+    videos: [
+      { id: "S5JSZKURFPo", start: 17, end: 45, voice: true }
+    ]
+  },
+  benchpress: {
+    name: "Barbell Bench Press", sets: 3, reps: "6–8", unit: "reps", rest: 120,
+    equip: "a barbell, bench and rack",
+    muscles: { main: ["chest", "triceps"], help: ["delts"] },
+    type: "push", level: "intermediate", easyOn: [], loads: ["shoulders"], easier: ["chestpress"],
+    key: "Shoulder blades squeezed together, feet planted",
+    cues: [
+      "Lie on the bench with your eyes under the bar and your feet flat on the floor",
+      "Grip the bar a little wider than your shoulders",
+      "Lower the bar to the middle of your chest with your elbows angled in",
+      "Press it back up over your shoulders"
+    ],
+    stop: "Use a spotter or safety arms. If your shoulder hurts at the bottom, lower the weight.",
+    videos: [
+      { id: "xS3MqdFppiY", start: 5 }
+    ]
+  },
+  ohp: {
+    name: "Barbell Overhead Press", sets: 3, reps: "6–8", unit: "reps", rest: 90,
+    equip: "a barbell and rack",
+    muscles: { main: ["delts", "triceps"], help: ["traps", "upperback", "abs"] },
+    type: "pushup", level: "intermediate", easyOn: [], loads: ["shoulders", "lowerback"], easier: ["seatedohp"],
+    key: "Squeeze your glutes; don't lean back",
+    cues: [
+      "Hold the bar at your collarbones, hands just outside your shoulders",
+      "Squeeze your glutes and brace your stomach",
+      "Press the bar straight up, moving your head back out of the way",
+      "Finish with the bar over your head, then lower it back to your chest"
+    ],
+    stop: "If your lower back arches or your shoulder pinches, use a lighter weight.",
+    videos: [
+      { id: "afR3tPH6y_g", start: 7, end: 42, voice: true }
+    ]
+  },
+  bbrow: {
+    name: "Barbell Bent-Over Row", sets: 3, reps: "8–10", unit: "reps", rest: 90,
+    equip: "a barbell",
+    muscles: { main: ["upperback", "lats"], help: ["biceps", "reardelts", "lowerback", "forearms"] },
+    type: "pull", level: "intermediate", easyOn: [], loads: ["lowerback"], easier: ["csrow"],
+    key: "Flat back; pull to your lower ribs",
+    cues: [
+      "Hold the bar with your hands just outside your legs",
+      "Push your hips back and lean forward with a flat back",
+      "Pull the bar to your lower ribs",
+      "Lower it slowly with control"
+    ],
+    stop: "If your lower back aches, don't lean as far forward.",
+    videos: [
+      { id: "rqTOAM8WoeM", start: 10, end: 26, voice: true }
+    ]
+  }
 };
 
 // The optional warm-up before every session, and the cool-down stretches after it

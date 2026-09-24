@@ -79,6 +79,7 @@ Guidelines
 - Balance the week's movements: cover squat or lunge, hinge, push, pull and core across the week, and at least as many pulls as pushes (more pulls if my shoulders bother me).
 - For anything I said hurts, avoid exercises that load that joint and prefer ones that are easy on it. Tell me why you chose what you did.
 - Beginners: beginner-level exercises, fewer sets, and the easier alternative where there is one.
+- Gym machines only if I train in a gym. Barbell exercises only if I tell you I already lift with a barbell; otherwise use their easier alternatives.
 - Sets ${DOSE.sets.min}-${DOSE.sets.max}. Reps: a number from ${R.min} to ${R.max}, or one of these ranges: ${R.ranges.map((r) => r.replace("–", "-")).join(", ")}. For "each side" exercises, reps are per side. Holds: ${H.min} to ${H.max} seconds, in steps of ${H.step}. Carries: ${DOSE.metres.join(", ")} metres. Activities: minutes, in steps of 5.
 - Only plan the days I said I can train; leave the other days out.
 

@@ -136,11 +136,12 @@ This is a player for a plan, not medical advice. The cues and "back off" lines c
 ## Demo videos
 
 <!-- credits:start -->
-Every demo is the creator's own video, played through YouTube's embedded player (start and end points only; nothing is downloaded or edited). Thank you to these 48 channels:
+Every demo is the creator's own video, played through YouTube's embedded player (start and end points only; nothing is downloaded or edited). Thank you to these 53 channels:
 
 - **[Advanced Therapy and Performance](https://www.youtube.com/@advancedtherapyperformance)**: [90/90 Hip Swivels](https://www.youtube.com/watch?v=YxECcOkUCEY)
 - **[Andrew Coates](https://www.youtube.com/@Andrewcoatesfitness)**: [Neutral-Grip Incline Press](https://www.youtube.com/watch?v=2SU_K4-knrc)
 - **[Atomic Athlete](https://www.youtube.com/@atomic.athlete)**: [Pigeon Pose](https://www.youtube.com/watch?v=1o7awuDGzag)
+- **[Average To Jacked](https://www.youtube.com/@Averagetojacked)**: [Barbell Overhead Press](https://www.youtube.com/watch?v=afR3tPH6y_g)
 - **[BEN MIGHTY](https://www.youtube.com/@BENMIGHTY85)**: [Chest-Supported Incline Row](https://www.youtube.com/watch?v=ym-Mp8tCF00)
 - **[BESS - British Elbow & Shoulder Society](https://www.youtube.com/@bess-upper-limbs)**: [Wall Slides](https://www.youtube.com/watch?v=Eaj_NG5_hIo)
 - **[BluePhoenix Fitness](https://www.youtube.com/@bluephoenixfitness)**: [Band Pulldown](https://www.youtube.com/watch?v=84D8bVJWB3s), [Band Seated Row](https://www.youtube.com/watch?v=b3035OyY4c8)
@@ -153,6 +154,7 @@ Every demo is the creator's own video, played through YouTube's embedded player 
 - **[Champion Physical Therapy and Performance](https://www.youtube.com/@championptp)**: [Suitcase Carries](https://www.youtube.com/watch?v=3RKKnZhhelE)
 - **[Dr. Christy Lee](https://www.youtube.com/@itiswellptllc)**: [Arm Circles](https://www.youtube.com/watch?v=ndmSvkEdNQQ)
 - **[FITTR](https://www.youtube.com/@FITTRwithSquats)**: [Reverse Lunges](https://www.youtube.com/watch?v=RZKXLMxPF_I)
+- **[Forest Gate Therapy Inc.](https://www.youtube.com/@forestgatetherapyinc.)**: [Barbell Bench Press](https://www.youtube.com/watch?v=xS3MqdFppiY)
 - **[Girls Gone Strong \| Women's Health & Fitness](https://www.youtube.com/@GirlsGoneStrong)**: [Bodyweight Squat](https://www.youtube.com/watch?v=3fl7uYmiMVw)
 - **[Hinge Health](https://www.youtube.com/@hingehealth)**: [Split Squat](https://www.youtube.com/watch?v=qW5OGJ62ZjY), [Push-Up](https://www.youtube.com/watch?v=ZR1QBUtC1GY), [Dead Bug](https://www.youtube.com/watch?v=GbSC02oU3To), [Bird Dog](https://www.youtube.com/watch?v=xEDnlOxeJH4)
 - **[Hubert Physical Therapy](https://www.youtube.com/@HubertPT)**: [Hamstring Doorway Stretch](https://www.youtube.com/watch?v=b7k-9CZVYbA)
@@ -172,11 +174,12 @@ Every demo is the creator's own video, played through YouTube's embedded player 
 - **[Onnit Academy](https://www.youtube.com/@OnnitAcademy)**: [Romanian Deadlift](https://www.youtube.com/watch?v=xAL7lHwj30E), [Floor Pullovers](https://www.youtube.com/watch?v=qALakTR1nRI)
 - **[OPEX Fitness](https://www.youtube.com/@OPEXFitness)**: [Neutral-Grip Incline Press](https://www.youtube.com/watch?v=g4tj2lnUgpM), [Floor Press](https://www.youtube.com/watch?v=oqnNivBhveM), [Standing Calf Raises](https://www.youtube.com/watch?v=ADIDoYt_ko4), [Incline Hammer Curls](https://www.youtube.com/watch?v=1Z6XiaBxwHQ), [Overhead Triceps Extensions](https://www.youtube.com/watch?v=HADoxgsslvw), [Incline Push-Up](https://www.youtube.com/watch?v=E--Ls5QtFqI)
 - **[PrimeMVMNT](https://www.youtube.com/@PrimeMVMNT)**: [Tibialis Raises](https://www.youtube.com/watch?v=nQKgHwi8W9E)
-- **[PureGym](https://www.youtube.com/@PureGymVideo)**: [Single-Arm Row](https://www.youtube.com/watch?v=ZRSGpBUVcNw), [Step-Ups](https://www.youtube.com/watch?v=DxUNi119Qzs), [Glute Bridge](https://www.youtube.com/watch?v=tqp5XQPpTxY)
+- **[PureGym](https://www.youtube.com/@PureGymVideo)**: [Single-Arm Row](https://www.youtube.com/watch?v=ZRSGpBUVcNw), [Step-Ups](https://www.youtube.com/watch?v=DxUNi119Qzs), [Glute Bridge](https://www.youtube.com/watch?v=tqp5XQPpTxY), [Leg Press](https://www.youtube.com/watch?v=p5dCqF7wWUw), [Machine Chest Press](https://www.youtube.com/watch?v=sqNwDkUU_Ps)
 - **[React Physical Therapy](https://www.youtube.com/@ReactPhysicalTherapyChicago)**: [Cross-Body Shoulder Stretch](https://www.youtube.com/watch?v=aIq0fLi8iak), [Overhead Triceps Stretch](https://www.youtube.com/watch?v=_IOHtPSYGbk)
 - **[Rehab My Patient](https://www.youtube.com/@RehabMyPatient)**: [Kneeling Side Plank](https://www.youtube.com/watch?v=UurF0EhHFLg)
 - **[Renaissance Periodization](https://www.youtube.com/@RenaissancePeriodization)**: [Single-Arm Row](https://www.youtube.com/watch?v=DMo3HJoawrU), [Face Pulls](https://www.youtube.com/watch?v=nzTY7j9ocR8)
-- **[Runna](https://www.youtube.com/@Runna)**: [Bodyweight Squat](https://www.youtube.com/watch?v=P-yaD24bUE8)
+- **[REP](https://www.youtube.com/@repfitnessequipment)**: [Seated Cable Row](https://www.youtube.com/watch?v=f_r95UajQcg)
+- **[Runna](https://www.youtube.com/@Runna)**: [Bodyweight Squat](https://www.youtube.com/watch?v=P-yaD24bUE8), [Barbell Deadlift](https://www.youtube.com/watch?v=S5JSZKURFPo), [Barbell Bent-Over Row](https://www.youtube.com/watch?v=rqTOAM8WoeM)
 - **[Simone Sports Performance](https://www.youtube.com/@SimoneSportsPerformance)**: [Y-T-W Raises](https://www.youtube.com/watch?v=WAnSCSJbQYw)
 - **[Steam Training Fitness](https://www.youtube.com/@steamtrainingfitness720)**: [Sumo Deadlift](https://www.youtube.com/watch?v=xK4ED_yQcoU)
 - **[Streamline Performance Physical Therapy](https://www.youtube.com/@ptstreamline)**: [Thread the Needle](https://www.youtube.com/watch?v=YuAJ1i76Hek)
@@ -184,7 +187,9 @@ Every demo is the creator's own video, played through YouTube's embedded player 
 - **[Sworkit](https://www.youtube.com/@SworkitHealth)**: [Arm Circles](https://www.youtube.com/watch?v=UVMEnIaY8aU)
 - **[Tangelo - Seattle Chiropractor + Rehab](https://www.youtube.com/@Tangelohealth)**: [Band Pull-Aparts](https://www.youtube.com/watch?v=stwYTTPXubo), [Couch Stretch](https://www.youtube.com/watch?v=fHKndvWwenc)
 - **[The Hybrid Headquarters](https://www.youtube.com/@TheHybridHeadquarters)**: [Seated Neutral Overhead Press](https://www.youtube.com/watch?v=7oH0algsdww)
+- **[The Physical Therapy and Wellness Channel](https://www.youtube.com/@EWphysicaltherapyandwellness)**: [Barbell Back Squat](https://www.youtube.com/watch?v=ZaSetOZFo-k)
 - **[Three Lakes Physical Therapy](https://www.youtube.com/@threelakesphysicaltherapya927)**: [Cat-Cow → Child's Pose](https://www.youtube.com/watch?v=Kegpy6v-NfA)
+- **[UC Davis Health](https://www.youtube.com/@UCDavisHealth)**: [Lat Pulldown](https://www.youtube.com/watch?v=oMJmAHRZXBk)
 - **[Wade Bass](https://www.youtube.com/@Tglcoach)**: [Tibialis Raises](https://www.youtube.com/watch?v=OPEuhclsTUQ)
 <!-- credits:end -->
 

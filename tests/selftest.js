@@ -368,6 +368,7 @@
   // A plan that isn't the example: other amounts, every newer exercise, a stretch day and an activity day
   const USER_PLAN = "v1/t:Test-Plan/mon:Full-Body:sarow.4x6-8,planktaps.2x20s,suitcase.2x60,boxsquat.5x15-20,couch.1x15s/tue:Batch-1-A:bwsquat.3x10,gobletsquat.2x8-10,splitsquat.2x8,inclinepushup.2x10,pushup.2x8,bandpulldown.2x12-15"
     + "/wed:Walk:walk.30m/thu:Batch-1-B:bandrow.2x12,glutebridge.2x12,deadbug.2x8,birddog.2x8,sideplank.2x30s,wallslide.2x10"
+    + "/fri:Batch-2:legpress.2x10,latpulldown.2x10-12,cablerow.2x10,chestpress.2x10,bbsquat.2x6-8,deadlift.2x5,benchpress.2x6-8,ohp.2x6-8,bbrow.2x8-10"
     + "/sat:Stretch:pigeon.2x30s,hamstring.1x15s";
 
   async function run({ days = Plans.current.days.map((_, i) => i), previews = true, layout = true } = {}) {
