@@ -97,7 +97,9 @@ Each day is `mon`…`sun`, a name, then exercises as `id.SETSxREPS` (or a range 
 ```js
 rdl: {
   name: "Romanian Deadlift", sets: 3, reps: "8–10", unit: "reps", rest: 90,   // defaults; plans set their own
-  equip: "dumbbells", about: "hamstrings, glutes; no stress on the knee",    // what the AI sees
+  equip: "dumbbells", type: "hinge", level: "intermediate",                  // what the AI sees
+  easyOn: ["knees"], loads: ["lowerback"], easier: ["slbridge", "sumodl"],
+  muscles: { main: ["hams", "glutes"], help: ["lowerback", "forearms", "adductors"] },
   key: "Hinge at the hips with soft knees",               // the Focus: the one thing that matters most
   cues: ["Stand tall with your chest up and core tight",    // in the order the demo shows them
          "Push your hips back as if touching a wall behind you", "..."],
@@ -106,7 +108,7 @@ rdl: {
 },
 ```
 
-Holds use `time: 30` (seconds) instead of `reps`. Add `perSide: true` for one side at a time, `kind: "stretch"` for stretches, and `voice: true` to a video when someone talks in it.
+Holds use `time: 30` (seconds) instead of `reps`. Add `perSide: true` for one side at a time, `type: "stretch"` for stretches, and `voice: true` to a video when someone talks in it.
 
 ### The coach's voice
 

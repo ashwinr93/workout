@@ -28,7 +28,7 @@ Live: https://ashwinr93.github.io/workout/ (branch `main`). Staging: https://ash
 | `README.md` | Public story, usage tips and "make it yours" guide — keep it true when behaviour changes; re-run `screenshots.mjs` after visual changes |
 
 ### Exercise data (`EX` in `library.js`)
-`name`, `sets?`, `reps`+`unit` **or** `time` (seconds) — defaults, a plan sets its own — `perSide?`, `measure?` (`"m"`: reps are metres), `rest`, `equip` + `about` (short; the AI prompt lists them), `kind?` (`"stretch"`), `muscles` (`{ main, help }`, names from `MUSCLES`; for stretches, what's stretched; a variant demo can override), `key` (the one cue that matters most → "Focus"), `cues` (in the order the demo shows them), `stop` (safety), `videos` (main first, then alternates: `{ id, label?, start?, end?, voice?, name?, key?, cues?, stop? }`). `voice: true` means someone talks in the demo; `name`/`key`/`cues`/`stop` on a video make it a variant with its own text.
+`name`, `sets?`, `reps`+`unit` **or** `time` (seconds) — defaults, a plan sets its own — `perSide?`, `measure?` (`"m"`: reps are metres), `rest`, `equip`, `type` (movement pattern from `TYPES`; `"stretch"` for stretches), `level` (beginner | intermediate), `easyOn` / `loads` (joints from `JOINTS`, **verified against published biomechanics / physio guidance — never guessed**), `easier?` / `harder?` (symmetric), `muscles` (`{ main, help }`, names from `MUSCLES`; for stretches, what's stretched; a variant demo can override these and `level`/`easyOn`/`loads`), `key` (the one cue that matters most → "Focus"), `cues` (in the order the demo shows them), `stop` (safety), `videos` (main first, then alternates: `{ id, label?, start?, end?, voice?, name?, key?, cues?, stop? }`). `voice: true` means someone talks in the demo; `name`/`key`/`cues`/`stop` on a video make it a variant with its own text.
 
 ## Product rules (decided with the owner — keep them)
 - **One sound at a time.** `Sound.mode` is `coach` | `video` | `off`. Coach is the default at the start of every workout/preview; Video lasts only for that session. On a demo with no voice, the coach speaks even in Video mode. Unmuting with YouTube's own speaker switches to Video. The app never mutes a video on a guess.
@@ -71,5 +71,5 @@ Setup (if the venv/models are gone — they were kept in `/private/tmp/claude-50
 2. `node tests/e2e/ad-scan.mjs --talk <ids>` — reject any "AD"; the output tells you which have a voice (`voice: true`).
 3. Check intro/outro frames and set `start`/`end`; check the cues match what the demo does.
 4. `node tools/credits.mjs` to update the README credits.
-5. Fill in `equip`/`about` (and `kind: "stretch"` for stretches) so the AI prompt describes it; record its clips (`make_audio.py`).
+5. Fill in `equip`, `type`, `level`, `easyOn`/`loads` (check each joint claim against a published source), `easier`/`harder` and `muscles` so the AI prompt describes it; record its clips (`make_audio.py`).
 6. Run the tests.

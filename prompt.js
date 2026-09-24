@@ -22,12 +22,23 @@ const AI_CHATS = [
 const chatLink = (ai, text) => (ai.paste ? ai.url : ai.url + encodeURIComponent(text));
 
 function coachPrompt(current) {
+  const joints = (list) => list.map((j) => JOINTS[j]).join(", ");
   const line = (k) => {
     const ex = EX[k], how = ex.time ? "hold, seconds" : ex.measure === "m" ? "carry, metres" : ex.perSide || /each side/.test(ex.unit) ? "reps each side" : "reps";
-    return `${k} - ${ex.name} (${how}) - ${ex.equip} - ${ex.about}`;
+    // a demo variant can be easier or harder than the main one (goblet vs sumo): give the range
+    const levels = [...new Set(ex.videos.map((_, vi) => variant(k, vi).level))].sort();
+    // joints every version loads, then what a particular version adds ("pigeon version also loads knees")
+    const vs = ex.videos.map((_, vi) => variant(k, vi)), common = vs[0].loads.filter((j) => vs.every((v) => v.loads.includes(j)));
+    const extra = vs.map((v) => [v.name, v.loads.filter((j) => !common.includes(j))]).filter(([, l]) => l.length)
+      .map(([n, l]) => `${n.toLowerCase()} version ${common.length ? "also " : ""}loads ${joints(l)}`);
+    return [`${k} - ${ex.name} (${how})`, `${TYPES[ex.type]}, ${levels.join(" to ")}`,
+      `works ${muscleList(ex.muscles.main).toLowerCase()}`,
+      ex.easyOn.length ? `easy on ${joints(ex.easyOn)}` : "", common.length ? `loads ${joints(common)}` : "", ...extra,
+      `needs ${ex.equip}`,
+      ex.easier ? `easier: ${ex.easier.join(", ")}` : "", ex.harder ? `harder: ${ex.harder.join(", ")}` : ""].filter(Boolean).join(" - ");
   };
   const keys = Object.keys(EX).filter((k) => !WARMUP.includes(k));
-  const strength = keys.filter((k) => EX[k].kind !== "stretch"), stretches = keys.filter((k) => EX[k].kind === "stretch");
+  const strength = keys.filter((k) => EX[k].type !== "stretch"), stretches = keys.filter((k) => EX[k].type === "stretch");
   const acts = Object.entries(ACTIVITIES).map(([k, a]) => `${k} (${a.name.toLowerCase()})`).join(", ");
   const R = DOSE.reps, H = DOSE.hold;
   const example = `${SITE}#v1/t:Home-Strength/mon:Full-Body-A:boxsquat.3x10-12,sarow.3x10,slbridge.2x10,planktaps.3x30s`
@@ -50,7 +61,7 @@ If I mention chest pain, dizziness or fainting, recent surgery, a new injury, or
 
 STEP 2 - BUILD THE PLAN
 Use ONLY exercises from this list, by their id. Never invent one, even if it would suit me better. If the list can't cover something I need, tell me.
-Format: id - name (how it's counted) - equipment - notes
+Format: id - name (how it's counted) - movement, level - main muscles - joints it is easy on / puts load on - equipment - easier / harder alternatives
 
 Strength
 ${strength.map(line).join("\n")}
@@ -65,9 +76,9 @@ The app adds a 5-minute warm-up before and a short cool-down stretch after every
 Guidelines
 - Aim for at least 2 strength days a week, plus cardio: 150 to 300 minutes a week of brisk activity (walks count). If I want to lose weight, lean toward the higher end and keep the strength days, as they hold on to muscle.
 - 3 to 6 exercises on a strength day; fit my session length (about 5 minutes per strength exercise, 2 per stretch).
-- Balance pushing and pulling; at least as many pulls as pushes if my shoulders bother me.
-- Steer around anything I said hurts, and tell me why you chose what you did.
-- Beginners: fewer sets, easier choices.
+- Balance the week's movements: cover squat or lunge, hinge, push, pull and core across the week, and at least as many pulls as pushes (more pulls if my shoulders bother me).
+- For anything I said hurts, avoid exercises that load that joint and prefer ones that are easy on it. Tell me why you chose what you did.
+- Beginners: beginner-level exercises, fewer sets, and the easier alternative where there is one.
 - Sets ${DOSE.sets.min}-${DOSE.sets.max}. Reps: a number from ${R.min} to ${R.max}, or one of these ranges: ${R.ranges.map((r) => r.replace("–", "-")).join(", ")}. For "each side" exercises, reps are per side. Holds: ${H.min} to ${H.max} seconds, in steps of ${H.step}. Carries: ${DOSE.metres.join(", ")} metres. Activities: minutes, in steps of 5.
 - Only plan the days I said I can train; leave the other days out.
 

@@ -153,7 +153,7 @@ function parseDay(part, fixes) {
   }
   if (activity && items.length) problems.push(`${DAY_NAMES[d]}: an activity day can't also have exercises`);
   if (!activity && !items.length && !problems.length) problems.push(`${DAY_NAMES[d]}: has no exercises`);
-  const kind = activity ? "activity" : items.every((i) => EX[i.key].kind === "stretch") ? "stretch" : "workout";
+  const kind = activity ? "activity" : items.every((i) => EX[i.key].type === "stretch") ? "stretch" : "workout";
   const fallback = activity ? ACTIVITIES[activity.key].name : kind === "stretch" ? "Stretching" : "Workout";
   return { day: { d, key: WEEKDAYS[d], name: name || fallback, kind, items, activity }, problems };
 }

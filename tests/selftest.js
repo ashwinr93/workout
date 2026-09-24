@@ -310,6 +310,26 @@
     return { name: "Muscle map", steps: 0, lines: 0, fails };
   }
 
+  /* ---------- what the AI knows about each exercise: movement, level, joints, easier/harder */
+  function detailsCheck() {
+    const fails = [], LEVELS = ["beginner", "intermediate"];
+    for (const [key, ex] of Object.entries(EX)) {
+      if (!TYPES[ex.type]) fails.push(`${key}: unknown type "${ex.type}"`);
+      ex.videos.forEach((_, vi) => {
+        const v = variant(key, vi), where = `${key}${vi ? ` (demo ${vi + 1})` : ""}`;
+        if (!LEVELS.includes(v.level)) fails.push(`${where}: level must be beginner or intermediate`);
+        for (const j of [...(v.easyOn || []), ...(v.loads || [])]) if (!JOINTS[j]) fails.push(`${where}: unknown joint "${j}"`);
+        if (!Array.isArray(v.easyOn) || !Array.isArray(v.loads)) fails.push(`${where}: easyOn and loads must be lists`);
+      });
+      for (const [dir, back] of [["easier", "harder"], ["harder", "easier"]]) for (const other of ex[dir] || []) {
+        if (!EX[other]) fails.push(`${key}.${dir}: no exercise "${other}"`);
+        else if (WARMUP.includes(other) || WARMUP.includes(key)) fails.push(`${key}.${dir}: warm-ups aren't a progression`);
+        else if (!(EX[other][back] || []).includes(key)) fails.push(`${key}.${dir} has ${other}, but ${other}.${back} doesn't have ${key}`);
+      }
+    }
+    return { name: "Exercise details", steps: 0, lines: 0, fails };
+  }
+
   /* ---------- plan links, the AI message, and a recording for everything a plan can ask for */
   function planCheck() {
     const fails = [], check = (ok, msg) => { if (!ok) fails.push(msg); };
@@ -356,6 +376,7 @@
     await Figure.load();                                        // badges and figures are part of the layout
     results.push(wordingCheck());
     results.push(await safely("Muscle map", muscleCheck));
+    results.push(await safely("Exercise details", async () => detailsCheck()));
     results.push(await safely("Plan links & AI message", async () => planCheck()));
     const sessions = async (plan, which) => {
       for (const i of which) {
@@ -392,6 +413,6 @@
     return SELFTEST.report;
   }
 
-  window.SELFTEST = { run, layoutCheck, wordingCheck, planCheck, done: false, report: "", timers };
+  window.SELFTEST = { run, layoutCheck, wordingCheck, planCheck, detailsCheck, done: false, report: "", timers };
   if (QUERY.get("selftest") !== "manual") rawTimeout(() => run(), 300);
 })();
