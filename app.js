@@ -692,22 +692,18 @@ const UI = {
     $("plans-goals").innerHTML = chip("", "All").replace('aria-pressed="false"', `aria-pressed="${!this.goal}"`) + Object.entries(GOALS).map(([k, n]) => chip(k, n)).join("");
     const lvl = (l) => (l === "beginner" ? "Beginner" : "Intermediate");
     const list = PROGRAMS.filter((p) => !this.goal || p.goals.includes(this.goal));
-    // each plan is a block in its goal's colour, with the muscles its week works
+    // each plan is a photo card, shaded in its goal's colour behind the text
     $("plans-list").innerHTML = list.map((p) => {
-      const plan = this.programPlan(p), mine = Plans.current?.link === plan.link, m = this.planMuscles(plan);
-      return `<button class="plan-tile goal-${p.goals[0]}" data-id="${p.id}" aria-label="${esc(`${plan.title}: ${p.goals.map((g) => GOALS[g]).join(", ")}`)}">${Figure.slot("full", m, muscleList(m.main))}
-        <span class="plan-tile-text"><b>${esc(plan.title)}</b>
+      const plan = this.programPlan(p), mine = Plans.current?.link === plan.link;
+      return `<button class="plan-tile goal-${p.goals[0]}" data-id="${p.id}">
+        <img class="plan-photo" src="${photoUrl(p, 720)}" alt="" loading="lazy">
+        <span class="plan-tile-text"><span class="plan-goal">${esc(p.goals.map((g) => GOALS[g]).join(" · "))}</span><b>${esc(plan.title)}</b>
         <span class="plan-tile-meta">${lvl(p.level)} · ${esc(this.programDays(plan))} · ${p.mins} min</span>
         <span class="plan-tile-meta">${esc(p.gear)}</span></span>${mine ? '<span class="mine">Your week</span>' : ""}</button>`;
     }).join("") + `<div class="plan-tile create-tile"><b>None of these quite fit?</b>
         <span class="muted">Tell an AI your goals, any aches and what you train with, and it builds a plan for you.</span>
         <button class="link-accent" id="plans-create-2">Create your own with AI ›</button></div>`;
     $("plans-create-2").onclick = () => this.create(false);
-    Figure.paint($("plans-list"));
-  },
-  // What a plan's week mainly works (its exercises' main muscles)
-  planMuscles(plan) {
-    return { main: Figure.session(plan.days.flatMap((d) => d.items || [])).main, help: [] };
   },
   programPlan(p) {
     if (p.link === EXAMPLE_PLAN.link) return examplePlan();
@@ -727,7 +723,8 @@ const UI = {
     // each day opens its day screen (muscles, exercises to preview, even a try-out session)
     const dayCard = (d, i) => `<button class="card plan-day" data-day="${i}"><span><span class="label">${DAY_NAMES[d.d]}</span><b>${esc(d.name)}</b>
       <span class="muted">${esc(d.kind === "activity" ? this.daySummary(d) : d.items.map((x) => EX[x.key].name).join(" · "))}</span></span><span class="chev">›</span></button>`;
-    $("plan-view-body").innerHTML = `<h1 class="title">${esc(plan.title)}</h1>
+    $("plan-view-body").innerHTML = `<div class="plan-hero goal-${p.goals[0]}"><img class="plan-photo" src="${photoUrl(p, 1200)}" alt="">
+        <h1 class="title">${esc(plan.title)}</h1></div>
       <div class="ex-tags"><span class="tag">${lvl}</span><span class="tag">${esc(this.programSummary(p, plan))}</span></div>
       <p class="card-text">${esc(p.about)}</p>
       ${plan.days.map(dayCard).join("")}

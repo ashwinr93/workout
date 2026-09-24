@@ -155,23 +155,29 @@ h1, h2, h3, p { margin: 0; }
 .tag { padding: 3px 10px; border-radius: 999px; background: var(--panel-2); color: var(--muted); font-size: 13px; }
 .plans-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
 .link-accent { color: var(--accent); font-weight: 650; font-size: 15px; }
-.plan-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; margin-top: 6px; }
-/* plan cards: a colour block per goal, the week's muscles tinted to match */
+.plan-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 10px; margin-top: 6px; }
+/* plan cards: a photo, shaded from the left in the plan's goal colour so the text reads on it */
 .plan-cards { grid-auto-rows: 1fr; }
-.goal-strong { --g1: #1f7a52; --g2: #0f3d2a; --tint: #9fffd0; }
-.goal-lose   { --g1: #c2502c; --g2: #5a2213; --tint: #ffd0bd; }
-.goal-move   { --g1: #2c62a6; --g2: #132c4d; --tint: #cfe6ff; }
-.plan-tile { position: relative; display: flex; align-items: center; gap: 14px; text-align: left; border-radius: var(--radius); padding: 14px 16px; color: #fff;
-  background: linear-gradient(135deg, var(--g1), var(--g2)); }
-.plan-tile .fig.full { --h: 96px; }
-.plan-tile .fig path.body { fill: rgba(0, 0, 0, .28); }
-.plan-tile .fig path.main { fill: var(--tint); }
-.plan-tile-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.plan-tile-text b { font-size: 17px; line-height: 1.2; margin-bottom: 2px; }
-.plan-tile-meta { font-size: 13px; color: rgba(255, 255, 255, .78); line-height: 1.35; }
-.plan-tile .mine { position: absolute; top: 10px; right: 10px; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(255, 255, 255, .92); color: var(--g2); }
-.plan-tile:has(.mine) .plan-tile-text b { padding-right: 64px; }   /* clear of the corner badge */
-.create-tile { flex-direction: column; align-items: stretch; gap: 4px; color: var(--text); background: var(--panel); border: 1px dashed #3a4250; }
+.goal-strong { --shade: 12 52 36; }
+.goal-lose   { --shade: 74 30 14; }
+.goal-move   { --shade: 16 40 74; }
+.plan-tile, .plan-hero { position: relative; overflow: hidden; border-radius: var(--radius); color: #fff; background: rgb(var(--shade)); isolation: isolate; }
+.plan-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; z-index: -2; }
+.plan-tile .plan-photo { left: auto; width: 62%; }   /* the photo fills the right; the text sits on the colour */
+.plan-tile::before, .plan-hero::before { content: ""; position: absolute; inset: 0; z-index: -1;
+  background: linear-gradient(90deg, rgb(var(--shade)) 38%, rgb(var(--shade) / .55) 52%, rgb(var(--shade) / 0) 70%); }
+.plan-tile { display: flex; align-items: flex-end; min-height: 168px; padding: 18px; text-align: left; }
+.plan-tile-text { display: flex; flex-direction: column; gap: 3px; max-width: 58%; text-shadow: 0 1px 8px rgb(var(--shade) / .8); }
+.plan-goal { font-size: 12px; font-weight: 700; letter-spacing: .04em; color: rgba(255, 255, 255, .85); margin-bottom: 2px; }
+.plan-tile-text b { font-size: 20px; line-height: 1.15; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 4px; }
+.plan-tile-meta { font-size: 13px; color: rgba(255, 255, 255, .82); line-height: 1.35; }
+.plan-tile .mine { position: absolute; top: 12px; right: 12px; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: rgba(255, 255, 255, .95); color: rgb(var(--shade)); }
+/* a plan's preview opens on its photo */
+.plan-hero { display: flex; align-items: flex-end; min-height: 190px; padding: 18px; margin-bottom: 10px; }
+.plan-hero::before { background: linear-gradient(0deg, rgb(var(--shade) / .92) 0%, rgb(var(--shade) / .35) 55%, rgb(var(--shade) / 0) 100%); }
+.plan-hero .title { margin: 0; color: #fff; }
+.create-tile { flex-direction: column; justify-content: center; align-items: stretch; gap: 4px; color: var(--text); background: var(--panel); border: 1px dashed #3a4250; }
+.create-tile::before { content: none; }
 .create-tile .link-accent { align-self: flex-start; margin-top: 6px; }
 .plan-day { margin-top: 10px; width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; }
 .plan-day > span:first-child { flex: 1; min-width: 0; }

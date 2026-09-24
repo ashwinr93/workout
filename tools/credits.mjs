@@ -1,4 +1,5 @@
-// Rebuilds the "Demo videos" credits in README.md from the videos in library.js.
+// Rebuilds the "Demo videos" credits in README.md from the videos in library.js, plus the
+// plan photos in programs.js.
 // Channel names come from YouTube's public oEmbed endpoint.
 //   node tools/credits.mjs
 import fs from "node:fs";
@@ -40,9 +41,14 @@ const lines = [...channels.entries()]
     return `- **[${md(name)}](${url})**: ${vids}`;
   });
 
+// the ready-made plans' card photos (programs.js)
+const photos = ctx.PROGRAMS.map((p) => `- [${md(p.title || ctx.examplePlan().title)}](https://unsplash.com/photos/${p.photo.page}) by ${md(p.photo.by)}`);
+
 const section = [START,
   `Every demo is the creator's own video, played through YouTube's embedded player (start and end points only; nothing is downloaded or edited). Thank you to these ${channels.size} channels:`,
-  "", ...lines, END].join("\n");
+  "", ...lines, "",
+  "The ready-made plans' photos come from [Unsplash](https://unsplash.com) (free to use under the [Unsplash License](https://unsplash.com/license)) and load from Unsplash's servers. Thank you to these photographers:",
+  "", ...photos, END].join("\n");
 
 const readme = fs.readFileSync(README, "utf8");
 const i = readme.indexOf(START), j = readme.indexOf(END);

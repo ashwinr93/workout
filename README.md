@@ -196,6 +196,18 @@ Every demo is the creator's own video, played through YouTube's embedded player 
 - **[UC Davis Health](https://www.youtube.com/@UCDavisHealth)**: [Lat Pulldown](https://www.youtube.com/watch?v=oMJmAHRZXBk)
 - **[Wade Bass](https://www.youtube.com/@Tglcoach)**: [Tibialis Raises](https://www.youtube.com/watch?v=OPEuhclsTUQ)
 - **[YMCA Calgary](https://www.youtube.com/@ymcacalgary)**: [Seated Leg Curl](https://www.youtube.com/watch?v=TAbolZJ6Lg4)
+
+The ready-made plans' photos come from [Unsplash](https://unsplash.com) (free to use under the [Unsplash License](https://unsplash.com/license)) and load from Unsplash's servers. Thank you to these photographers:
+
+- [Start Here: Full Body](https://unsplash.com/photos/funsezUxxe4) by Vitaly Gariev
+- [Lose Weight at Home](https://unsplash.com/photos/oLStrTTMz2s) by bruce mars
+- [Gym First Steps](https://unsplash.com/photos/SMSpk9fprcU) by Nate Johnston
+- [Build Muscle: Dumbbells](https://unsplash.com/photos/1P2iWpwuNAs) by Vitaly Gariev
+- [Build Muscle: Gym](https://unsplash.com/photos/3jAN9InapQI) by Cathy Pham
+- [Barbell Strength Basics](https://unsplash.com/photos/IYLLF511aOY) by Land O'Lakes, Inc.
+- [Desk Worker: Posture and Back](https://unsplash.com/photos/07mA-tEIJ6A) by Vitaly Gariev
+- [Joint-Friendly Strength & Flexibility](https://unsplash.com/photos/z9VbZ4tM3Zc) by Michael Faix
+- [Mobility and Recovery](https://unsplash.com/photos/EUk6LRg9alk) by Vitaly Gariev
 <!-- credits:end -->
 
 Changed the videos? `node tools/credits.mjs` rebuilds this list.

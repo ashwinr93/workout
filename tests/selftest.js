@@ -382,6 +382,7 @@
       const r = parsePlan(p.link);
       check(!r.problems.length && !r.fixes.length && r.plan?.link === p.link, `${p.id}: plan link isn't clean (${[...r.problems, ...r.fixes].join("; ")})`);
       check(p.goals.every((g) => GOALS[g]) && ["beginner", "intermediate"].includes(p.level), `${p.id}: goals or level missing`);
+      check(p.photo?.img && p.photo.by && p.photo.page, `${p.id}: no card photo (with its photographer, for the README credits)`);
     }
     const mine = Plans.current;
     Plans.none();
