@@ -994,11 +994,13 @@ const UI = {
         ${hold ? `<div class="hold" id="hold"><span class="clock" id="clock"></span><span class="state" id="hold-state"></span></div>`
                : `<div class="target">${this.target(st.dose)}</div>`}</div>
         ${Figure.slot("badge", v.muscles, muscleList(v.muscles.main))}</div>
+      <i class="grow"></i>
       <div class="focus"><div class="label">Focus</div><p>${esc(v.key)}</p></div>
       <div class="form">
         <ul class="cues" id="cues">${v.cues.map((c, i) => `<li${i ? "" : ' class="on"'}>${esc(c)}</li>`).join("")}</ul>
         <div class="dots" id="dots">${v.cues.map((_, i) => `<i${i ? "" : ' class="on"'}></i>`).join("")}</div>
       </div>
+      <i class="grow"></i>
       <p class="safety">${esc(v.stop)}</p>
       </div>
       <div class="controls">

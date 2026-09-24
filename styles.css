@@ -213,9 +213,12 @@ h1, h2, h3, p { margin: 0; }
 
 /* coaching panel: content that never squeezes (scrolls if it must) + buttons pinned to the bottom */
 .panel { display: flex; flex-direction: column; min-height: 0; overflow: hidden;
-  padding: clamp(10px, 2.6vh, 26px) clamp(14px, 2.2vw, 28px); gap: clamp(6px, 1.6vh, 14px); }
+  padding: clamp(10px, 2.6vh, 26px) clamp(14px, 2.2vw, 28px); --gap: clamp(6px, 1.6vh, 14px); gap: var(--gap); }
 .panel-body { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: inherit; }
 .panel-body > * { flex-shrink: 0; }
+/* between the groups (what · how · safety): room that grows with the free space, up to a limit,
+   so a tall panel spreads its content instead of leaving one empty block above the buttons */
+.panel-body > .grow { flex: 1 0 0; max-height: clamp(10px, 6vh, 56px); margin-top: calc(-1 * var(--gap)); }   /* a full panel: no extra space */
 .context { font-size: clamp(12px, 2.4vh, 14px); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
 .context .side { color: var(--text); }
 .context.rest { color: var(--rest); }
@@ -275,7 +278,7 @@ h1, h2, h3, p { margin: 0; }
   .tool { min-height: 34px; }
   .sound { min-width: 56px; }
   .stage { grid-template-columns: 1.12fr 1fr; }
-  .panel { padding: 6px 14px; gap: 4px; }
+  .panel { padding: 6px 14px; --gap: 4px; }
   .context { font-size: 11px; }
   .name { font-size: 22px; }
   .target { font-size: 14px; padding: 3px 12px; }
@@ -310,7 +313,7 @@ h1, h2, h3, p { margin: 0; }
   .tool { min-height: 44px; min-width: 44px; }
   .stage { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
   .video { aspect-ratio: 16/9; }
-  .panel { padding: 12px 16px 10px; gap: 8px; }
+  .panel { padding: 12px 16px 10px; --gap: 8px; }
   .name { font-size: 26px; }
   .cues li { display: none; padding: 0; }
   .cues li.on { display: block; }
