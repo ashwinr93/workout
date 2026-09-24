@@ -109,6 +109,7 @@ h1, h2, h3, p { margin: 0; }
 .fig.full svg { height: 100%; width: calc(var(--h) * 0.41); flex: none; }
 .main-muscles { color: var(--accent); font-weight: 600; }
 .help-muscles { color: var(--muted); font-size: 14px; margin-top: 4px; }
+.main-muscles .dot, .help-muscles .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; vertical-align: 1px; }
 .day-muscles { display: flex; align-items: center; gap: 18px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; }
 .fig-col { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: none; }
 .fig-toggle { font-size: 12px; color: var(--faint); }
@@ -236,8 +237,11 @@ h1, h2, h3, p { margin: 0; }
   .upnext h3 { font-size: 18px; }
   .head { column-gap: 10px; }
   .head .fig.badge, .upnext .fig.badge { width: 46px; height: 46px; }
-  .finished { gap: 6px; }
-  .finished .fig.full { --h: 38vh; margin: 0; }
+  /* "Workout complete": the figure beside the text, which stacks in the second column */
+  .finished { display: grid; grid-template-columns: auto auto; grid-auto-flow: dense; align-content: center; justify-content: center;
+    justify-items: start; column-gap: 28px; row-gap: 6px; text-align: left; }
+  .finished > * { grid-column: 2; }
+  .finished .fig.full { --h: 62vh; grid-column: 1; grid-row: 1 / span 5; align-self: center; margin: 0; }
 }
 
 /* ------------------------------------------------------------------ Phone, portrait */

@@ -539,7 +539,9 @@ document.addEventListener("visibilitychange", () => {
    empty slot (Figure.slot) and paint() fills every slot once the figure chosen on this device
    has loaded, and again when the choice changes. */
 const Figure = {
-  COLORS: { body: "#6b7280", main: "#3ddc97", help: "#1f9e6a" },
+  // Three tones that stay apart on a small figure: bright main, mid helping, a body grey dark
+  // enough that the helping green doesn't blend into it
+  COLORS: { body: "#4b5260", main: "#3ddc97", help: "#1d8f62" },
   kind: store.get("figure", "male") === "female" ? "female" : "male",
   data: null, fetched: {},                        // kind → promise of that figure
 
@@ -761,7 +763,11 @@ Figure.load(); };
     const s = Figure.session(entries), other = Figure.kind === "male" ? "female" : "male";
     return `<div class="day-muscles"><div class="fig-col">${Figure.slot("full", s, muscleList(s.main))}
       <button class="link fig-toggle" data-kind="${other}">Show ${other} figure</button></div>
-      <div><p class="main-muscles">${esc(muscleList(s.main))}</p>${s.help.length ? `<p class="help-muscles">${esc(muscleList(s.help))}</p>` : ""}</div></div>`;
+      <div>${this.muscleKey("Main", "main", s.main)}${s.help.length ? this.muscleKey("Helping", "help", s.help) : ""}</div></div>`;
+  },
+  // One line of the figure's colour key: a dot in the muscles' colour, what they are, which ones
+  muscleKey(label, tone, keys) {
+    return `<p class="${tone}-muscles"><i class="dot" style="background:${Figure.COLORS[tone]}"></i><b>${label}:</b> ${esc(muscleList(keys))}</p>`;
   },
   section(label, entries) { return entries.length ? `<div class="label section-label">${label}</div><div class="ex-list">${entries.map((e) => this.exRow(e)).join("")}</div>` : ""; },
   toggle(id, on, title, sub) {
@@ -933,7 +939,7 @@ Figure.load(); };
     $("finished").innerHTML = `<h1 class="title">Workout complete</h1>
       <p class="muted">${esc(Workout.label)} · ${mins} min</p>
       ${Figure.slot("full", worked, muscleList(worked.main))}
-      <p class="main-muscles">${esc(muscleList(worked.main))}</p>
+      <div class="muscle-key">${this.muscleKey("Main", "main", worked.main)}${worked.help.length ? this.muscleKey("Helping", "help", worked.help) : ""}</div>
       <button class="big-btn" id="done-close">Back to the plan</button>
       ${Plans.current.example && !Workout.preview ? '<button class="link" id="done-create">Create your own plan</button>' : ""}`;
     $("done-close").onclick = () => { Workout.day = null; Workout.exit(); };
