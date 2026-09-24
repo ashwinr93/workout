@@ -535,6 +535,14 @@ document.addEventListener("visibilitychange", () => {
 });
 
 const SWAP_ICON = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4 3 8l4 4"/><path d="M3 8h14"/><path d="m17 20 4-4-4-4"/><path d="M21 16H7"/></svg>`;
+// Icons for the plan menu (outline, like the swap icon)
+const MENU_ICON = (d) => `<span class="menu-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg></span>`;
+const MENU_ICONS = {
+  adjust: MENU_ICON('<path d="M4 6h10"/><path d="M18 6h2"/><circle cx="16" cy="6" r="2"/><path d="M4 12h4"/><path d="M12 12h8"/><circle cx="10" cy="12" r="2"/><path d="M4 18h12"/><path d="M20 18h0"/><circle cx="18" cy="18" r="2"/>'),
+  ai: MENU_ICON('<path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>'),
+  share: MENU_ICON('<path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/>'),
+  swap: MENU_ICON('<path d="M7 4 3 8l4 4"/><path d="M3 8h14"/><path d="m17 20 4-4-4-4"/><path d="M21 16H7"/>'),
+};
 
 /* ============================================================ Figure: the muscle map
    Body art traced from the owner's images (figures/<male|female>.json, see design/README.md):
@@ -851,13 +859,34 @@ const UI = {
     const n = day.items.length;
     return `${n} ${day.kind === "stretch" ? "stretch" : "exercise"}${n === 1 ? "" : day.kind === "stretch" ? "es" : "s"}`;
   },
-  // Under the days: change or share your week, or switch to another plan (the Plans tab, where your
-  // own plans and the ready-made ones are)
+  // Under the days: one row that opens a sheet to change your week with AI, share it, or switch plan
   planCard() {
-    $("plan-card").innerHTML = `<div class="card-actions" style="margin-top:0"><button class="tool" id="pc-change">Change this week with AI</button><button class="tool" id="pc-share">Copy link</button><button class="tool" id="pc-switch">Switch plan</button><span class="note" id="pc-status"></span></div>`;
-    $("pc-change").onclick = () => this.create(true);
-    $("pc-share").onclick = async () => { $("pc-status").textContent = (await copyText(Plans.link())) ? "Link copied" : "Couldn't copy"; };
-    $("pc-switch").onclick = () => this.tab("plans");
+    $("plan-card").innerHTML = `<button class="menu-row" id="pc-open">${MENU_ICONS.adjust}<span><b>Change or share this plan</b>
+      <small>Adjust it with AI, share it, or switch</small></span><span class="chev">›</span></button>`;
+    $("pc-open").onclick = () => this.planMenu();
+  },
+  planMenu() {
+    const opt = (id, icon, title, sub) => `<button class="menu-opt" id="${id}">${MENU_ICONS[icon]}<span><b>${title}</b><small>${sub}</small></span></button>`;
+    $("plan-menu-title").textContent = Plans.current.title;
+    $("plan-menu-status").textContent = "";
+    $("plan-menu-opts").innerHTML = opt("pm-change", "ai", "Change it with AI", "Your AI gets this plan and asks what to change")
+      + opt("pm-share", "share", "Share", "Send the link: it opens this exact plan")
+      + opt("pm-switch", "swap", "Switch plan", "Your own plans and the ready-made ones");
+    const close = () => { $("plan-menu").hidden = true; };
+    $("pm-change").onclick = () => { close(); this.create(true); };
+    $("pm-switch").onclick = () => { close(); this.tab("plans"); };
+    // the phone's share sheet where there is one (Messages, WhatsApp, AirDrop…); otherwise copy the link
+    $("pm-share").onclick = async () => {
+      const url = Plans.link();
+      if (navigator.share) {
+        try { await navigator.share({ title: Plans.current.title, url }); close(); return; }
+        catch (e) { if (e.name === "AbortError") return; }
+      }
+      $("plan-menu-status").textContent = (await copyText(url)) ? "Link copied" : "Couldn't copy the link";
+    };
+    $("plan-menu-cancel").onclick = close;
+    $("plan-menu").onclick = (e) => { if (e.target === $("plan-menu")) close(); };   // tap outside the sheet
+    $("plan-menu").hidden = false;
   },
 
   /* ---------- create or change a plan with an AI */

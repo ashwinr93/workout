@@ -24,7 +24,15 @@
     <h1 class="title" id="plan-title"></h1>
     <p class="subtitle" id="plan-subtitle"></p>
     <div class="days" id="days"></div>
-    <div class="card" id="plan-card"></div>
+    <div id="plan-card"></div>
+    <div class="sheet-wrap" id="plan-menu" hidden>
+      <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="plan-menu-title">
+        <div><h2 id="plan-menu-title"></h2><p class="muted">Your week</p></div>
+        <div class="menu-opts" id="plan-menu-opts"></div>
+        <p class="note" id="plan-menu-status" aria-live="polite"></p>
+        <button class="ghost-btn" id="plan-menu-cancel">Cancel</button>
+      </div>
+    </div>
     <div class="empty" id="week-empty" hidden>
       <p>You haven't picked a plan yet. Choose a ready-made one, or have an AI build one around your goals.</p>
       <div class="card-actions"><button class="big-btn" id="week-browse">Browse plans</button><button class="ghost-btn" id="week-create">Create your own with AI</button></div>

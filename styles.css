@@ -189,6 +189,18 @@ h1, h2, h3, p { margin: 0; }
 .sheet h2 { font-size: 19px; }
 .sheet .big-btn { min-width: 0; width: 100%; border-radius: 12px; }
 .ghost-btn { padding: 13px; border-radius: 12px; border: 1px solid var(--line); color: var(--text); font-weight: 600; }
+/* My week: one row for changing, sharing or switching the plan, and the sheet it opens */
+.menu-row, .menu-opt { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; }
+.menu-row { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-top: 18px; }
+.menu-row > span:nth-child(2), .menu-opt > span:last-child { flex: 1; min-width: 0; }
+.menu-row b, .menu-opt b { display: block; font-size: 15px; font-weight: 650; }
+.menu-row small, .menu-opt small { display: block; color: var(--muted); font-size: 13px; margin-top: 1px; }
+.menu-row .chev { color: var(--faint); font-size: 18px; }
+.menu-ic { width: 36px; height: 36px; border-radius: 10px; background: var(--panel-2); color: var(--accent); display: flex; align-items: center; justify-content: center; flex: none; }
+.menu-opts { display: flex; flex-direction: column; }
+.menu-opt { padding: 12px 2px; }
+.menu-opt + .menu-opt { border-top: 1px solid var(--line); }
+#plan-menu-status:empty { display: none; }
 .empty { margin-top: 12px; }
 .empty p { color: var(--muted); max-width: 52ch; }
 .empty .big-btn { min-width: 0; }
