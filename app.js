@@ -765,9 +765,11 @@ Figure.load(); };
       <button class="link fig-toggle" data-kind="${other}">Show ${other} figure</button></div>
       <div>${this.muscleKey("Main", "main", s.main)}${s.help.length ? this.muscleKey("Helping", "help", s.help) : ""}</div></div>`;
   },
-  // One line of the figure's colour key: a dot in the muscles' colour, what they are, which ones
+  // One line of the figure's key, in the same colour as those muscles on the figure
   muscleKey(label, tone, keys) {
-    return `<p class="${tone}-muscles"><i class="dot" style="background:${Figure.COLORS[tone]}"></i><b>${label}:</b> ${esc(muscleList(keys))}</p>`;
+    // each name stays whole, and a wrapped line starts with its "·" instead of ending on one
+    const items = keys.map((k) => esc(MUSCLES[k]).replace(/ /g, "&nbsp;")).join(" ·&nbsp;");
+    return `<p class="muscle-line" style="color:${Figure.COLORS[tone]}">${label}: ${items}</p>`;
   },
   section(label, entries) { return entries.length ? `<div class="label section-label">${label}</div><div class="ex-list">${entries.map((e) => this.exRow(e)).join("")}</div>` : ""; },
   toggle(id, on, title, sub) {

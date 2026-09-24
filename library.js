@@ -641,5 +641,5 @@ const MUSCLES = {
   abs: "Abs", obliques: "Obliques", glutes: "Glutes", hipflexors: "Hip flexors", adductors: "Adductors",
   quads: "Quads", hams: "Hamstrings", calves: "Calves", shins: "Shins",
 };
-// ["hams", "glutes"] → "Hamstrings, glutes"
-const muscleList = (keys) => keys.map((k, i) => (i ? MUSCLES[k].toLowerCase() : MUSCLES[k])).join(", ");
+// A list of equal parts, not a sentence: ["hams", "glutes"] → "Hamstrings, Glutes" (or with sep " · ")
+const muscleList = (keys, sep = ", ") => keys.map((k) => MUSCLES[k]).join(sep);
