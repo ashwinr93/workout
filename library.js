@@ -386,7 +386,7 @@ const EX = {
       "Palms face each other, elbows slightly in front of your body",
       "Lower back to shoulder level. Keep your ribs down and don't arch"
     ],
-    stop: "If your shoulder pinches, shorten the range or tilt the bench back a little.",
+    stop: "If your shoulder pinches, shorten the range.",
     videos: [
       { id: "7oH0algsdww", start: 4, voice: true }
     ]
@@ -487,7 +487,7 @@ const EX = {
   dbrevlunge: {
     name: "Reverse Lunges", sets: 3, reps: "10", unit: "reps each side", rest: 90,
     muscles: { main: ["quads", "glutes"], help: ["adductors", "hams", "calves"] },
-    type: "lunge", level: "intermediate", easyOn: ["knees"], loads: ["knees"], easier: ["stepup", "splitsquat"],
+    type: "lunge", level: "intermediate", easyOn: [], loads: ["knees"], easier: ["stepup", "splitsquat"],
     equip: "dumbbells optional", gear: ["bodyweight"],
     key: "Always step backward, never forward",
     why: "Keeps the front shin vertical so there's no twisting force on the knee.",
@@ -532,12 +532,12 @@ const EX = {
   stepup: {
     name: "Step-Ups", sets: 3, reps: "10", unit: "reps each side", rest: 60,
     muscles: { main: ["quads", "glutes"], help: ["hams", "calves", "adductors"] },
-    type: "lunge", level: "beginner", easyOn: ["knees"], loads: ["knees"], harder: ["dbrevlunge", "splitsquat"],
+    type: "lunge", level: "beginner", easyOn: [], loads: ["knees"], harder: ["dbrevlunge", "splitsquat"],
     equip: "bench or sturdy step, dumbbells optional", gear: ["bodyweight"],
     key: "Use a step low enough that your knee is at 90° or less",
     why: "Push through the heel of your leading leg.",
     cues: [
-      "Stand facing a low step, dumbbells at your sides. The box in the demo is higher than you need",
+      "Stand facing a step lower than the one in the demo, dumbbells at your sides",
       "Place your whole foot on the step",
       "Push through that heel to stand tall; don't push off the back foot",
       "Step down slowly. Do all reps on one side, then switch"

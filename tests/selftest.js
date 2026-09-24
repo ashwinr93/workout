@@ -282,6 +282,12 @@
       fails.push(...panelProblems(`rest before ${key}`));
     }
     Workout.exit();
+    // the day card's muscle key stays within the height of the figures beside it
+    for (const p of PROGRAMS) parsePlan(p.link).plan.days.filter((d) => d.kind !== "activity").forEach((day) => {
+      UI.openDay(day);
+      const card = $("day-body").querySelector(".day-muscles"), key = card.querySelector(".muscle-groups").getBoundingClientRect(), fig = card.querySelector(".fig.full").getBoundingClientRect();
+      if (key.height > fig.height + 1) fails.push(`${p.id} ${day.name}: the day card's muscle names run past the figures`);
+    });
     return { name: `Layout ${innerWidth}×${innerHeight}`, steps: 0, lines: 0, fails: [...new Set(fails)] };
   }
 
@@ -328,6 +334,7 @@
         if (!LEVELS.includes(v.level)) fails.push(`${where}: level must be beginner or intermediate`);
         for (const j of [...(v.easyOn || []), ...(v.loads || [])]) if (!JOINTS[j]) fails.push(`${where}: unknown joint "${j}"`);
         if (!Array.isArray(v.easyOn) || !Array.isArray(v.loads)) fails.push(`${where}: easyOn and loads must be lists`);
+        else if (v.easyOn.some((j) => v.loads.includes(j))) fails.push(`${where}: a joint is both easy on and loaded`);
       });
       for (const [dir, back] of [["easier", "harder"], ["harder", "easier"]]) for (const other of ex[dir] || []) {
         if (!EX[other]) fails.push(`${key}.${dir}: no exercise "${other}"`);

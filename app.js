@@ -653,6 +653,7 @@ const Plans = {
   recent() { return REVIEW_MODE ? [] : store.get("plans", []); },
   link(plan = this.current) { return SITE + (plan.example ? "" : "#" + plan.link); },
 };
+addEventListener("resize", () => UI.fitMuscleKey());   // turning the phone changes how much fits
 // A new plan link opened while the app is already open (e.g. tapped in the AI chat)
 window.addEventListener("hashchange", () => {
   const hash = location.hash.slice(1);
@@ -672,6 +673,7 @@ const UI = {
     if (tabbed) this.tabNow = screen;
     for (const b of $("tabbar").querySelectorAll("button")) b.setAttribute("aria-current", b.dataset.tab === screen ? "page" : "false");
     window.scrollTo(0, 0);
+    if (screen === "day") this.fitMuscleKey();   // it can only be measured while showing
   },
   tab(name) {
     if (name === "exercises") this.exercises();
@@ -891,15 +893,25 @@ const UI = {
   // the other figure (a way of looking at the picture, not a workout setting; remembered on the device)
   dayMuscles(entries) {
     const s = Figure.session(entries), other = Figure.kind === "male" ? "female" : "male";
-    return `<div class="day-muscles"><div class="fig-col">${Figure.slot("full", s, muscleList(s.main))}
-      <button class="fig-toggle" data-kind="${other}" aria-label="Show ${other} figure" title="Show ${other} figure">${SWAP_ICON}</button></div>
-      ${this.muscleGroups(s)}</div>`;
+    return `<div class="day-muscles">${Figure.slot("full", s, muscleList(s.main))}${this.muscleGroups(s)}
+      <button class="fig-toggle" data-kind="${other}" aria-label="Show ${other} figure" title="Show ${other} figure">${SWAP_ICON}</button></div>`;
   },
   // The figure's key: each group marked by a bar drawn like its muscles (solid main, striped helping)
   muscleGroups(m) {
     const group = (label, tone, keys) => keys.length
-      ? `<div class="muscle-group ${tone}"><div class="label">${label}</div><div class="names">${esc(muscleList(keys))}</div></div>` : "";
+      ? `<div class="muscle-group ${tone}"><div class="label">${label}</div><div class="names" data-keys="${keys.join(",")}">${esc(muscleList(keys))}</div></div>` : "";
     return `<div class="muscle-groups">${group("Main", "main", m.main)}${group("Helping", "help", m.help)}</div>`;
+  },
+  // The day card's key stays within the figures' height: a long list ends "and 3 more" (helping
+  // muscles give way first); the figures still show every muscle
+  fitMuscleKey() {
+    const card = $("day-body").querySelector(".day-muscles");
+    if (!card || !card.offsetParent) return;
+    const fig = card.querySelector(".fig.full"), key = card.querySelector(".muscle-groups");
+    const groups = [...key.querySelectorAll(".names")].map((el) => ({ el, keys: el.dataset.keys.split(","), n: 0 }));
+    const show = (g) => { g.el.textContent = muscleList(g.keys.slice(0, g.n)) + (g.n < g.keys.length ? ` and ${g.keys.length - g.n} more` : ""); };
+    groups.forEach((g) => { g.n = g.keys.length; show(g); });
+    for (const g of [...groups].reverse()) while (key.offsetHeight > fig.offsetHeight && g.n > 1) { g.n--; show(g); }
   },
   section(label, entries) { return entries.length ? `<div class="label section-label">${label}</div><div class="ex-list">${entries.map((e) => this.exRow(e)).join("")}</div>` : ""; },
   toggle(id, on, title, sub) {
@@ -935,6 +947,7 @@ const UI = {
       const r = e.target.closest(".ex-row"); if (r) { const x = this.rows[+r.dataset.r]; this.preview(x.key, x.dose); }
     };
     Figure.paint($("day-body"));
+    this.fitMuscleKey();
   },
 
   /* ---------- player: top bar */
@@ -969,30 +982,33 @@ const UI = {
 
   /* ---------- player: exercise */
   context(st) {
-    const what = st.preview ? `Preview${st.sets > 1 ? ` · ${st.sets} sets` : ""}`
+    const what = st.preview ? `${this.facts(st.key, Workout.variantOf(st.key)).level}${st.sets > 1 ? ` · ${st.sets} sets` : ""}`
       : st.section === "warm" ? "Warm-up"
       : st.section === "cool" ? `Cool-down${st.sets > 1 ? ` · set ${st.set} of ${st.sets}` : ""}`
       : `Set ${st.set} of ${st.sets}`;
     const m = variant(st.key, Workout.variantOf(st.key)).muscles;
     return `${esc(what)}${st.side ? ` · <span class="side">${st.side}</span>` : ""} · <span class="muscles">${esc(muscleList(m.main))}</span>`;
   },
-  // A preview's quick facts: "Beginner · One dumbbell · Easy on knees · Loads lower back"
-  exerciseFacts(key, vi) {
+  // An exercise's quick facts. A preview shows each beside what it's about (level in the top line,
+  // equipment under the target, joints with the safety line); the rest screen, all on one line.
+  facts(key, vi) {
     const ex = EX[key], v = variant(key, vi), joints = (l) => l.map((j) => JOINTS[j]).join(", ");
-    return [v.level === "beginner" ? "Beginner" : "Intermediate", ex.equip === "none" ? "No equipment" : ex.equip[0].toUpperCase() + ex.equip.slice(1),
-      v.easyOn.length ? `Easy on ${joints(v.easyOn)}` : "", v.loads.length ? `Loads ${joints(v.loads)}` : ""].filter(Boolean).join(" · ");
+    return { level: v.level === "beginner" ? "Beginner" : "Intermediate",
+      equip: ex.equip === "none" ? "No equipment" : ex.equip[0].toUpperCase() + ex.equip.slice(1),
+      joints: [v.easyOn.length ? `Easy on ${joints(v.easyOn)}` : "", v.loads.length ? `Loads ${joints(v.loads)}` : ""].filter(Boolean).join(" · ") };
   },
+  exerciseFacts(key, vi) { const f = this.facts(key, vi); return [f.level, f.equip, f.joints].filter(Boolean).join(" · "); },
   target(d) {
     return d.time ? `<b>${fmt(d.time)}</b> ${d.perSide ? "each side" : "hold"}`
       : `<b>${esc(d.reps)}${d.measure === "m" ? " m" : ""}</b> ${esc(d.unit)}`;
   },
   work(st) {
-    const v = variant(st.key, Workout.variantOf(st.key)), hold = st.dose.time && !st.preview;
+    const vi = Workout.variantOf(st.key), v = variant(st.key, vi), hold = st.dose.time && !st.preview, f = st.preview && this.facts(st.key, vi);
     $("panel").innerHTML = `<div class="panel-body">
       <div class="context">${this.context(st)}</div>
       <div class="head"><div class="head-text"><h2 class="name">${esc(v.name)}</h2>
         ${hold ? `<div class="hold" id="hold"><span class="clock" id="clock"></span><span class="state" id="hold-state"></span></div>`
-               : `<div class="target">${this.target(st.dose)}</div>`}</div>
+               : `<div class="target-row"><div class="target">${this.target(st.dose)}</div>${f ? `<p class="equip">${esc(f.equip)}</p>` : ""}</div>`}</div>
         ${Figure.slot("badge", v.muscles, muscleList(v.muscles.main))}</div>
       <i class="grow"></i>
       <div class="focus"><div class="label">Focus</div><p>${esc(v.key)}</p></div>
@@ -1002,9 +1018,10 @@ const UI = {
       </div>
       <i class="grow"></i>
       <p class="safety">${esc(v.stop)}</p>
+      ${f && f.joints ? `<p class="joints">${esc(f.joints)}</p>` : ""}
       </div>
       <div class="controls">
-        ${st.preview ? `<p class="ex-facts">${esc(this.exerciseFacts(st.key, Workout.variantOf(st.key)))}</p><button class="ctl primary close" id="c-done">Close</button>`
+        ${st.preview ? `<button class="ctl primary" id="c-done">Close</button>`
           : `<button class="ctl" id="c-prev" aria-label="Back">‹</button>${hold ? `<button class="ctl" id="c-pause">Pause</button>` : ""}
              <button class="ctl primary" id="c-done">${hold ? "Skip ›" : "Done ✓"}</button>`}
       </div>`;
