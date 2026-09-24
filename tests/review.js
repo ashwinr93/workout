@@ -4,7 +4,8 @@
      home          the home screen (top)          day[:i]       day i of the plan (top)
      home-end      the home screen, scrolled down day-end[:i]   day i, scrolled down
      create        "Create your own plan"         player[:i]    day i's first exercise playing
-     exercises     the Exercises tab              exercise:key  one exercise's page
+     exercises     the Exercises tab
+     plans         the Plans tab                  plan:id       one ready-made plan's preview
                                                   rest[:i]      the rest after it
                                                   finish[:i]    "Workout complete" for day i
    Add a plan link after "#" to review someone else's plan, or a broken one for "This link needs a fix".
@@ -20,7 +21,8 @@
     "day-end"() { UI.openDay(day()); end(); },
     create() { UI.create(false); },
     exercises() { UI.tab("exercises"); },
-    exercise() { UI.exercise(arg || "gobletsquat", { from: "exercises" }); },
+    plans() { UI.tab("plans"); },
+    plan() { UI.planView(arg || "gym-first"); },
     player() { UI.openDay(day()); Workout.start({ warm: false, cool: false, label: `${DAY_NAMES[day().d]} · ${day().name}` }); },
     rest() { screens.player(); Workout.go(1); },
     finish() { screens.player(); Workout.finish(); },

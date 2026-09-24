@@ -1011,6 +1011,92 @@ const EX = {
     videos: [
       { id: "rqTOAM8WoeM", start: 10, end: 26, voice: true }
     ]
+  },
+
+  // ---------- Gap fillers (batch 3) ----------
+  tablerow: {
+    name: "Table Row", sets: 3, reps: "8–10", unit: "reps", rest: 60,
+    equip: "a sturdy table", gear: ["bodyweight"],
+    muscles: { main: ["upperback", "lats"], help: ["biceps", "reardelts", "abs"] },
+    type: "pull", level: "beginner", easyOn: [], loads: [],
+    key: "Body straight; pull your chest to the table",
+    cues: [
+      "Lie under a sturdy table and grip its edge, hands shoulder-width apart",
+      "Bend your knees with feet flat, or straighten your legs to make it harder",
+      "Pull your chest up toward the table, squeezing your shoulder blades",
+      "Lower yourself slowly until your arms are straight"
+    ],
+    stop: "Only use a table that can't tip or slide. If your shoulders hurt, bend your knees more.",
+    videos: [
+      { id: "DfVqXebqoaw", start: 4, end: 35, voice: true }
+    ]
+  },
+  lowjacks: {
+    name: "Low-Impact Jacks", sets: 3, time: 30, rest: 30,
+    equip: "none", gear: ["bodyweight"],
+    muscles: { main: ["calves", "delts"], help: ["quads", "glutes"] },
+    type: "cardio", level: "beginner", easyOn: [], loads: [],
+    key: "Keep moving at a pace you can talk through",
+    cues: [
+      "Step one foot out to the side as you raise both arms overhead",
+      "Step back in as your arms come down",
+      "Switch sides and keep a steady rhythm"
+    ],
+    stop: "If you feel dizzy or can't catch your breath, slow down or rest.",
+    videos: [
+      { id: "0N6_Pqk5DPI", start: 5, end: 19 }
+    ]
+  },
+  curlup: {
+    name: "McGill Curl-Up", sets: 3, reps: "6", unit: "reps each side", rest: 30,
+    equip: "none", gear: ["bodyweight"],
+    muscles: { main: ["abs"], help: ["obliques"] },
+    type: "core", level: "beginner", easyOn: ["lowerback"], loads: [],
+    key: "Lift only your head and shoulders",
+    cues: [
+      "Lie on your back with one knee bent and the other leg straight",
+      "Slide your hands under your lower back to keep its natural curve",
+      "Brace your stomach and lift your head and shoulders slightly off the floor",
+      "Hold for ten seconds, then lower. Switch legs halfway"
+    ],
+    stop: "Don't curl up any higher. If your neck strains, tuck your chin slightly.",
+    videos: [
+      { id: "I_drRVYlHbc", start: 5, end: 33, voice: true }
+    ]
+  },
+  legcurl: {
+    name: "Seated Leg Curl", sets: 3, reps: "10–12", unit: "reps", rest: 60,
+    equip: "a leg curl machine (gym)", gear: ["gym"],
+    muscles: { main: ["hams"], help: ["calves"] },
+    type: "legs", level: "beginner", easyOn: [], loads: [],
+    key: "Slow on the way back up",
+    cues: [
+      "Adjust the machine so your knees line up with its pivot and the pad rests just above your ankles",
+      "Lower the thigh pad so your legs are held firmly",
+      "Curl your heels down and back under the seat",
+      "Let your legs rise back up slowly"
+    ],
+    stop: "If the back of your knee hurts, use a lighter weight and a smaller range.",
+    videos: [
+      { id: "TAbolZJ6Lg4", start: 17, end: 54 }
+    ]
+  },
+  legext: {
+    name: "Leg Extension", sets: 3, reps: "10–12", unit: "reps", rest: 60,
+    equip: "a leg extension machine (gym)", gear: ["gym"],
+    muscles: { main: ["quads"], help: [] },
+    type: "legs", level: "beginner", easyOn: [], loads: ["knees"],
+    key: "Lift and lower slowly, no swinging",
+    cues: [
+      "Adjust the seat so your knees line up with the machine's pivot",
+      "Set the pad on the front of your lower shins",
+      "Straighten your legs to lift the pad, squeezing your thighs",
+      "Lower slowly back down"
+    ],
+    stop: "If your kneecaps hurt, use a lighter weight and stop short of straightening your legs fully.",
+    videos: [
+      { id: "EAR4tit2Dac", start: 10, end: 53 }
+    ]
   }
 };
 
@@ -1046,7 +1132,7 @@ const isVariant = (v) => !!(v.name || v.cues || v.key);
 const TYPES = {
   squat: "squat", hinge: "hinge", lunge: "lunge / single leg", push: "push (forward)", pushup: "push (overhead)",
   pull: "pull (rowing)", pullup: "pull (overhead)", core: "core", carry: "carry", calves: "calves and shins",
-  arms: "arms", mobility: "mobility", stretch: "stretch",
+  arms: "arms", legs: "legs (machine)", cardio: "cardio (low impact)", mobility: "mobility", stretch: "stretch",
 };
 // Kinds of kit, for the Exercises filter. Choosing one also shows everything that needs less:
 // bodyweight moves go with any kit, and a gym has it all.
@@ -1057,15 +1143,19 @@ const GEAR = {
   gym: { name: "Gym", with: ["bodyweight", "bands", "dumbbells", "gym"] },
 };
 // Body areas, for grouping and filtering exercises by what they mainly work
-const AREAS = {
-  legs: { name: "Legs", muscles: ["quads", "glutes", "hams", "adductors", "calves", "shins", "hipflexors"] },
-  chest: { name: "Chest", muscles: ["chest"] },
-  back: { name: "Back", muscles: ["lats", "upperback", "lowerback", "traps"] },
-  shoulders: { name: "Shoulders", muscles: ["delts", "reardelts"] },
+const AREAS = {   // alphabetical: the order of the Exercises tab's chips and groups
   arms: { name: "Arms", muscles: ["biceps", "triceps", "forearms"] },
+  back: { name: "Back", muscles: ["lats", "upperback", "lowerback", "traps"] },
+  chest: { name: "Chest", muscles: ["chest"] },
   core: { name: "Core", muscles: ["abs", "obliques"] },
+  legs: { name: "Legs", muscles: ["quads", "glutes", "hams", "adductors", "calves", "shins", "hipflexors"] },
+  shoulders: { name: "Shoulders", muscles: ["delts", "reardelts"] },
 };
-const areasOf = (key) => Object.keys(AREAS).filter((a) => EX[key].muscles.main.some((m) => AREAS[a].muscles.includes(m)));
+// The areas an exercise mainly works, its first main muscle's area first (where it's listed)
+const areasOf = (key) => {
+  const main = EX[key].muscles.main, first = Object.keys(AREAS).find((a) => AREAS[a].muscles.includes(main[0]));
+  return [first, ...Object.keys(AREAS).filter((a) => a !== first && main.some((m) => AREAS[a].muscles.includes(m)))];
+};
 
 // Joints an exercise can be easy on or load
 const JOINTS = { shoulders: "shoulders", elbows: "elbows", wrists: "wrists", lowerback: "lower back", hips: "hips", knees: "knees", ankles: "ankles" };

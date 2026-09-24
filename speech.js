@@ -23,6 +23,7 @@ const SPOKEN_NAMES = {
   legpress: "Leg press", latpulldown: "Lat pulldown", cablerow: "Seated cable row", chestpress: "Machine chest press",
   bbsquat: "Barbell back squat", deadlift: "Barbell deadlift", benchpress: "Barbell bench press",
   ohp: "Barbell overhead press", bbrow: "Barbell bent over row",
+  tablerow: "Table rows", lowjacks: "Low impact jacks", curlup: "McGill curl up", legcurl: "Seated leg curl", legext: "Leg extensions",
 };
 
 // Written text → words that read naturally aloud

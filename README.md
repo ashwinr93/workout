@@ -136,7 +136,7 @@ This is a player for a plan, not medical advice. The cues and "back off" lines c
 ## Demo videos
 
 <!-- credits:start -->
-Every demo is the creator's own video, played through YouTube's embedded player (start and end points only; nothing is downloaded or edited). Thank you to these 53 channels:
+Every demo is the creator's own video, played through YouTube's embedded player (start and end points only; nothing is downloaded or edited). Thank you to these 58 channels:
 
 - **[Advanced Therapy and Performance](https://www.youtube.com/@advancedtherapyperformance)**: [90/90 Hip Swivels](https://www.youtube.com/watch?v=YxECcOkUCEY)
 - **[Andrew Coates](https://www.youtube.com/@Andrewcoatesfitness)**: [Neutral-Grip Incline Press](https://www.youtube.com/watch?v=2SU_K4-knrc)
@@ -150,9 +150,11 @@ Every demo is the creator's own video, played through YouTube's embedded player 
 - **[Broser Built](https://www.youtube.com/@BroserBuilt)**: [Incline Hammer Curls](https://www.youtube.com/watch?v=cbRSu8Ws_hs)
 - **[Buff Bandit](https://www.youtube.com/@buffbandit6575)**: [Band Seated Row](https://www.youtube.com/watch?v=aafaCFMvDKk)
 - **[California Department of Public Health](https://www.youtube.com/@CAPublicHealth)**: [Cat-Cow → Child's Pose](https://www.youtube.com/watch?v=vuyUwtHl694)
+- **[Cassi Niemann](https://www.youtube.com/@CassiNiemann)**: [Table Row](https://www.youtube.com/watch?v=DfVqXebqoaw)
 - **[Catalyst Physical Therapy & Wellness](https://www.youtube.com/@catalystptandwellness)**: [Figure-4 Stretch](https://www.youtube.com/watch?v=xVq2-g_leTI)
 - **[Champion Physical Therapy and Performance](https://www.youtube.com/@championptp)**: [Suitcase Carries](https://www.youtube.com/watch?v=3RKKnZhhelE)
 - **[Dr. Christy Lee](https://www.youtube.com/@itiswellptllc)**: [Arm Circles](https://www.youtube.com/watch?v=ndmSvkEdNQQ)
+- **[FITBODY with Julie Lohre](https://www.youtube.com/@FITBODYLifestyle)**: [Leg Extension](https://www.youtube.com/watch?v=EAR4tit2Dac)
 - **[FITTR](https://www.youtube.com/@FITTRwithSquats)**: [Reverse Lunges](https://www.youtube.com/watch?v=RZKXLMxPF_I)
 - **[Forest Gate Therapy Inc.](https://www.youtube.com/@forestgatetherapyinc.)**: [Barbell Bench Press](https://www.youtube.com/watch?v=xS3MqdFppiY)
 - **[Girls Gone Strong \| Women's Health & Fitness](https://www.youtube.com/@GirlsGoneStrong)**: [Bodyweight Squat](https://www.youtube.com/watch?v=3fl7uYmiMVw)
@@ -163,6 +165,7 @@ Every demo is the creator's own video, played through YouTube's embedded player 
 - **[Joanna Soh](https://www.youtube.com/@ExerciseLibraryJoannaSoh)**: [Plank with Shoulder Taps](https://www.youtube.com/watch?v=0PrTUpElJ44)
 - **[kafetters](https://www.youtube.com/@kafetters)**: [Goblet Deadlift](https://www.youtube.com/watch?v=TC2jOPCNYhU)
 - **[ken whittier](https://www.youtube.com/@kenwhittier7243)**: [Suitcase Carries](https://www.youtube.com/watch?v=bAnCoDrvXc4)
+- **[Lamiss Fitness](https://www.youtube.com/@lamissfitness3102)**: [Low-Impact Jacks](https://www.youtube.com/watch?v=0N6_Pqk5DPI)
 - **[Luke Briggs](https://www.youtube.com/@lukebriggs3231)**: [Floor Press](https://www.youtube.com/watch?v=IaY4EncHDHU)
 - **[Medibank](https://www.youtube.com/@medibank)**: [90/90 Hip Swivels](https://www.youtube.com/watch?v=F1XdXdCjERk)
 - **[MedStar Health](https://www.youtube.com/@medstarhealth)**: [Single-Leg Glute Bridge](https://www.youtube.com/watch?v=AVAXhy6pl7o)
@@ -173,6 +176,7 @@ Every demo is the creator's own video, played through YouTube's embedded player 
 - **[Online Strength Training for Cyclists](https://www.youtube.com/@fastfitstrong)**: [Reverse Lunge + Twist](https://www.youtube.com/watch?v=UuBs5AqO3JY)
 - **[Onnit Academy](https://www.youtube.com/@OnnitAcademy)**: [Romanian Deadlift](https://www.youtube.com/watch?v=xAL7lHwj30E), [Floor Pullovers](https://www.youtube.com/watch?v=qALakTR1nRI)
 - **[OPEX Fitness](https://www.youtube.com/@OPEXFitness)**: [Neutral-Grip Incline Press](https://www.youtube.com/watch?v=g4tj2lnUgpM), [Floor Press](https://www.youtube.com/watch?v=oqnNivBhveM), [Standing Calf Raises](https://www.youtube.com/watch?v=ADIDoYt_ko4), [Incline Hammer Curls](https://www.youtube.com/watch?v=1Z6XiaBxwHQ), [Overhead Triceps Extensions](https://www.youtube.com/watch?v=HADoxgsslvw), [Incline Push-Up](https://www.youtube.com/watch?v=E--Ls5QtFqI)
+- **[Prime Health Co.](https://www.youtube.com/@primehealthco_)**: [McGill Curl-Up](https://www.youtube.com/watch?v=I_drRVYlHbc)
 - **[PrimeMVMNT](https://www.youtube.com/@PrimeMVMNT)**: [Tibialis Raises](https://www.youtube.com/watch?v=nQKgHwi8W9E)
 - **[PureGym](https://www.youtube.com/@PureGymVideo)**: [Single-Arm Row](https://www.youtube.com/watch?v=ZRSGpBUVcNw), [Step-Ups](https://www.youtube.com/watch?v=DxUNi119Qzs), [Glute Bridge](https://www.youtube.com/watch?v=tqp5XQPpTxY), [Leg Press](https://www.youtube.com/watch?v=p5dCqF7wWUw), [Machine Chest Press](https://www.youtube.com/watch?v=sqNwDkUU_Ps)
 - **[React Physical Therapy](https://www.youtube.com/@ReactPhysicalTherapyChicago)**: [Cross-Body Shoulder Stretch](https://www.youtube.com/watch?v=aIq0fLi8iak), [Overhead Triceps Stretch](https://www.youtube.com/watch?v=_IOHtPSYGbk)
@@ -191,6 +195,7 @@ Every demo is the creator's own video, played through YouTube's embedded player 
 - **[Three Lakes Physical Therapy](https://www.youtube.com/@threelakesphysicaltherapya927)**: [Cat-Cow → Child's Pose](https://www.youtube.com/watch?v=Kegpy6v-NfA)
 - **[UC Davis Health](https://www.youtube.com/@UCDavisHealth)**: [Lat Pulldown](https://www.youtube.com/watch?v=oMJmAHRZXBk)
 - **[Wade Bass](https://www.youtube.com/@Tglcoach)**: [Tibialis Raises](https://www.youtube.com/watch?v=OPEuhclsTUQ)
+- **[YMCA Calgary](https://www.youtube.com/@ymcacalgary)**: [Seated Leg Curl](https://www.youtube.com/watch?v=TAbolZJ6Lg4)
 <!-- credits:end -->
 
 Changed the videos? `node tools/credits.mjs` rebuilds this list.

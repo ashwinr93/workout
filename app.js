@@ -9,8 +9,8 @@
  *   Narration  what the coach says on each step, and when
  *   Workout    the session: steps, timer, moving between steps
  *   Figure     the muscle map: badges and front/back figures, male or female
- *   Plans      which plan is open: from the link, the last one used on this device, or the example
- *   UI         rendering the screens (tabs: My week, Exercises; an exercise's own page)
+ *   Plans      which plan is your week: from a link, the last one used on this device, or none yet
+ *   UI         rendering the screens (tabs: My week, Plans, Exercises; a plan's preview)
  * Data lives in library.js (exercises), plan.js (plan links), speech.js (what the coach says)
  * and prompt.js (the message that has an AI chat write a plan).
  */
@@ -605,20 +605,26 @@ const Figure = {
   },
 };
 
-/* ============================================================ Plans: which plan is open
-   A plan arrives in the link (#v1/…). The last one opened is remembered on the device, so the plain
-   address brings you back to it; with none, the example plan (the owner's week) opens. */
+/* ============================================================ Plans: which plan is your week
+   A plan arrives in a link (#v1/…) or is started from the Plans tab. The one you're following is
+   remembered on the device, so the plain address brings you back to it. Someone who has never
+   picked one lands on the Plans tab. (People who used the app before plans existed had the owner's
+   week, stored as "plan": null; they keep it.) */
 const Plans = {
   current: null,
   MAX_RECENT: 6,
 
   boot() {
-    const hash = location.hash.slice(1), exKey = hash.match(/^ex\/(\w+)/)?.[1];
-    if (hash && !exKey) return this.open(hash);
-    const saved = REVIEW_MODE ? null : store.get("plan", null), r = saved ? parsePlan(saved) : null;
-    this.use(r && r.plan && !r.problems.length ? r.plan : null, !!exKey);
-    if (exKey && EX[exKey]) UI.exercise(exKey, { from: "exercises" });
+    const hash = location.hash.slice(1);
+    if (hash) return this.open(hash);
+    const saved = REVIEW_MODE ? null : this.saved();
+    const r = typeof saved === "string" ? parsePlan(saved) : null;
+    if (r?.plan && !r.problems.length) this.use(r.plan);
+    else if (saved === null) this.use(null);                       // before plans existed: the owner's week
+    else this.none();
   },
+  // the stored plan link; null for the owner's week in older versions; undefined if never chosen
+  saved() { try { const v = localStorage.getItem(STORE_PREFIX + "plan"); return v === null ? undefined : JSON.parse(v); } catch { return undefined; } },
   // A plan link from an AI (or a bookmark): open it, or explain what needs fixing
   open(text) {
     const r = parsePlan(text);
@@ -626,47 +632,113 @@ const Plans = {
     if (r.problems.length || !r.plan) return UI.fix(r);
     this.use(r.plan);
   },
-  use(plan, keepHash) {
+  // Make a plan your week (null: the owner's week, the example)
+  use(plan) {
     if (!plan || plan.link === EXAMPLE_PLAN.link) plan = examplePlan();
+    const program = PROGRAMS.find((p) => p.link === plan.link);   // a ready-made plan keeps its proper name
+    if (program?.title) plan.title = program.title;
     this.current = plan;
     if (!TEST_MODE && !REVIEW_MODE) {
-      store.set("plan", plan.example ? null : plan.link);
-      if (!plan.example) store.set("plans", [{ link: plan.link, title: plan.title }, ...this.recent().filter((p) => p.link !== plan.link)].slice(0, this.MAX_RECENT));
-      if (!keepHash) history.replaceState(null, "", this.url());
+      store.set("plan", plan.link);
+      store.set("plans", [{ link: plan.link, title: plan.title }, ...this.recent().filter((p) => p.link !== plan.link)].slice(0, this.MAX_RECENT));
+      history.replaceState(null, "", this.url());
     }
     Workout.day = null;
     UI.home(); UI.show("home");
   },
-  // This page's address for the current plan (bookmarkable: the plan lives in it)
-  url() { return location.pathname + location.search + (this.current.example ? "" : "#" + this.current.link); },
+  // No plan yet: My week says so, and you start on the Plans tab
+  none() { this.current = null; UI.home(); UI.tab("plans"); },
+  // This page's address for your week (bookmarkable: the plan lives in it)
+  url() { return location.pathname + location.search + (!this.current || this.current.example ? "" : "#" + this.current.link); },
   recent() { return REVIEW_MODE ? [] : store.get("plans", []); },
   link(plan = this.current) { return SITE + (plan.example ? "" : "#" + plan.link); },
 };
 // A new plan link opened while the app is already open (e.g. tapped in the AI chat)
 window.addEventListener("hashchange", () => {
   const hash = location.hash.slice(1);
-  if (hash.startsWith("ex/")) { const k = hash.slice(3); if (EX[k] && !Video.active) UI.exercise(k, { from: "exercises" }); return; }
   if (hash && hash !== Plans.current?.link && !Video.active) Plans.open(hash);
 });
 
 /* ============================================================ UI */
 const UI = {
   cueIdx: 0, cueTimer: null, exitArmed: 0, rows: [],
-  TABS: ["home", "exercises"],
+  TABS: ["home", "plans", "exercises"],
 
   show(screen) {
-    for (const id of ["home", "exercises", "exercise", "day", "player", "create", "fix"]) $(id).hidden = id !== screen;
+    for (const id of ["home", "plans", "plan-view", "exercises", "day", "player", "create", "fix"]) $(id).hidden = id !== screen;
+    this.screen = screen;
     const tabbed = this.TABS.includes(screen);
     $("tabbar").hidden = !tabbed;
     if (tabbed) this.tabNow = screen;
     for (const b of $("tabbar").querySelectorAll("button")) b.setAttribute("aria-current", b.dataset.tab === screen ? "page" : "false");
-    if (screen !== "exercise" && !TEST_MODE && !REVIEW_MODE && Plans.current && location.hash.startsWith("#ex/")) history.replaceState(null, "", Plans.url());
     window.scrollTo(0, 0);
   },
   tab(name) {
     if (name === "exercises") this.exercises();
+    if (name === "plans") this.plans();
     this.show(name);
   },
+  // Back to a screen: tabs re-render, others are shown as they were
+  back(to) { if (this.TABS.includes(to)) this.tab(to); else this.show(to); },
+  // Tapping an exercise anywhere plays its preview, then comes back here
+  preview(key, d) { Workout.returnTo = this.screen; Workout.startPreview(key, d || dose(key)); },
+
+  /* ---------- Plans: ready-made plans, filtered by goal; creating your own comes after browsing */
+  goal: null,
+  plans() {
+    const chip = (k, name) => `<button class="chip" data-goal="${k}" aria-pressed="${this.goal === k}">${esc(name)}</button>`;
+    $("plans-goals").innerHTML = chip("", "All").replace('aria-pressed="false"', `aria-pressed="${!this.goal}"`) + Object.entries(GOALS).map(([k, n]) => chip(k, n)).join("");
+    const lvl = (l) => (l === "beginner" ? "Beginner" : "Intermediate");
+    const list = PROGRAMS.filter((p) => !this.goal || p.goals.includes(this.goal));
+    $("plans-list").innerHTML = list.map((p) => {
+      const plan = this.programPlan(p), mine = Plans.current?.link === plan.link;
+      return `<button class="plan-tile" data-id="${p.id}">
+        <span class="plan-tile-head"><b>${esc(plan.title)}</b><span class="pill${p.level === "beginner" ? "" : " quiet"}">${lvl(p.level)}</span></span>
+        <span class="muted">${esc(this.programSummary(p, plan))}</span>${mine ? '<span class="mine">Your week</span>' : ""}</button>`;
+    }).join("") + `<div class="plan-tile create-tile"><b>None of these quite fit?</b>
+        <span class="muted">Tell an AI your goals, any aches and what you train with, and it builds a plan for you.</span>
+        <button class="link-accent" id="plans-create-2">Create your own with AI ›</button></div>`;
+    $("plans-create-2").onclick = () => this.create(false);
+  },
+  programPlan(p) {
+    if (p.link === EXAMPLE_PLAN.link) return examplePlan();
+    const plan = parsePlan(p.link).plan;
+    if (p.title) plan.title = p.title;
+    return plan;
+  },
+  programSummary(p, plan) {
+    const train = plan.days.filter((d) => d.kind !== "activity").length, acts = plan.days.filter((d) => d.kind === "activity").length;
+    return [`${train} day${train === 1 ? "" : "s"}${acts ? ` + ${acts} ${plan.days.find((d) => d.kind === "activity").activity.key === "walk" ? "walk" : "activity"}${acts === 1 ? "" : "s"}` : ""}`,
+      `${p.mins} min`, p.gear].join(" · ");
+  },
+  // One plan's preview: browsing never changes your week; "Start this plan" does, after asking
+  planView(id) {
+    const p = PROGRAMS.find((x) => x.id === id), plan = this.programPlan(p), mine = Plans.current?.link === plan.link;
+    const lvl = p.level === "beginner" ? "Beginner" : "Intermediate";
+    const dayCard = (d) => `<div class="card plan-day"><div class="label">${DAY_NAMES[d.d]}</div><b>${esc(d.name)}</b>
+      <div class="muted">${d.kind === "activity" ? esc(this.daySummary(d)) : d.items.map((i) => `<button class="link" data-ex="${i.key}">${esc(EX[i.key].name)}</button>`).join(" · ")}</div></div>`;
+    $("plan-view-body").innerHTML = `<h1 class="title">${esc(plan.title)}</h1>
+      <div class="ex-tags"><span class="tag">${lvl}</span><span class="tag">${esc(this.programSummary(p, plan))}</span></div>
+      <p class="card-text">${esc(p.about)}</p>
+      ${plan.days.map(dayCard).join("")}
+      <p class="note"><button class="link" id="plan-adjust">Adjust it to suit you with AI</button></p>`;
+    $("plan-view-body").onclick = (e) => { const b = e.target.closest("button[data-ex]"); if (b) this.preview(b.dataset.ex); };
+    $("plan-adjust").onclick = () => this.create(true, plan.link);
+    $("plan-start").textContent = mine ? "This is your week" : "Start this plan";
+    $("plan-start").disabled = mine;
+    $("plan-start").onclick = () => (Plans.current ? this.confirmPlan(plan) : this.startPlan(plan));
+    $("plan-view-back").onclick = () => this.tab("plans");
+    this.show("plan-view");
+  },
+  confirmPlan(plan) {
+    $("plan-confirm-title").textContent = `Switch to ${plan.title}?`;
+    $("plan-confirm-text").textContent = `It replaces ${Plans.current.title} as your week. You can switch back anytime from Your plans.`;
+    $("plan-confirm-no").textContent = `Keep ${Plans.current.title}`;
+    $("plan-confirm").hidden = false;
+    $("plan-confirm-yes").onclick = () => { $("plan-confirm").hidden = true; this.startPlan(plan); };
+    $("plan-confirm-no").onclick = () => { $("plan-confirm").hidden = true; };
+  },
+  startPlan(plan) { log("start plan:", plan.title); Plans.use(plan.example ? null : plan); }, 
 
   /* ---------- Exercises: the library, searchable and filterable */
   exFilter: { q: "", gear: null, area: null },
@@ -678,11 +750,10 @@ const UI = {
     $("ex-search").value = F.q;
     this.exerciseList();
   },
-  // What the filters leave, grouped by the body area each exercise mainly works
+  // What the filters leave, A to Z; grouped by body area (A to Z) under the area of its first main muscle
   exerciseMatches() {
     const F = this.exFilter, q = F.q.trim().toLowerCase(), allowed = F.gear && GEAR[F.gear].with;
-    const rank = (k) => ["mobility", "stretch"].includes(EX[k].type) ? 1 : 0;   // training moves first, then warm-ups and stretches
-    return Object.keys(EX).sort((a, b) => rank(a) - rank(b)).filter((k) => {
+    return Object.keys(EX).sort((a, b) => EX[a].name.localeCompare(EX[b].name)).filter((k) => {   // A to Z
       const ex = EX[k], v = ex.videos.map((_, vi) => variant(k, vi).name.toLowerCase());
       return (!q || v.some((n) => n.includes(q)) || ex.name.toLowerCase().includes(q) || muscleList(ex.muscles.main).toLowerCase().includes(q))
         && (!allowed || ex.gear.some((g) => allowed.includes(g)))
@@ -704,44 +775,22 @@ const UI = {
   },
   libraryRow(key) {
     const ex = EX[key], m = ex.muscles;
-    return `<button class="ex-row" data-ex="${key}">
+    return `<button class="ex-row" data-ex="${key}" aria-label="Preview ${esc(ex.name)}">
       <img src="https://i.ytimg.com/vi/${ex.videos[0].id}/mqdefault.jpg" alt="" loading="lazy">
       <div><div class="ex-title">${esc(ex.name)}</div><div class="ex-meta">${esc(muscleList(m.main))} · ${ex.level === "beginner" ? "Beginner" : "Intermediate"}</div></div>
       ${Figure.slot("badge", m, muscleList(m.main))}<span class="chev">›</span></button>`;
   },
 
-  /* ---------- one exercise's own page: how to do it, what it works, easier and harder versions.
-     from: the screen to go back to; dose: the amount when opened from a day of your plan */
-  exercise(key, { from = this.tabNow || "exercises", dose: d = null } = {}) {
-    const ex = EX[key], v = variant(key, 0), lvl = (l) => (l === "beginner" ? "Beginner" : "Intermediate");
-    const levels = [...new Set(ex.videos.map((_, vi) => variant(key, vi).level))].map(lvl).join(" to ");
-    const joints = (list) => list.map((j) => JOINTS[j]).join(", ");
-    const links = (label, keys) => keys?.length ? `<p class="ex-links">${label}: ${keys.map((k) => `<button class="link" data-ex="${k}">${esc(EX[k].name)}</button>`).join(", ")}</p>` : "";
-    const variants = ex.videos.filter((vv) => vv.name).map((vv) => vv.name);
-    $("exercise-body").innerHTML = `
-      <button class="ex-hero" id="ex-try" aria-label="Try ${esc(ex.name)} with the coach"><img src="https://i.ytimg.com/vi/${ex.videos[0].id}/hqdefault.jpg" alt=""><span class="play">▶</span></button>
-      <h1 class="title">${esc(ex.name)}</h1>
-      <div class="ex-tags"><span class="tag">${levels}</span><span class="tag">${esc(ex.equip[0].toUpperCase() + ex.equip.slice(1))}</span>${d ? `<span class="tag">${esc(this.amount(d))}</span>` : ""}</div>
-      ${variants.length ? `<p class="note">Two ways to do it, each with its own demo: ${esc(variants.join(" or "))}.</p>` : ""}
-      <div class="day-muscles ex-muscles"><div class="fig-col">${Figure.slot("full", ex.muscles, muscleList(ex.muscles.main))}</div>${this.muscleGroups(ex.muscles)}</div>
-      <div class="focus"><div class="label">Focus</div><p>${esc(v.key)}</p></div>
-      <ol class="ex-cues">${v.cues.map((c) => `<li>${esc(c)}</li>`).join("")}</ol>
-      <p class="safety">${esc(v.stop)}</p>
-      ${ex.easyOn.length || ex.loads.length ? `<p class="ex-joints">${[ex.easyOn.length ? `Easy on: ${joints(ex.easyOn)}` : "", ex.loads.length ? `Puts load on: ${joints(ex.loads)}` : ""].filter(Boolean).join(" · ")}</p>` : ""}
-      ${links("Easier", ex.easier)}${links("Harder", ex.harder)}
-      <div class="card-actions"><button class="big-btn" id="ex-try2">Try it with the coach ▶</button></div>`;
-    const tryIt = () => { Workout.returnTo = "exercise"; Workout.startPreview(key, d || dose(key)); };
-    $("ex-try").onclick = $("ex-try2").onclick = tryIt;
-    $("exercise-body").onclick = (e) => { const b = e.target.closest("button[data-ex]"); if (b) this.exercise(b.dataset.ex, { from }); };
-    $("exercise-back").onclick = () => (from === "day" ? this.show("day") : this.tab(from));
-    this.show("exercise");
-    if (!TEST_MODE && !REVIEW_MODE) history.replaceState(null, "", location.pathname + location.search + "#ex/" + key);
-    Figure.paint($("exercise-body"));
-  },
+
 
   /* ---------- home */
   home() {
     const plan = Plans.current;
+    $("week-empty").hidden = !!plan;
+    for (const id of ["plan-title", "plan-subtitle", "days", "plan-card"]) $(id).hidden = !plan;
+    $("week-browse").onclick = () => this.tab("plans");
+    $("week-create").onclick = () => this.create(false);
+    if (!plan) { $("plan-title").textContent = ""; document.title = "Workout Coach"; return; }
     document.title = `${plan.title} · Workout Coach`;
     $("plan-title").textContent = plan.title;
     $("plan-subtitle").textContent = plan.subtitle || this.planSummary(plan);
@@ -753,8 +802,6 @@ const UI = {
         <span class="goal">${esc(day.goal || this.daySummary(day))}</span>
       </button>`).join("");
     $("days").onclick = (e) => { const b = e.target.closest(".day-card"); if (b) this.openDay(plan.days[+b.dataset.i]); };
-    $("plan-cta").hidden = !plan.example;
-    $("plan-cta-btn").onclick = () => this.create(false);
     this.planCard();
   },
   planSummary(plan) {
@@ -769,29 +816,25 @@ const UI = {
     const n = day.items.length;
     return `${n} ${day.kind === "stretch" ? "stretch" : "exercise"}${n === 1 ? "" : day.kind === "stretch" ? "es" : "s"}`;
   },
-  // Under the days, on your own plan: change it, share it, start another; and plans used before on this device
+  // Under the days: change or share your week, and switch back to plans you've followed before
   planCard() {
-    const plan = Plans.current, others = [...Plans.recent().filter((p) => p.link !== plan.link), ...(plan.example ? [] : [{ example: true, title: EXAMPLE_PLAN.title }])];
-    $("plan-card").hidden = plan.example && !others.length;
-    $("plan-card").innerHTML = (plan.example ? ""
-      : `<div class="label">Your plan</div>
-         <p class="card-text">Bookmark this page or add it to your Home Screen: the plan lives in its link.</p>
-         <div class="card-actions"><button class="tool" id="pc-change">Change it with AI</button><button class="tool" id="pc-share">Copy link</button><button class="tool" id="pc-create">Create a new plan</button><span class="note" id="pc-status"></span></div>`)
-      + (others.length ? `<div class="label"${plan.example ? "" : ' style="margin-top:16px"'}>Other plans on this device</div>
-         <div class="plan-list">${others.map((p, i) => `<button class="link" data-i="${i}">${esc(p.title)}${p.example ? " (example)" : ""}</button>`).join("")}</div>` : "");
-    if ($("pc-create")) $("pc-create").onclick = () => this.create(false);
-    if ($("pc-change")) $("pc-change").onclick = () => this.create(true);
-    if ($("pc-share")) $("pc-share").onclick = async () => { $("pc-status").textContent = (await copyText(Plans.link())) ? "Link copied" : "Couldn't copy"; };
+    const plan = Plans.current, others = Plans.recent().filter((p) => p.link !== plan.link);
+    const title = (p) => (p.link === EXAMPLE_PLAN.link ? EXAMPLE_PLAN.title : p.title);
+    $("plan-card").innerHTML = `<div class="card-actions" style="margin-top:0"><button class="tool" id="pc-change">Change this week with AI</button><button class="tool" id="pc-share">Copy link</button><span class="note" id="pc-status"></span></div>`
+      + (others.length ? `<div class="label" style="margin-top:16px">Your plans</div>
+         <div class="plan-list">${others.map((p, i) => `<button class="link" data-i="${i}">${esc(title(p))}</button>`).join("")}</div>` : "");
+    $("pc-change").onclick = () => this.create(true);
+    $("pc-share").onclick = async () => { $("pc-status").textContent = (await copyText(Plans.link())) ? "Link copied" : "Couldn't copy"; };
     $("plan-card").querySelector(".plan-list")?.addEventListener("click", (e) => {
       const b = e.target.closest("button[data-i]"); if (!b) return;
-      const p = others[+b.dataset.i];
-      Plans.use(p.example ? null : parsePlan(p.link).plan);
+      Plans.use(parsePlan(others[+b.dataset.i].link).plan);
     });
   },
 
   /* ---------- create or change a plan with an AI */
-  create(change) {
-    const text = coachPrompt(change ? Plans.current.link : null);
+  create(change, link = Plans.current?.link) {
+    const text = coachPrompt(change ? link : null), from = this.screen;
+    $("create-back").onclick = () => this.back(from || "home");
     $("create-title").textContent = change ? "Change your plan" : "Create your own plan";
     $("create-intro").textContent = change
       ? "Pick an AI you use. It gets your current plan, asks what you'd like to change, and gives you a new link."
@@ -835,7 +878,7 @@ const UI = {
   exRow(entry) {
     const ex = EX[entry.key], m = variant(entry.key, Workout.variantOf(entry.key)).muscles;
     this.rows.push(entry);
-    return `<button class="ex-row" data-r="${this.rows.length - 1}" aria-label="${esc(ex.name)}: how to do it">
+    return `<button class="ex-row" data-r="${this.rows.length - 1}" aria-label="Preview ${esc(ex.name)}">
       <img src="https://i.ytimg.com/vi/${ex.videos[0].id}/mqdefault.jpg" alt="" loading="lazy">
       <div><div class="ex-title">${esc(ex.name)}</div><div class="ex-meta">${esc(this.amount(entry.dose))} · ${esc(muscleList(m.main))}</div></div>
       ${Figure.slot("badge", m, muscleList(m.main))}<span class="chev">›</span></button>`;
@@ -889,7 +932,7 @@ const UI = {
     $("day-body").onclick = (e) => {
       const f = e.target.closest(".fig-toggle");
       if (f) { Figure.choose(f.dataset.kind); return this.day(); }
-      const r = e.target.closest(".ex-row"); if (r) { const x = this.rows[+r.dataset.r]; this.exercise(x.key, { from: "day", dose: x.dose }); }
+      const r = e.target.closest(".ex-row"); if (r) { const x = this.rows[+r.dataset.r]; this.preview(x.key, x.dose); }
     };
     Figure.paint($("day-body"));
   },
@@ -1030,7 +1073,7 @@ const UI = {
       ${Figure.slot("full", worked, muscleList(worked.main))}
       ${this.muscleGroups(worked)}
       <button class="big-btn" id="done-close">Back to the plan</button>
-      ${Plans.current.example && !Workout.preview ? '<button class="link" id="done-create">Create your own plan</button>' : ""}`;
+      ${Plans.current?.example && !Workout.preview ? '<button class="link" id="done-create">Create your own plan</button>' : ""}`;
     $("done-close").onclick = () => { Workout.day = null; Workout.exit(); };
     if ($("done-create")) $("done-create").onclick = () => { Workout.day = null; Workout.exit(); this.create(false); };
     Figure.paint($("finished"));
@@ -1121,7 +1164,9 @@ function debugBar() {
 
 /* ============================================================ boot */
 $("day-back").onclick = () => { Workout.day = null; UI.show("home"); };
-$("create-back").onclick = () => UI.show("home");
+$("plans-create").onclick = () => UI.create(false);
+$("plans-goals").onclick = (e) => { const b = e.target.closest("button[data-goal]"); if (b) { UI.goal = b.dataset.goal || null; UI.plans(); } };
+$("plans-list").onclick = (e) => { const b = e.target.closest(".plan-tile[data-id]"); if (b) UI.planView(b.dataset.id); };
 $("tabbar").onclick = (e) => { const b = e.target.closest("button[data-tab]"); if (b) UI.tab(b.dataset.tab); };
 $("ex-search").oninput = (e) => { UI.exFilter.q = e.target.value; UI.exerciseList(); };
 const chipFilter = (id, field) => ($(id).onclick = (e) => {
@@ -1131,7 +1176,7 @@ const chipFilter = (id, field) => ($(id).onclick = (e) => {
   UI.exerciseList();
 });
 chipFilter("ex-gear", "gear"); chipFilter("ex-area", "area");
-$("ex-results").onclick = (e) => { const b = e.target.closest("[data-ex]"); if (b) UI.exercise(b.dataset.ex, { from: "exercises" }); };
+$("ex-results").onclick = (e) => { const b = e.target.closest("[data-ex]"); if (b) UI.preview(b.dataset.ex); };
 $("exit-btn").onclick = () => UI.exitButton();
 $("vid-prev").onclick = () => Video.choose(Video.idx - 1);
 $("vid-next").onclick = () => Video.choose(Video.idx + 1);

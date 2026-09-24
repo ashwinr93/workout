@@ -25,9 +25,9 @@
     <p class="subtitle" id="plan-subtitle"></p>
     <div class="days" id="days"></div>
     <div class="card" id="plan-card"></div>
-    <div class="cta" id="plan-cta" hidden>
-      <p>Want a week like this, built around your own goals?</p>
-      <button class="big-btn" id="plan-cta-btn">Create your own plan</button>
+    <div class="empty" id="week-empty" hidden>
+      <p>You haven't picked a plan yet. Choose a ready-made one, or have an AI build one around your goals.</p>
+      <div class="card-actions"><button class="big-btn" id="week-browse">Browse plans</button><button class="ghost-btn" id="week-create">Create your own with AI</button></div>
     </div>
     <p class="note"><button class="link" id="diag-open">Diagnostics</button></p>
     <div class="card" id="diag" hidden>
@@ -45,6 +45,32 @@
   </div>
 </section>
 
+<!-- Plans: ready-made plans to browse, and creating your own with AI -->
+<section id="plans" class="screen tabbed" hidden>
+  <div class="wrap">
+    <div class="plans-head"><h1 class="title">Plans</h1><button class="link-accent" id="plans-create">+ Create</button></div>
+    <div class="chips" id="plans-goals" role="group" aria-label="Goal"></div>
+    <div class="plan-cards" id="plans-list"></div>
+  </div>
+</section>
+
+<!-- One ready-made plan: what's in it, and starting it -->
+<section id="plan-view" class="screen" hidden>
+  <div class="wrap narrow">
+    <button class="back" id="plan-view-back">‹ Plans</button>
+    <div id="plan-view-body"></div>
+    <div class="start-bar"><button class="big-btn" id="plan-start">Start this plan</button></div>
+  </div>
+  <div class="sheet-wrap" id="plan-confirm" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="plan-confirm-title">
+      <h2 id="plan-confirm-title"></h2>
+      <p class="muted" id="plan-confirm-text"></p>
+      <button class="big-btn" id="plan-confirm-yes">Start this plan</button>
+      <button class="ghost-btn" id="plan-confirm-no"></button>
+    </div>
+  </div>
+</section>
+
 <!-- Exercises: the whole library, searchable -->
 <section id="exercises" class="screen tabbed" hidden>
   <div class="wrap">
@@ -54,14 +80,6 @@
     <div class="chips" id="ex-area" role="group" aria-label="Body area"></div>
     <p class="note filter-note" id="ex-note" role="status"></p>
     <div id="ex-results"></div>
-  </div>
-</section>
-
-<!-- One exercise: how to do it -->
-<section id="exercise" class="screen" hidden>
-  <div class="wrap narrow">
-    <button class="back" id="exercise-back">‹ Back</button>
-    <div id="exercise-body"></div>
   </div>
 </section>
 
@@ -109,6 +127,7 @@
 <!-- Tabs: on the top-level screens only (never during a workout) -->
 <nav class="tabbar" id="tabbar" aria-label="Sections" hidden>
   <button data-tab="home"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>My week</span></button>
+  <button data-tab="plans"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span>Plans</span></button>
   <button data-tab="exercises"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Exercises</span></button>
 </nav>
 
@@ -144,6 +163,7 @@
 <script src="plan.js"></script>
 <script src="speech.js"></script>
 <script src="prompt.js"></script>
+<script src="programs.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -145,6 +145,33 @@ h1, h2, h3, p { margin: 0; }
 .tabbar button[aria-current="page"] { color: var(--accent); }
 .screen.tabbed { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
 
+/* ------------------------------------------------------------------ Plans */
+.ex-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
+.tag { padding: 3px 10px; border-radius: 999px; background: var(--panel-2); color: var(--muted); font-size: 13px; }
+.plans-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+.link-accent { color: var(--accent); font-weight: 650; font-size: 15px; }
+.plan-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; margin-top: 6px; }
+.plan-tile { display: flex; flex-direction: column; gap: 4px; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+.plan-tile-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 16px; }
+.pill { flex: none; font-size: 12px; padding: 2px 9px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.pill.quiet { background: var(--panel-2); color: var(--muted); }
+.plan-tile .mine { align-self: flex-start; margin-top: 4px; font-size: 12px; color: var(--accent); font-weight: 650; }
+.create-tile { border-style: dashed; border-color: #3a4250; }
+.create-tile .link-accent { align-self: flex-start; margin-top: 6px; }
+.plan-day { margin-top: 10px; }
+.plan-day b { display: block; margin: 2px 0 4px; font-size: 16px; }
+.plan-day .link { font-size: 14px; color: var(--muted); }
+#plan-start:disabled { background: var(--panel-2); color: var(--muted); }
+.sheet-wrap { position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, .6); display: flex; align-items: flex-end; justify-content: center; }
+.sheet { width: 100%; max-width: 520px; background: var(--panel); border: 1px solid var(--line); border-radius: 18px 18px 0 0;
+  padding: 20px var(--pad-r) max(20px, env(safe-area-inset-bottom, 0px)) var(--pad-l); display: flex; flex-direction: column; gap: 12px; }
+.sheet h2 { font-size: 19px; }
+.sheet .big-btn { min-width: 0; width: 100%; border-radius: 12px; }
+.ghost-btn { padding: 13px; border-radius: 12px; border: 1px solid var(--line); color: var(--text); font-weight: 600; }
+.empty { margin-top: 12px; }
+.empty p { color: var(--muted); max-width: 52ch; }
+.empty .big-btn { min-width: 0; }
+
 /* ------------------------------------------------------------------ Exercises */
 .search { width: 100%; margin: 14px 0 10px; padding: 11px 14px; border-radius: 12px; border: 1px solid var(--line);
   background: var(--panel); color: var(--text); font: inherit; font-size: 16px; }
@@ -153,17 +180,6 @@ h1, h2, h3, p { margin: 0; }
 .chip { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); font-size: 13px; }
 .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 650; }
 .filter-note { margin-top: 4px; }
-.ex-hero { position: relative; display: block; width: 100%; margin: 14px 0; border-radius: 12px; overflow: hidden; background: #000; aspect-ratio: 16/9; }
-.ex-hero img { width: 100%; height: 100%; object-fit: cover; opacity: .85; }
-.ex-hero .play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 38px; color: #fff; }
-.ex-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
-.tag { padding: 3px 10px; border-radius: 999px; background: var(--panel-2); color: var(--muted); font-size: 13px; }
-.ex-muscles { margin: 4px 0 16px; }
-.ex-cues { margin: 12px 0; padding-left: 22px; line-height: 1.5; }
-.ex-cues li { margin: 6px 0; }
-.ex-joints, .ex-links { color: var(--muted); font-size: 14px; margin-top: 10px; }
-.ex-links .link { font-size: 14px; color: var(--text); }
-#exercise .safety { margin-top: 4px; }
 
 /* ------------------------------------------------------------------ Player */
 #player { position: fixed; top: 0; left: 0; right: 0; height: 100vh; height: 100dvh;   /* the visible screen, also as a Home Screen app */

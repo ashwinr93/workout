@@ -351,21 +351,53 @@
     Object.assign(F, { gear: null, q: "squat" });
     check(UI.exerciseMatches().includes("bbsquat") && !UI.exerciseMatches().includes("sarow"), "search for 'squat' is wrong");
     Object.assign(F, keep); UI.exerciseList();
-    for (const k of Object.keys(EX)) {
-      UI.exercise(k, { from: "exercises" });
-      const body = $("exercise-body");
-      check(!$("exercise").hidden && $("tabbar").hidden, `${k}: exercise page didn't open`);
-      check(body.querySelectorAll(".ex-cues li").length === variant(k, 0).cues.length, `${k}: page doesn't list every cue`);
-      for (const b of body.querySelectorAll("[data-ex]")) check(!!EX[b.dataset.ex], `${k}: links to unknown exercise ${b.dataset.ex}`);
-    }
-    $("exercise-back").click();
-    check(!$("exercises").hidden, "Back from an exercise page didn't return to Exercises");
-    UI.exercise("rdl", { from: "exercises" }); $("ex-try2").click(); await settle(1);
-    check(!$("player").hidden, "Try it with the coach didn't start the preview");
+    UI.tab("exercises");
+    $("ex-results").querySelector('[data-ex="rdl"]').click(); await settle(1);
+    check(!$("player").hidden && Workout.preview && Workout.step().key === "rdl", "tapping an exercise didn't play its preview");
     Workout.exit(); await settle(0.5);
-    check(!$("exercise").hidden, "closing the preview didn't return to the exercise page");
+    check(!$("exercises").hidden, "closing the preview didn't return to Exercises");
     UI.show("home");
-    return { name: "Exercises tab", steps: Object.keys(EX).length, lines: 0, fails };
+    return { name: "Exercises tab", steps: 0, lines: 0, fails };
+  }
+
+  /* ---------- Plans tab: every ready-made plan is valid, browsing never changes your week */
+  async function plansCheck() {
+    const fails = [], check = (ok, msg) => { if (!ok) fails.push(msg); };
+    for (const p of PROGRAMS) {
+      const r = parsePlan(p.link);
+      check(!r.problems.length && !r.fixes.length && r.plan?.link === p.link, `${p.id}: plan link isn't clean (${[...r.problems, ...r.fixes].join("; ")})`);
+      check(p.goals.every((g) => GOALS[g]) && ["beginner", "intermediate"].includes(p.level), `${p.id}: goals or level missing`);
+    }
+    const mine = Plans.current;
+    Plans.none();
+    check(!$("plans").hidden && !$("tabbar").hidden, "with no plan, the app didn't start on Plans");
+    UI.show("home"); check(!$("week-empty").hidden, "My week with no plan doesn't say so");
+    UI.tab("plans");
+    check($("plans-list").querySelectorAll(".plan-tile[data-id]").length === PROGRAMS.length, "Plans doesn't list every plan");
+    check(!!$("plans-list").querySelector(".create-tile"), "no create-your-own card at the end of Plans");
+    UI.goal = "lose"; UI.plans();
+    check([...$("plans-list").querySelectorAll(".plan-tile[data-id]")].every((b) => PROGRAMS.find((p) => p.id === b.dataset.id).goals.includes("lose")), "goal filter shows other goals");
+    UI.goal = null; UI.plans();
+    Plans.use(null);                                           // a week to compare against
+    const before = Plans.current.link;
+    UI.tab("plans"); UI.planView("gym-first");
+    check(Plans.current.link === before, "opening a plan's preview changed your week");
+    $("plan-view-back").click();
+    check(!$("plans").hidden && Plans.current.link === before, "backing out of a preview changed your week");
+    UI.planView("gym-first"); $("plan-start").click();
+    check(!$("plan-confirm").hidden, "starting a plan over your week didn't ask first");
+    $("plan-confirm-no").click();
+    check(Plans.current.link === before && $("plan-confirm").hidden, "Keep didn't keep your week");
+    $("plan-start").click(); $("plan-confirm-yes").click();
+    check(Plans.current.title === "Gym First Steps" && !$("home").hidden, "Start this plan didn't make it your week");
+    UI.planView("gym-first");
+    check($("plan-start").disabled, "your own week's preview still offers to start it");
+    $("plan-view-body").querySelector('[data-ex="legpress"]').click(); await settle(1);
+    check(!$("player").hidden && Workout.step().key === "legpress", "tapping an exercise in a plan didn't play its preview");
+    Workout.exit(); await settle(0.5);
+    check(!$("plan-view").hidden, "closing the preview didn't return to the plan");
+    if (mine) Plans.use(mine.example ? null : mine); else Plans.use(null);
+    return { name: "Plans tab", steps: PROGRAMS.length, lines: 0, fails: fails.filter(Boolean) };
   }
 
   /* ---------- plan links, the AI message, and a recording for everything a plan can ask for */
@@ -419,6 +451,7 @@
     results.push(await safely("Muscle map", muscleCheck));
     results.push(await safely("Exercise details", async () => detailsCheck()));
     results.push(await safely("Exercises tab", exercisesCheck));
+    results.push(await safely("Plans tab", plansCheck));
     results.push(await safely("Plan links & AI message", async () => planCheck()));
     const sessions = async (plan, which) => {
       for (const i of which) {
@@ -433,6 +466,10 @@
     if (days.length) {
       const user = parsePlan(USER_PLAN).plan;
       await sessions(user, user.days.map((_, i) => i).filter((i) => user.days[i].kind !== "activity"));
+    }
+    if (previews) for (const p of PROGRAMS.filter((x) => x.link !== EXAMPLE_PLAN.link)) {   // every ready-made plan plays
+      const plan = parsePlan(p.link).plan;
+      await sessions(plan, plan.days.map((_, i) => i).filter((i) => plan.days[i].kind !== "activity"));
     }
     if (previews) {
       results.push(await safely("Previews", runPreviews));
