@@ -6,7 +6,7 @@ const ROOT = path.join(__dirname, "..");
 const FILES = ["library.js", "plan.js", "speech.js", "prompt.js", "programs.js"];
 const NAMES = ["EX", "WARMUP", "COOLDOWN", "ACTIVITIES", "variant", "isVariant", "MUSCLES", "muscleList", "TYPES", "JOINTS", "GEAR", "AREAS", "areasOf", "DOSE", "WEEKDAYS", "DAY_NAMES",
   "EXAMPLE_PLAN", "dose", "doseOptions", "parsePlan", "planLink", "examplePlan", "SPOKEN_NAMES", "speakable", "SAY",
-  "clipId", "allPhrases", "SITE", "AI_CHATS", "chatLink", "coachPrompt", "GOALS", "PROGRAMS"];
+  "clipId", "allPhrases", "SITE", "AI_CHATS", "chatLink", "coachPrompt", "GOALS", "PROGRAMS", "OWN_PHOTOS"];
 const ctx = vm.createContext({ console });
 vm.runInContext(FILES.map((f) => fs.readFileSync(path.join(ROOT, f), "utf8")).join("\n;\n")
   + `\n;this.__out = { ${NAMES.join(", ")} };`, ctx, { filename: "app-data.js" });

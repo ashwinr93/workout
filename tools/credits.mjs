@@ -42,12 +42,14 @@ const lines = [...channels.entries()]
   });
 
 // the ready-made plans' card photos (programs.js)
-const photos = ctx.PROGRAMS.map((p) => `- [${md(p.title || ctx.examplePlan().title)}](https://unsplash.com/photos/${p.photo.page}) by ${md(p.photo.by)}`);
+const photos = [...ctx.PROGRAMS.map((p) => [p.title || ctx.examplePlan().title, p.photo]),
+  ...Object.entries(ctx.OWN_PHOTOS).map(([k, ph]) => [`Your own plans (${k === "stretch" ? "stretching" : ctx.GEAR[k].name.toLowerCase()})`, ph])]
+  .map(([what, ph]) => `- [${md(what)}](https://unsplash.com/photos/${ph.page}) by ${md(ph.by)}`);
 
 const section = [START,
   `Every demo is the creator's own video, played through YouTube's embedded player (start and end points only; nothing is downloaded or edited). Thank you to these ${channels.size} channels:`,
   "", ...lines, "",
-  "The ready-made plans' photos come from [Unsplash](https://unsplash.com) (free to use under the [Unsplash License](https://unsplash.com/license)) and load from Unsplash's servers. Thank you to these photographers:",
+  "The plan photos come from [Unsplash](https://unsplash.com) (free to use under the [Unsplash License](https://unsplash.com/license)) and load from Unsplash's servers. Thank you to these photographers:",
   "", ...photos, END].join("\n");
 
 const readme = fs.readFileSync(README, "utf8");

@@ -197,7 +197,7 @@ Every demo is the creator's own video, played through YouTube's embedded player 
 - **[Wade Bass](https://www.youtube.com/@Tglcoach)**: [Tibialis Raises](https://www.youtube.com/watch?v=OPEuhclsTUQ)
 - **[YMCA Calgary](https://www.youtube.com/@ymcacalgary)**: [Seated Leg Curl](https://www.youtube.com/watch?v=TAbolZJ6Lg4)
 
-The ready-made plans' photos come from [Unsplash](https://unsplash.com) (free to use under the [Unsplash License](https://unsplash.com/license)) and load from Unsplash's servers. Thank you to these photographers:
+The plan photos come from [Unsplash](https://unsplash.com) (free to use under the [Unsplash License](https://unsplash.com/license)) and load from Unsplash's servers. Thank you to these photographers:
 
 - [Start Here: Full Body](https://unsplash.com/photos/funsezUxxe4) by Vitaly Gariev
 - [Lose Weight at Home](https://unsplash.com/photos/oLStrTTMz2s) by bruce mars
@@ -208,6 +208,11 @@ The ready-made plans' photos come from [Unsplash](https://unsplash.com) (free to
 - [Desk Worker: Posture and Back](https://unsplash.com/photos/07mA-tEIJ6A) by Vitaly Gariev
 - [Joint-Friendly Strength & Flexibility](https://unsplash.com/photos/z9VbZ4tM3Zc) by Michael Faix
 - [Mobility and Recovery](https://unsplash.com/photos/EUk6LRg9alk) by Vitaly Gariev
+- [Your own plans (bodyweight)](https://unsplash.com/photos/cr1x1-_EUbw) by Vitaly Gariev
+- [Your own plans (bands)](https://unsplash.com/photos/kB4FXX1KXhQ) by Centre for Ageing Better
+- [Your own plans (dumbbells)](https://unsplash.com/photos/1lkg9MLl_rU) by engin akyurt
+- [Your own plans (gym)](https://unsplash.com/photos/VgZsyPiZLKw) by Jonathan Borba
+- [Your own plans (stretching)](https://unsplash.com/photos/893qZckG6I4) by THLT LCX
 <!-- credits:end -->
 
 Changed the videos? `node tools/credits.mjs` rebuilds this list.

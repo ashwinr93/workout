@@ -10,6 +10,15 @@
    README by tools/credits.mjs): img = its id on images.unsplash.com, page = its unsplash.com/photos/ id */
 const GOALS = { lose: "Lose weight", strong: "Get stronger", move: "Move better" };
 const photoUrl = (p, w) => `https://images.unsplash.com/photo-${p.photo.img}?w=${w}&q=70&auto=format&fit=crop`;
+// A plan you made with AI gets a photo that matches what it uses: the most kit any of its exercises
+// needs (GEAR in library.js), or stretching when it's all stretches
+const OWN_PHOTOS = {
+  bodyweight: { img: "1758599878222-04c0d21c275b", by: "Vitaly Gariev", page: "cr1x1-_EUbw" },
+  bands: { img: "1658314755811-73c806249f31", by: "Centre for Ageing Better", page: "kB4FXX1KXhQ" },
+  dumbbells: { img: "1659614871735-e133639e4b28", by: "engin akyurt", page: "1lkg9MLl_rU" },
+  gym: { img: "1571019652329-224804d6d663", by: "Jonathan Borba", page: "VgZsyPiZLKw" },
+  stretch: { img: "1593811167565-4672e6c8ce4c", by: "THLT LCX", page: "893qZckG6I4" },
+};
 
 const PROGRAMS = [
   { id: "start", photo: { img: "1758599880618-3f03f2a401b4", by: "Vitaly Gariev", page: "funsezUxxe4" }, title: "Start Here: Full Body", goals: ["strong"], level: "beginner", gear: "Bodyweight and a sturdy table", mins: 30,

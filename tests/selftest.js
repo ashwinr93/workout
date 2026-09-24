@@ -384,12 +384,15 @@
       check(p.goals.every((g) => GOALS[g]) && ["beginner", "intermediate"].includes(p.level), `${p.id}: goals or level missing`);
       check(p.photo?.img && p.photo.by && p.photo.page, `${p.id}: no card photo (with its photographer, for the README credits)`);
     }
+    for (const k of [...Object.keys(GEAR), "stretch"]) {
+      check(OWN_PHOTOS[k]?.img && OWN_PHOTOS[k].by && OWN_PHOTOS[k].page, `no photo for your own plans that use ${k}`);
+    }
     const mine = Plans.current;
     Plans.none();
     check(!$("plans").hidden && !$("tabbar").hidden, "with no plan, the app didn't start on Plans");
     UI.show("home"); check(!$("week-empty").hidden, "My week with no plan doesn't say so");
     UI.tab("plans");
-    check($("plans-list").querySelectorAll(".plan-tile[data-id]").length === PROGRAMS.length, "Plans doesn't list every plan");
+    check($("plans-list").querySelectorAll('.plan-tile[data-id]:not([data-id^="own-"])').length === PROGRAMS.length, "Plans doesn't list every plan");
     check(!!$("plans-list").querySelector(".create-tile"), "no create-your-own card at the end of Plans");
     UI.goal = "lose"; UI.plans();
     check([...$("plans-list").querySelectorAll(".plan-tile[data-id]")].every((b) => PROGRAMS.find((p) => p.id === b.dataset.id).goals.includes("lose")), "goal filter shows other goals");
@@ -416,6 +419,12 @@
     check(!$("day").hidden, "closing the preview didn't return to the day");
     $("day-back").click();
     check(!$("plan-view").hidden, "back from a plan's day didn't return to the plan");
+    // a plan you made with AI gets the same card, under Your plans, with a photo that fits its kit
+    Plans.use(parsePlan(USER_PLAN).plan); UI.tab("plans");
+    const own = $("plans-list").querySelector('.plan-tile[data-id^="own-"]');
+    check(own?.querySelector(".mine") && own.querySelector(".plan-photo")?.src.includes("images.unsplash.com"), "your own plan has no card (with a photo) under Your plans");
+    own?.click();
+    check(!$("plan-view").hidden && $("plan-start").disabled, "your own plan's card doesn't open its preview");
     if (mine) Plans.use(mine.example ? null : mine); else Plans.use(null);
     return { name: "Plans tab", steps: PROGRAMS.length, lines: 0, fails: fails.filter(Boolean) };
   }
