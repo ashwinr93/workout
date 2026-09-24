@@ -21,7 +21,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const OWN = "v1/t:Home-Strength/mon:Full-Body-A:boxsquat.3x10-12,sarow.3x10,slbridge.2x10,planktaps.3x30s/wed:Brisk-Walk:walk.30m/fri:Full-Body-B:rdl.3x8-10,floorpress.3x10,stepup.2x8,suitcase.3x40/sun:Stretch:couch.1x60s,pigeon.1x60s";
 const SCREENS = {
   home: ["home"], "home-end": ["home-end"], day: ["day:0"], "day-end": ["day-end:0"], create: ["create"],
-  plans: ["plans"], plan: ["plan:gym-first"], exercises: ["exercises"], player: ["player:0", "", 5000], rest: ["rest:0", "", 3000], finish: ["finish:0"], "own-plan": ["home", OWN], fix: ["home", "v1/t:Gym/mon:Legs:legpress.3x10,rdl.3x8-10"],
+  plans: ["plans"], plan: ["plan:gym-first"], exercises: ["exercises"], player: ["player:0", "", 5000], rest: ["rest:0", "", 3000], finish: ["finish:0"], "own-plan": ["home", OWN], fix: ["home", "v1/t:Gym/mon:Legs:legpress.3x10,moonwalk.3x8-10"],
 };
 const names = arg("screens", "home,home-end,plans,plan,exercises,day,day-end,create,player,rest,finish,own-plan,fix").split(",");
 for (const n of names) if (!SCREENS[n]) throw new Error(`unknown screen "${n}" (known: ${Object.keys(SCREENS).join(", ")})`);

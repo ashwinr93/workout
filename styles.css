@@ -174,7 +174,7 @@ h1, h2, h3, p { margin: 0; }
   background: #fff; color: #10141a; font-size: 16px; font-weight: 750; }
 .plan-tile .mine { position: absolute; top: 14px; left: 14px; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); }
 /* a plan's preview opens on its photo, the title on a shade at its foot */
-.plan-hero::before { background: linear-gradient(0deg, rgb(8 10 14 / .85) 0%, rgb(8 10 14 / .2) 50%, transparent 100%); }
+.plan-hero::before { background: linear-gradient(0deg, rgb(8 10 14 / .92) 0%, rgb(8 10 14 / .6) 40%, rgb(8 10 14 / 0) 75%); }
 .plan-hero { display: flex; align-items: flex-end; min-height: 200px; padding: 18px; margin-bottom: 10px; }
 .plan-hero .title { margin: 0; color: #fff; }
 .plan-hero .plan-days { display: block; margin-bottom: 2px; }

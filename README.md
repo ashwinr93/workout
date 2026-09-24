@@ -1,7 +1,7 @@
 # Workout Coach
 
-**A workout plan turned into a coached session you follow on your TV, and a way for anyone to get their own plan by chatting with an AI.**
-Human demo videos, a calm coach voice, timers and form cues. Your phone is the remote.
+**A workout plan turned into a coached session you follow on your TV. Pick a ready-made plan, or get your own by chatting with an AI.**
+Human demo videos, a calm coach voice, timers and form cues. Your phone is the remote. Free, no account, no ads.
 
 **Try it:** https://ashwinr93.github.io/workout/
 
@@ -21,8 +21,9 @@ So I turned the PDF into this. I open it on my iPhone, mirror the screen to the 
 The plan it opens with is mine. It covers the plan's warm-up, the day's exercises and the cool-down stretches, all using only the equipment I own. Every exercise names *when to back off*, because the whole point is to train around my joints, not through them.
 
 <p>
-  <img src="docs/home.png" width="32%" alt="Home screen: the week's days">
-  <img src="docs/day.png" width="32%" alt="A day: warm-up and cool-down toggles, then the exercises">
+  <img src="docs/home.png" width="32%" alt="My week: the plan's photo, then the week's days, today first">
+  <img src="docs/plans.png" width="32%" alt="Plans: ready-made plans as photo cards, each with its days a week, level and kit">
+  <img src="docs/day.png" width="32%" alt="A day: the muscles it works, then the warm-up (with its switch) and the exercises">
 </p>
 
 ## Using it: tips
@@ -48,20 +49,27 @@ It then opens full-screen like an app, with no browser bars.
 - **Video** plays the demo's own audio. On demos with no voice, the coach fills in.
 - Tap **Coach** again to silence everything.
 
-**Warm-up and cool-down** are on by default. Turn either off on the day screen.
+**Warm-up and cool-down** are on by default. Turn either off with the switch in its section on the day screen, or tap **Skip warm-up** in the player once you're warm.
 
-**Preview** any exercise from the day screen to learn it before you start.
+**Preview** any exercise by tapping it (on a day, or in the **Exercises** tab) to learn it before you start. The preview also shows its level, the kit it needs and which joints it's easy on or loads.
+
+**The coach tells you what each exercise works** during the rest before it ("This one works your quads and glutes"), and the muscle figure on screen lights them up, so the gym words become familiar.
 
 There are no accounts, no tracking and no ads (every demo video is checked for ads). Nothing leaves your phone except the YouTube embeds.
 
+## Ready-made plans
+
+The **Plans** tab has nine plans to start from: a first full-body plan at home, losing weight with bands and walks, first steps in a gym, building muscle with dumbbells or in a gym, barbell basics, a desk worker's posture plan, a mobility plan and my own week. They're built from published guidance (ACSM progression models, Schoenfeld's work on training volume, the WHO activity guidelines). Filter by goal, open one to see each day, and tap **Start this plan** to make it your week. Browsing never changes your week, and switching asks first.
+
 ## Get your own plan (no code needed)
 
-Tap **Create your own plan** on the home screen and pick an AI you already use (ChatGPT, Claude, Gemini, Copilot, Perplexity, Grok or Le Chat). It opens a new chat with a message that turns the AI into a coach: it asks about your goals, any aches, where you train (at home or in a gym) and how much time you have, one question at a time, then gives you a link. Tap the link and your plan opens in the app, with the same videos, coach voice and timers.
+Tap **+ Create** on the Plans tab and pick an AI you already use (ChatGPT, Claude, Gemini, Copilot, Perplexity, Grok or Le Chat). It opens a new chat with a message that turns the AI into a coach: it asks about your goals, any aches, where you train (at home or in a gym) and how much time you have, one question at a time, then gives you a link. Tap the link and your plan opens in the app, with the same videos, coach voice and timers.
 
 - **It's free.** The AI runs on your own account; this site has no server.
 - **Your plan lives in its link.** Bookmark it or add it to your Home Screen. The app also remembers the last plan you opened on that phone.
 - **Private.** Your answers stay in your AI chat. The link holds only exercise names and numbers, and the part after `#` is never sent to any server.
-- **Changing it later:** open your plan and tap **Change it with AI**. The AI gets your current plan and gives you a new link.
+- **Changing it later:** on My week, tap **Change or share this plan → Change it with AI**. The AI gets your current plan and gives you a new link. **Share** sends the link to a friend, and it opens the same plan for them.
+- **Your plans** on the Plans tab keeps the plans you've made, each with its own card, so you can switch back anytime.
 - **Cardio and sport** become activity days (a walk, a run, your football match), with the warm-up before and the stretches after.
 - If an AI makes a mistake in the link, the app says what's wrong and gives you a message to paste back into the chat.
 
@@ -79,6 +87,7 @@ If you'd rather run your own copy (your own exercises, videos and wording), fork
 | [`plan.js`](plan.js) | The plan link format, and the example plan the app opens with (`EXAMPLE_PLAN`) |
 | [`speech.js`](speech.js) | Everything the coach says, and how names are pronounced (`SPOKEN_NAMES`) |
 | [`prompt.js`](prompt.js) | The message that turns an AI chat into a coach that writes plans |
+| [`programs.js`](programs.js) | The ready-made plans on the Plans tab, and their photos (saved in `photos/` by `tools/photos.mjs`) |
 
 The easiest way is to hand the job to an AI coding assistant such as [Claude Code](https://claude.com/claude-code). [`CLAUDE.md`](CLAUDE.md) already explains how the app is built and the rules that keep it good: one movement per exercise, cues that match the demo, ad-free videos, and wording that sounds natural out loud.
 
@@ -122,7 +131,7 @@ It records only new or changed phrases (including every rep count and hold time 
 
 ### Publish it for free
 
-In your fork on GitHub, go to **Settings → Pages → Deploy from a branch → `main`, `/ (root)`**. A minute later it's live at `https://<you>.github.io/<repo>/`. Change `SITE` in `prompt.js` to that address so the AIs link to your copy.
+In your fork on GitHub, go to **Settings → Pages → Source: GitHub Actions**. The included workflow ([`.github/workflows/pages.yml`](.github/workflows/pages.yml)) publishes `main` at `https://<you>.github.io/<repo>/`, and a `staging` branch, if you make one, at `…/staging/` for trying changes on your phone first. Each release's files are stamped with its commit, so phones never mix old and new files.
 
 ### Check it
 
