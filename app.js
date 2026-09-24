@@ -748,12 +748,11 @@ Figure.load(); };
     const amount = d.time ? `${fmt(d.time)}${d.perSide ? " each side" : ""}` : amountText(d);
     return d.sets > 1 ? `${d.sets} × ${amount}` : amount;
   },
-  // Front and back figures for the day's own exercises, and the figure switch
+  // Front and back figures for the day's own exercises
   dayMuscles(entries) {
     const s = Figure.session(entries);
     return `<div class="day-muscles">${Figure.slot("full", s, muscleList(s.main))}
-      <div><p class="main-muscles">${esc(muscleList(s.main))}</p>${s.help.length ? `<p class="help-muscles">${esc(muscleList(s.help))}</p>` : ""}
-      <div class="fig-switch" role="group" aria-label="Figure">${["male", "female"].map((k) => `<button data-kind="${k}" aria-pressed="${Figure.kind === k}">${k === "male" ? "Male" : "Female"}</button>`).join("")}</div></div></div>`;
+      <div><p class="main-muscles">${esc(muscleList(s.main))}</p>${s.help.length ? `<p class="help-muscles">${esc(muscleList(s.help))}</p>` : ""}</div></div>`;
   },
   section(label, entries) { return entries.length ? `<div class="label section-label">${label}</div><div class="ex-list">${entries.map((e) => this.exRow(e)).join("")}</div>` : ""; },
   toggle(id, on, title, sub) {
@@ -784,8 +783,6 @@ Figure.load(); };
     if (matchMedia("(pointer: coarse)").matches)
       $("day-body").insertAdjacentHTML("beforeend", `<p class="note tv-tip">Want it bigger? Mirror your phone to a TV: turn off Rotation Lock, hold the phone sideways, then Control Center → Screen Mirroring.</p>`);
     $("day-body").onclick = (e) => {
-      const k = e.target.closest(".fig-switch button");
-      if (k) { Figure.choose(k.dataset.kind); return this.day(); }
       const r = e.target.closest(".ex-row"); if (r) { const x = this.rows[+r.dataset.r]; Workout.startPreview(x.key, x.dose); }
     };
     Figure.paint($("day-body"));
@@ -1019,6 +1016,10 @@ function debugBar() {
 /* ============================================================ boot */
 $("day-back").onclick = () => { Workout.day = null; UI.show("home"); };
 $("create-back").onclick = () => UI.show("home");
+// Muscle figure: an appearance setting (home footer), remembered on the device
+const figureSwitch = () => $("fig-switch").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.kind === Figure.kind));
+$("fig-switch").onclick = (e) => { const b = e.target.closest("button"); if (b) { Figure.choose(b.dataset.kind); figureSwitch(); } };
+figureSwitch();
 $("exit-btn").onclick = () => UI.exitButton();
 $("vid-prev").onclick = () => Video.choose(Video.idx - 1);
 $("vid-next").onclick = () => Video.choose(Video.idx + 1);
