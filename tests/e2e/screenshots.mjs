@@ -65,17 +65,19 @@ await page.close();
 const img = (f) => `data:image/png;base64,${fs.readFileSync(path.join(OUT, f)).toString("base64")}`;
 const icon = `data:image/svg+xml;base64,${fs.readFileSync(path.join(ROOT, "icons/icon.svg")).toString("base64")}`;
 page = await browser.newPage({ viewport: { width: 1200, height: 630 } });
-// the player sits beside the words (from the name down), not beside the icon above them
+// the icon and name as one lockup (the icon's ring, not its dark square, lines up with the text), then what it is, then what you get; the player beside the whole block
 await page.setContent(`<body style="margin:0;width:1200px;height:630px;background:#0d1015;color:#eef1f5;font-family:-apple-system,system-ui,sans-serif;overflow:hidden;
-    display:grid;grid-template-columns:430px 660px;column-gap:24px;align-content:center;padding-left:60px;box-sizing:border-box">
-  <img src="${icon}" style="width:84px;height:84px;border-radius:20px;grid-column:1">
-  <div style="grid-column:1;grid-row:2;align-self:center;margin-top:26px">
-    <div style="font-size:62px;font-weight:800;letter-spacing:-1.5px;line-height:1.02">Workout Coach</div>
-    <div style="font-size:28px;line-height:1.3;margin-top:18px;color:#c9ced6">A simple, free workout coach in your browser</div>
-    <div style="font-size:22px;line-height:1.45;margin-top:26px;color:#3ddc97;font-weight:650">Demo videos · A coach voice · Timers</div>
-    <div style="font-size:22px;line-height:1.45;color:#8b95a3">No sign-up, no ads, nothing to install</div>
+    display:flex;align-items:center;gap:34px;padding:0 50px 0 56px;box-sizing:border-box">
+  <div style="width:470px;flex:none">
+    <div style="display:flex;align-items:center;gap:16px">
+      <img src="${icon}" style="width:64px;height:64px;margin-left:-11px">
+      <div style="font-size:52px;font-weight:800;letter-spacing:-1.3px;line-height:1">Workout Coach</div>
+    </div>
+    <div style="font-size:28px;line-height:1.3;margin-top:24px;color:#c9ced6">A simple, free workout coach<br>in your browser</div>
+    <div style="font-size:22px;line-height:1.5;margin-top:28px;color:#3ddc97;font-weight:650">Demo videos · A coach voice · Timers</div>
+    <div style="font-size:22px;line-height:1.5;color:#8b95a3">No sign-up, no ads, nothing to install</div>
   </div>
-  <img src="${img("player.png")}" style="grid-column:2;grid-row:2;align-self:center;margin-top:26px;width:660px;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.6);border:1px solid #232a33">
+  <img src="${img("player.png")}" style="width:590px;flex:none;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.6);border:1px solid #232a33">
 </body>`);
 await page.screenshot({ path: `${OUT}/share.jpg`, type: "jpeg", quality: 82 });
 await page.close();
