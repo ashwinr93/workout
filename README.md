@@ -1,30 +1,34 @@
 # Workout Coach
 
-**A workout plan turned into a coached session you follow on your TV. Pick a ready-made plan, or get your own by chatting with an AI.**
-Human demo videos, a calm coach voice, timers and form cues. Your phone is the remote. Free, no account, no ads.
+This is a small workout app for people who would rather press a button and get on with the workout than keep figuring out what comes next. It combines exercise demos, spoken instructions, rest timers and a little bit of context around the muscles and joints involved.
+
+The intention is to make following a plan feel a little less intimidating. There are ready-made plans to start from, but the app is also designed so you can bring your own plan into it without having to learn how to code.
 
 **Try it:** https://ashwinr93.github.io/workout/
-
-![The player in landscape: demo video on the left, the exercise, Focus cue and Done button on the right](docs/player.png)
-
-## Why this exists
-
-I had a good workout plan: a PDF with a joint-friendly, four-day split, safety rules and a stretching routine. I also had a small home setup: **a pair of dumbbells, an adjustable bench and a yoga mat**. What I didn't have was a way to *follow* the plan mid-workout without squinting at a PDF between sets or guessing whether my form was right.
-
-So I turned the PDF into this. I open it on my iPhone, mirror the screen to the TV and work out in front of it:
-
-- a person on the TV shows each movement;
-- a coach voice talks me through the set, with the one thing to remember saved for last;
-- rest timers count down and tell me what's next;
-- my phone stays in my hand as the remote. **Done** moves to the next set.
-
-The plan it opens with is mine. It covers the plan's warm-up, the day's exercises and the cool-down stretches, all using only the equipment I own. Every exercise names *when to back off*, because the whole point is to train around my joints, not through them.
 
 <p>
   <img src="docs/home.png" width="32%" alt="My week: the plan's photo, then the week's days, today first">
   <img src="docs/plans.png" width="32%" alt="Plans: ready-made plans as photo cards, each with its days a week, level and kit">
   <img src="docs/day.png" width="32%" alt="A day: the muscles it works, then the warm-up (with its switch) and the exercises">
 </p>
+
+## How I use it
+
+I usually run it on my phone and mirror the screen to the TV while I work through the workout. The phone isn't particularly important though.. you can just use the app directly on your phone, laptop or whatever screen you have around.
+
+This is basically what my setup looks like at home. Have used my laptop to mirror it this time so I could use my phone to click this photo 😛. I usually mirror the workout from my phone though so I can easily reach out and click next during the workout.
+
+![My setup at home: the workout mirrored to the TV, with a yoga mat, a pair of dumbbells and an adjustable bench in front of it](docs/setup.jpg)
+
+## Why this exists
+
+Once I had the basic version working for myself, it felt a bit silly to keep it private. It's a fairly simple idea, and there are probably plenty of ways other people would want to structure their workouts differently. So I figured I'd put the whole thing out there and let people use it, break it, improve it or ignore most of it and take the bits they find useful.
+
+## Make it yours
+
+And for the curious, this was entirely vibe coded with Claude. I had the idea in my head, described what I wanted, and kept going back and forth with Claude until I had something I was happy with. It was a lot more fun than I expected!
+
+So don't feel like you need to understand every line of code before touching this. Point Claude, Codex, Cursor or whichever coding agent you use at the repo and have a go. Change the exercises, the plans, the design or whatever else you fancy. And share the good bits back.
 
 ## Using it: tips
 
@@ -59,11 +63,11 @@ There are no accounts, no tracking and no ads (every demo video is checked for a
 
 ## Ready-made plans
 
-The **Plans** tab has nine plans to start from: a first full-body plan at home, losing weight with bands and walks, first steps in a gym, building muscle with dumbbells or in a gym, barbell basics, a desk worker's posture plan, a mobility plan and my own week. They're built from published guidance (ACSM progression models, Schoenfeld's work on training volume, the WHO activity guidelines). Filter by goal, open one to see each day, and tap **Start this plan** to make it your week. Browsing never changes your week, and switching asks first.
+The **Plans** tab has plans to start from, like a first full-body plan at home, losing weight with bands and walks, first steps in a gym, building muscle with dumbbells or in a gym, a desk worker's posture plan, a mobility plan and my own week. They're built from published guidance (ACSM progression models, Schoenfeld's work on training volume, the WHO activity guidelines). Filter by goal, open one to see each day, and tap **Start this plan** to make it your week. Browsing never changes your week, and switching asks first.
 
 ## Get your own plan (no code needed)
 
-Tap **+ Create** on the Plans tab and pick the AI you already use: ChatGPT, Claude, Gemini or DeepSeek (or copy the message into any other). It opens a new chat with a message that turns the AI into a coach: it asks about your goals, any aches, where you train (at home or in a gym) and how much time you have, one question at a time, then gives you a link. Tap the link and your plan opens in the app, with the same videos, coach voice and timers.
+Tap **+ Create** on the Plans tab and pick the AI chat you already use. It opens a new chat with a message that turns the AI into a coach: it asks about your goals, any aches, where you train (at home or in a gym) and how much time you have, one question at a time, then gives you a link. Tap the link and your plan opens in the app, with the same videos, coach voice and timers.
 
 - **It's free.** The AI runs on your own account; this site has no server.
 - **Your plan lives in its link.** Bookmark it or add it to your Home Screen. The app also remembers the last plan you opened on that phone.
@@ -73,11 +77,11 @@ Tap **+ Create** on the Plans tab and pick the AI you already use: ChatGPT, Clau
 - **Cardio and sport** become activity days (a walk, a run, your football match), with the warm-up before and the stretches after.
 - If an AI makes a mistake in the link, the app says what's wrong and gives you a message to paste back into the chat.
 
-ChatGPT and Claude open with the message ready (sign in to Claude first). Gemini and DeepSeek can't receive a message through a link, so the app copies it and you paste it in. If the chat shows your link as plain text rather than a link you can tap, copy it and paste it into **Got your link?** on the same screen.
+Some chats open with the message ready (ChatGPT, and Claude once you're signed in). For the rest, the app copies the message and you paste it in. If the chat shows your link as plain text rather than a link you can tap, copy it: back in the app, Create asks for it.
 
 The AI can only choose from the app's exercise library, where every exercise has a checked demo video, cues that match it and a recorded coach voice. The library is growing.
 
-## Make it yours with code
+## Under the hood
 
 If you'd rather run your own copy (your own exercises, videos and wording), fork this repo. There's no build step: it's plain HTML, CSS and JavaScript.
 

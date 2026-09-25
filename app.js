@@ -268,7 +268,25 @@ const Video = {
   applySound() {
     if (!this.ready) return;
     this.lastMuteCall = Date.now();
-    if (Sound.videoSounds()) { this.yt.unMute(); this.yt.setVolume(100); } else this.yt.mute();
+    if (Sound.videoSounds() && !this.resting) { this.yt.unMute(); this.yt.setVolume(100); } else this.yt.mute();
+  },
+  // A rest: the next demo loads and plays (so the set can start at once, sound and all) but muted
+  // and hidden behind a still of it, so the screen doesn't show an exercise while it says Rest
+  rest(key, label, name) {
+    this.resting = true;
+    if (key) this.showExercise(key);
+    this.applySound();
+    const v = key && this.current();
+    $("rest-cover-img").src = v ? `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg` : "";
+    $("rest-cover-label").textContent = label; $("rest-cover-name").textContent = name || "";
+    $("rest-cover").hidden = !key;
+  },
+  // The set begins: lift the cover and start the demo from the top, with its sound as chosen
+  endRest() {
+    if (!this.resting) return;
+    this.resting = false;
+    $("rest-cover").hidden = true;
+    this.restart(); this.applySound();
   },
   // After a clip starts, check whether the browser actually let it make sound
   watchSound() {
@@ -302,7 +320,8 @@ const Video = {
   start() { this.active = true; this.key = null; },
   stop() {
     clearTimeout(this.stallTimer); clearTimeout(this.soundTimer); this.hint(null);
-    this.active = false; this.pending = null; this.key = null;
+    this.active = false; this.pending = null; this.key = null; this.resting = false;
+    $("rest-cover").hidden = true;
     try { if (this.ready) { this.yt.pauseVideo(); this.yt.stopVideo(); this.yt.mute(); } } catch {}
   },
   resume() { if (this.active && this.ready) { this.yt.playVideo(); this.watchStall(); } },
@@ -496,6 +515,7 @@ const Workout = {
     log("step", `${this.cur + 1}/${this.steps.length}`, st.type, st.key || "", st.set ? `set ${st.set}` : "", st.side || "");
     UI.progress();
     if (st.type === "work") {
+      Video.endRest();
       Video.showExercise(st.key);
       const plan = Narration.work(st);
       this.timer = st.dose.time && !st.preview
@@ -505,9 +525,8 @@ const Workout = {
       Voice.plan(plan.lines);
     } else {
       const next = this.nextWork();
-      if (next) Video.showExercise(next.key);    // show what's coming up during the rest
       this.timer = { phase: "rest", left: st.dur, total: st.dur, paused: false, t0: Date.now() };
-      UI.rest(st, next);
+      UI.rest(st, next);                          // also covers the video with what's next (Video.rest)
       Voice.plan(Narration.rest(st, next));
     }
   },
@@ -1150,12 +1169,18 @@ const UI = {
 
   /* ---------- player: exercise */
   context(st) {
+    // which set you're on is the set tracker's job (beside the target), not this line's
     const what = st.preview ? `${this.facts(st.key, Workout.variantOf(st.key)).level}${st.sets > 1 ? ` · ${st.sets} sets` : ""}`
-      : st.section === "warm" ? "Warm-up"
-      : st.section === "cool" ? `Cool-down${st.sets > 1 ? ` · set ${st.set} of ${st.sets}` : ""}`
-      : `Set ${st.set} of ${st.sets}`;
+      : st.section === "warm" ? "Warm-up" : st.section === "cool" ? "Cool-down" : "";
     const m = variant(st.key, Workout.variantOf(st.key)).muscles;
-    return `${esc(what)}${st.side ? ` · <span class="side">${st.side}</span>` : ""} · <span class="muscles">${esc(muscleList(m.main))}</span>`;
+    return [what && esc(what), st.side && `<span class="side">${st.side}</span>`, `<span class="muscles">${esc(muscleList(m.main))}</span>`].filter(Boolean).join(" · ");
+  },
+  // Where you are in an exercise's sets, big enough to read from across the room: a bar per set
+  // (done, now, to come) and "Set 2 of 3", or "Last set"
+  setTracker(st) {
+    if (st.preview || st.sets < 2) return "";
+    const bars = Array.from({ length: st.sets }, (_, i) => `<i class="${i < st.set - 1 ? "done" : i === st.set - 1 ? "now" : ""}"></i>`).join("");
+    return `<span class="sets" id="set-tracker">${bars}<em>${st.set === st.sets ? "Last set" : `Set ${st.set} of ${st.sets}`}</em></span>`;
   },
   // An exercise's quick facts. A preview shows each beside what it's about (level in the top line,
   // equipment under the target, joints with the safety line); the rest screen, all on one line.
@@ -1175,8 +1200,8 @@ const UI = {
     $("panel").innerHTML = `<div class="panel-body">
       <div class="context">${this.context(st)}</div>
       <div class="head"><div class="head-text"><h2 class="name">${esc(v.name)}</h2>
-        ${hold ? `<div class="hold" id="hold"><span class="clock" id="clock"></span><span class="state" id="hold-state"></span></div>`
-               : `<div class="target-row"><div class="target">${this.target(st.dose)}</div>${f ? `<p class="equip">${esc(f.equip)}</p>` : ""}</div>`}</div>
+        ${hold ? `<div class="hold" id="hold"><span class="clock" id="clock"></span><span class="hold-side">${this.setTracker(st)}<span class="state" id="hold-state"></span></span></div>`
+               : `<div class="target-row"><div class="target">${this.target(st.dose)}</div>${this.setTracker(st)}${f ? `<p class="equip">${esc(f.equip)}</p>` : ""}</div>`}</div>
         ${Figure.slot("badge", v.muscles, muscleList(v.muscles.main))}</div>
       <i class="grow"></i>
       <div class="focus"><div class="label">Focus</div><p>${esc(v.key)}</p></div>
@@ -1233,7 +1258,12 @@ const UI = {
   rest(st, next) {
     this.stopCues();
     const nex = next && variant(next.key, Workout.variantOf(next.key));
-    const detail = next ? [next.section === "warm" ? "" : `Set ${next.set} of ${next.sets}`, next.side].filter(Boolean).join(" · ") : "";
+    // another set of the exercise you've just done says so in its heading, so it can't look like a repeat
+    const prev = Workout.steps.slice(0, Workout.cur).reverse().find((x) => x.type === "work");
+    const same = next && prev && prev.key === next.key && next.set > prev.set;
+    const heading = same ? (next.set === next.sets ? "Next: last set" : `Next: set ${next.set} of ${next.sets}`) : "Up next";
+    Video.rest(next?.key, heading, nex?.name);
+    const detail = next ? [same || next.section === "warm" ? "" : `Set ${next.set} of ${next.sets}`, next.side].filter(Boolean).join(" · ") : "";
     $("panel").innerHTML = `<div class="panel-body">
       <div class="context rest">Rest</div>
       <div class="rest-main">
@@ -1242,7 +1272,7 @@ const UI = {
             <circle id="rest-arc" cx="60" cy="60" r="54" fill="none" stroke="var(--rest)" stroke-width="8" stroke-linecap="round" stroke-dasharray="${this.ringLength}" stroke-dashoffset="0"/></svg>
           <div class="num" id="rest-num">${st.dur}</div>
         </div>
-        ${nex ? `<div class="rest-info"><div class="upnext"><div><div class="label">Up next</div><h3>${esc(nex.name)}</h3>${detail ? `<div class="muted">${esc(detail)}</div>` : ""}</div>${Figure.slot("badge", nex.muscles, muscleList(nex.muscles.main))}</div>
+        ${nex ? `<div class="rest-info"><div class="upnext"><div><div class="label${same ? " next-set" : ""}" id="rest-heading">${heading}</div><h3>${esc(nex.name)}</h3>${detail ? `<div class="muted">${esc(detail)}</div>` : ""}</div>${Figure.slot("badge", nex.muscles, muscleList(nex.muscles.main))}</div>
         <div class="focus"><div class="label">Focus</div><p>${esc(nex.key)}</p></div>
         <p class="rest-facts">${esc(this.exerciseFacts(next.key, Workout.variantOf(next.key)))}</p></div>` : ""}
       </div>
@@ -1381,6 +1411,7 @@ const chipFilter = (id, field) => ($(id).onclick = (e) => {
 chipFilter("ex-gear", "gear"); chipFilter("ex-area", "area");
 $("ex-results").onclick = (e) => { const b = e.target.closest("[data-ex]"); if (b) UI.preview(b.dataset.ex); };
 $("exit-btn").onclick = () => UI.exitButton();
+$("rest-cover").onclick = () => { $("rest-cover").hidden = true; };   // watch the next demo (still muted) during the rest
 $("vid-prev").onclick = () => Video.choose(Video.idx - 1);
 $("vid-next").onclick = () => Video.choose(Video.idx + 1);
 $("vid-restart").onclick = () => Video.restart();

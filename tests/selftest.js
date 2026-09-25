@@ -427,6 +427,33 @@
     check(store.get("leftForChat", 0) === 0, "opening the chat's plan didn't stop Create asking for it");
     check(Plans.current?.title === "Pasted" && !$("home").hidden, "pasting a plan link on Create didn't open the plan");
     Plans.use(null);
+    // where you are, on every screen, without the coach's voice: the set tracker on each set, and a
+    // rest that leads to another set of the same exercise says so ("Next: set 2 of 3")
+    for (const day of Plans.current.days.filter((d) => d.kind === "workout").slice(0, 2)) {
+      UI.openDay(day); Workout.start({ warm: false, cool: true, label: "where" });
+      Workout.steps.forEach((st, i) => {
+        Workout.cur = i; Workout.render();
+        const at = `${day.name} step ${i + 1}`;
+        if (st.type === "work") {
+          check($("rest-cover").hidden, `${at}: the rest's cover is still over the demo`);
+          const t = $("set-tracker");
+          if (st.sets < 2) return check(!t, `${at}: a set tracker on a one-set exercise`);
+          const bars = t ? [...t.querySelectorAll("i")] : [];
+          check(t && bars.length === st.sets && bars.findIndex((b) => b.classList.contains("now")) === st.set - 1
+            && t.querySelector("em").textContent === (st.set === st.sets ? "Last set" : `Set ${st.set} of ${st.sets}`),
+            `${at}: ${st.key} set ${st.set} of ${st.sets} isn't shown on screen`);
+        } else {
+          const next = Workout.steps.slice(i + 1).find((x) => x.type === "work"), prev = Workout.steps.slice(0, i).reverse().find((x) => x.type === "work");
+          if (!next) return;
+          const same = prev?.key === next.key, h = $("rest-heading")?.textContent;
+          check(same ? h === (next.set === next.sets ? "Next: last set" : `Next: set ${next.set} of ${next.sets}`) : h === "Up next",
+            `${at}: the rest before ${next.key} set ${next.set} says "${h}"`);
+          // and the video isn't playing an exercise while the screen says Rest: it's covered (and muted)
+          check(!$("rest-cover").hidden && $("rest-cover-label").textContent === h && FY.muted, `${at}: the next demo isn't covered and muted during the rest`);
+        }
+      });
+      Workout.exit(); await settle(0.3);
+    }
     // every plan photo and icon is there
     const files = [...new Set([...PROGRAMS, ...Object.values(OWN_PHOTOS).map((photo) => ({ photo }))].map(photoUrl)),
       "icons/icon.svg", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png", "manifest.webmanifest"];

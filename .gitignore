@@ -4,3 +4,4 @@ voice-samples/
 __pycache__/
 .venv/
 tests/e2e/node_modules/
+tests/e2e/walkthrough/

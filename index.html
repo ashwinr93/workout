@@ -11,9 +11,9 @@
      mixes a new page with old cached scripts; locally it stays "dev" -->
 <meta name="build" content="dev">
 <title>Workout Coach</title>
-<meta name="description" content="A free workout coach: your weekly plan with demo videos, a coach voice and timers. Pick a ready-made plan or have your own AI build one.">
+<meta name="description" content="A simple free workout coach in your browser. No sign-up, no ads, no app to install. Pick a plan or make one with the AI chat you already use.">
 <meta property="og:title" content="Workout Coach">
-<meta property="og:description" content="Your weekly plan with demo videos, a coach voice and timers. Pick a ready-made plan or have your own AI build one. Free.">
+<meta property="og:description" content="A simple free workout coach in your browser. No sign-up, no ads, no app to install. Pick a plan or make one with the AI chat you already use.">
 <meta property="og:image" content="https://ashwinr93.github.io/workout/docs/share.png">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
@@ -187,6 +187,8 @@
       <div id="yt"></div>
       <div class="fallback" id="video-fallback" hidden></div>
       <div class="hint" id="video-hint" hidden></div>
+      <!-- During a rest: the next exercise as a still, so the screen isn't playing while it says Rest -->
+      <button class="rest-cover" id="rest-cover" hidden aria-label="Show the demo"><img alt="" id="rest-cover-img"><span class="rest-cover-text"><small id="rest-cover-label"></small><b id="rest-cover-name"></b><em>Tap to watch the demo</em></span></button>
     </div>
     <div class="panel" id="panel"></div>
   </div>

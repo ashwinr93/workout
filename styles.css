@@ -270,6 +270,13 @@ h1, h2, h3, p { margin: 0; }
 /* body: video left, coaching panel right */
 .stage { flex: 1; min-height: 0; display: grid; grid-template-columns: 1.3fr 1fr; }
 .video { position: relative; background: #000; min-height: 0; overflow: hidden; }
+/* During a rest the next demo is covered by a still of it (tap to watch) */
+.rest-cover { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; background: #000; color: #fff; text-align: center; width: 100%; }
+.rest-cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .35; }
+.rest-cover-text { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 16px; }
+.rest-cover small { font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--rest); }
+.rest-cover b { font-size: clamp(20px, 5vh, 32px); font-weight: 750; line-height: 1.15; }
+.rest-cover em { font-style: normal; font-size: 13px; color: rgba(255, 255, 255, .7); }
 .video iframe, #yt { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .video .hint { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); max-width: 90%; pointer-events: none;
   background: rgba(0,0,0,.82); color: #fff; font-size: 14px; font-weight: 600; padding: 8px 12px; border-radius: 8px; text-align: center; }
@@ -292,7 +299,15 @@ h1, h2, h3, p { margin: 0; }
 .target { align-self: flex-start; display: inline-flex; align-items: baseline; gap: 6px; border-radius: 999px;
   padding: clamp(4px, 1vh, 7px) clamp(12px, 1.4vw, 16px); background: var(--panel-2); font-size: clamp(14px, 3vh, 18px); color: var(--muted); }
 .target b { color: var(--text); font-size: 1.15em; font-variant-numeric: tabular-nums; }
-.hold { display: flex; align-items: baseline; gap: 12px; }
+/* the set tracker: a bar per set (done, now, to come) and "Set 2 of 3" / "Last set" */
+.sets { display: inline-flex; align-items: center; gap: 4px; flex: none; }
+.sets i { width: clamp(14px, 3vh, 22px); height: 6px; border-radius: 3px; background: var(--line); }
+.sets i.done { background: var(--accent); opacity: .45; }
+.sets i.now { background: var(--accent); }
+.sets em { font-style: normal; font-weight: 700; font-size: clamp(13px, 2.8vh, 16px); color: var(--text); margin-left: 6px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.hold-side { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }   /* beside the countdown: the set, then Hold / Get in position */
+.upnext .label.next-set { color: var(--accent); font-size: 13px; }
+.hold { display: flex; align-items: center; gap: 12px; }
 .hold .clock { font-size: clamp(36px, 11vh, 72px); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
 .hold .state { color: var(--muted); font-size: clamp(13px, 2.8vh, 17px); }
 .hold.ready .clock { color: var(--muted); }
@@ -407,5 +422,7 @@ h1, h2, h3, p { margin: 0; }
   .head .target-row { grid-column: 1; }
   .head .hold { grid-column: 1; justify-self: start; }
   .head .fig.badge { grid-column: 2; width: 48px; height: 48px; }
+  .sets i { width: 12px; }
+  .hold { gap: 10px; }
   .ring .num { font-size: 40px; }
 }
