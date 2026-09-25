@@ -94,7 +94,7 @@ If you'd rather run your own copy (your own exercises, videos and wording), fork
 | [`prompt.js`](prompt.js) | The message that turns an AI chat into a coach that writes plans |
 | [`programs.js`](programs.js) | The ready-made plans on the Plans tab, and their photos (saved in `photos/` by `tools/photos.mjs`) |
 
-The easiest way is to hand the job to an AI coding assistant such as [Claude Code](https://claude.com/claude-code). [`CLAUDE.md`](CLAUDE.md) already explains how the app is built and the rules that keep it good: one movement per exercise, cues that match the demo, ad-free videos, and wording that sounds natural out loud.
+The easiest way is to hand the job to an AI coding assistant such as [Claude Code](https://claude.com/claude-code). [`CLAUDE.md`](CLAUDE.md) already explains how the app is built and the rules that keep it good: one movement per exercise, cues that match the demo, ad-free videos, and wording that sounds natural out loud. [`docs/decisions.md`](docs/decisions.md) records why each feature works the way it does, and [`.claude/skills/`](.claude/skills) has step-by-step recipes for adding a demo video and changing what the coach says.
 
 ### A plan
 
