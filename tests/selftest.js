@@ -413,6 +413,14 @@
     UI.tab("plans"); const tile = $("plans-list").querySelector(".plan-tile"); UI.tab("home"); UI.tab("plans");
     check($("plans-list").contains(tile), "Plans rebuilt its cards on coming back to the tab");
     UI.show("home");
+    // pasting the link back from a chat: a whole address, a Markdown link, or just the plan part
+    const L = "v1/t:Pasted/mon:Day:sarow.3x10";
+    for (const text of [`https://x.io/workout/#${L}`, `[https://x.io/#${L}](https://x.io/#${L})`, ` ${L} `, `Here you go: https://x.io/#${L}.`.replace(/\.$/, "")])
+      check(planInText(text) === L, `pasting "${text}" didn't find the plan`);
+    check(planInText("hello there") === null, "pasting text with no plan found one");
+    UI.create(false); $("plan-paste").value = `https://x.io/workout/#${L}`; $("plan-paste-form").requestSubmit();
+    check(Plans.current?.title === "Pasted" && !$("home").hidden, "pasting a plan link on Create didn't open the plan");
+    Plans.use(null);
     // every plan photo and icon is there
     const files = [...new Set([...PROGRAMS, ...Object.values(OWN_PHOTOS).map((photo) => ({ photo }))].map(photoUrl)),
       "icons/icon.svg", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png", "manifest.webmanifest"];

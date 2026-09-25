@@ -182,6 +182,12 @@ h1, h2, h3, p { margin: 0; }
 .week-hero .plan-photo { object-position: 50% 20%; }
 .week-hero .subtitle { margin: 4px 0 0; color: rgba(255, 255, 255, .82); }
 .create-tile { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; padding: 16px 18px; border-radius: 16px; background: var(--panel); border: 1px dashed #3a4250; }
+/* Create: paste the link back from the chat */
+.paste-card { margin-top: 14px; }
+.paste-card .muted { margin: 4px 0 10px; font-size: 14px; }
+.paste-row { display: flex; gap: 8px; }
+.paste-row input { flex: 1; min-width: 0; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font: inherit; font-size: 16px; }
+.paste-row .big-btn { min-width: 0; padding: 0 20px; border-radius: 12px; }
 .create-tile .link-accent { align-self: flex-start; margin-top: 6px; }
 #plan-view-back { margin-bottom: 12px; }
 .plan-day { margin-top: 10px; width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; }

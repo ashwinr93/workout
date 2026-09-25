@@ -634,6 +634,9 @@ const Figure = {
   },
 };
 
+// The plan part of whatever was pasted: "https://…/workout/#v1/…", "[https://…](https://…)" or "v1/…"
+const planInText = (text) => (text || "").trim().match(/(?:#|^|\s|\()(v\d+\/[^\s)\]]+)/)?.[1] || null;
+
 /* ============================================================ Plans: which plan is your week
    A plan arrives in a link (#v1/…) or is started from the Plans tab. The one you're following is
    remembered on the device, so the plain address brings you back to it. Someone who has never
@@ -947,6 +950,14 @@ const UI = {
       const a = e.target.closest("a.ai-btn"), ai = a && AI_CHATS[+a.dataset.i];
       if (!ai || !pastes(ai, text)) return;
       copyText(text).then((ok) => { $("create-status").textContent = ok ? `Message copied. Paste it into ${ai.name}'s message box and send.` : "Couldn't copy the message. Use the button below."; });
+    };
+    // the link pasted back from the chat: a whole address, a Markdown link, or just the plan part
+    $("plan-paste").value = ""; $("plan-paste-status").textContent = "";
+    $("plan-paste-form").onsubmit = (e) => {
+      e.preventDefault();
+      const plan = planInText($("plan-paste").value);
+      if (!plan) { $("plan-paste-status").textContent = "That doesn't look like a plan link. It starts with the app's address and has #v1/ in it."; return; }
+      Plans.open(plan);
     };
     $("copy-prompt").onclick = async () => { $("create-status").textContent = (await copyText(text)) ? "Message copied. Paste it into any AI chat." : "Couldn't copy the message."; };
     $("create-status").textContent = "";
