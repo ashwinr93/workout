@@ -60,26 +60,25 @@ await page.screenshot({ path: `${OUT}/player.png` });
 await page.close();
 
 // The link preview chat apps and X show when the site is shared (og:image): a card, not a screenshot,
-// 1200×630 and a small JPEG (WhatsApp drops preview images over about 300 KB). The app's name, what it
-// is in one line, and the player as it looks mid-set.
+// 1200×630 and a small JPEG (WhatsApp drops preview images over about 300 KB). Everything is centred,
+// because WhatsApp on a phone shows only a square cut from the middle: that square alone has to read
+// (the icon and name, the line saying what it is, and the player), while the wide card shows it all.
 const img = (f) => `data:image/png;base64,${fs.readFileSync(path.join(OUT, f)).toString("base64")}`;
 const icon = `data:image/svg+xml;base64,${fs.readFileSync(path.join(ROOT, "icons/icon.svg")).toString("base64")}`;
 page = await browser.newPage({ viewport: { width: 1200, height: 630 } });
-// the icon and name as one lockup (the icon's ring, not its dark square, lines up with the text), then what it is, then what you get; the player beside the whole block
 await page.setContent(`<body style="margin:0;width:1200px;height:630px;background:#0d1015;color:#eef1f5;font-family:-apple-system,system-ui,sans-serif;overflow:hidden;
-    display:flex;align-items:center;gap:34px;padding:0 50px 0 56px;box-sizing:border-box">
-  <div style="width:470px;flex:none">
-    <div style="display:flex;align-items:center;gap:16px">
-      <img src="${icon}" style="width:64px;height:64px;margin-left:-11px">
-      <div style="font-size:52px;font-weight:800;letter-spacing:-1.3px;line-height:1">Workout Coach</div>
-    </div>
-    <div style="font-size:28px;line-height:1.3;margin-top:24px;color:#c9ced6">A simple, free workout coach<br>in your browser</div>
-    <div style="font-size:22px;line-height:1.5;margin-top:28px;color:#3ddc97;font-weight:650">Demo videos · A coach voice · Timers</div>
-    <div style="font-size:22px;line-height:1.5;color:#8b95a3">No sign-up, no ads, nothing to install</div>
+    display:flex;flex-direction:column;align-items:center;padding-top:44px;box-sizing:border-box;text-align:center">
+  <div style="display:flex;align-items:center;gap:14px">
+    <img src="${icon}" style="width:60px;height:60px">
+    <div style="font-size:50px;font-weight:800;letter-spacing:-1.2px;line-height:1">Workout Coach</div>
   </div>
-  <img src="${img("player.png")}" style="width:590px;flex:none;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.6);border:1px solid #232a33">
+  <div style="font-size:27px;line-height:1.3;margin-top:16px;color:#c9ced6">A simple, free workout coach in your browser</div>
+  <div style="font-size:21px;line-height:1.4;margin-top:8px;color:#3ddc97;font-weight:650">Demo videos · A coach voice · Timers</div>
+  <img src="${img("player.png")}" style="width:820px;margin-top:30px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.6);border:1px solid #232a33">
 </body>`);
 await page.screenshot({ path: `${OUT}/share.jpg`, type: "jpeg", quality: 82 });
+// what WhatsApp shows on a phone: the middle square (to look at, not published)
+if (process.env.SHARE_CROP) await page.screenshot({ path: process.env.SHARE_CROP, clip: { x: 285, y: 0, width: 630, height: 630 } });
 await page.close();
 
 await browser.close();
