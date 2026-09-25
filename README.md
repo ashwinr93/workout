@@ -14,7 +14,7 @@ The intention is to make following a plan feel a little less intimidating. There
 
 ## How I use it
 
-I usually run it on my phone and mirror the screen to the TV while I work through the workout. The phone isn't particularly important though.. you can just use the app directly on your phone, laptop or whatever screen you have around.
+I usually run it on my phone and mirror the screen to the TV while I work through the workout. The TV isn't particularly important though.. you can just use the app directly on your phone, laptop or whatever screen you have around.
 
 This is basically what my setup looks like at home. Have used my laptop to mirror it this time so I could use my phone to click this photo 😛. I usually mirror the workout from my phone though so I can easily reach out and click next during the workout.
 
