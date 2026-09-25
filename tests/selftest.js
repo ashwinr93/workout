@@ -456,7 +456,7 @@
     }
     // every plan photo and icon is there
     const files = [...new Set([...PROGRAMS, ...Object.values(OWN_PHOTOS).map((photo) => ({ photo }))].map(photoUrl)),
-      "icons/icon.svg", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "manifest.webmanifest"];
+      "icons/icon.svg", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "manifest.webmanifest", "vendor/umami.js"];
     for (const f of files) { const r = await fetch(f, { method: "HEAD" }).catch(() => null); check(r?.ok, `missing ${f}`); }
     return { name: "Player extras and files", steps: files.length, lines: 0, fails };
   }

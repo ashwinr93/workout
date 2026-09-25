@@ -41,7 +41,7 @@ async function copyText(text) {
 }
 
 /* ============================================================ Analytics: anonymous counts
-   Umami (cloud.umami.is), cookieless: how many people visit, where from, and how far they get
+   Umami (umami.is), cookieless: how many people visit, where from, and how far they get
    (a plan viewed, started, a workout finished). Only on the live site, so staging, tests, this Mac
    and anyone's fork don't count. Never sent: the plan (the address keeps only its path), a plan's
    title (the page title is replaced), anything typed, or where exactly someone came from (the
@@ -52,7 +52,8 @@ const Analytics = {
   load() {
     if (!this.on) return;
     window.umamiBeforeSend = (type, payload) => this.scrub(payload);
-    const s = Object.assign(document.createElement("script"), { src: "https://cloud.umami.is/script.js", defer: true });
+    // our own copy of Umami's tracker (vendor/umami.js), so no outside script runs in the app
+    const s = Object.assign(document.createElement("script"), { src: `vendor/umami.js?v=${BUILD}`, defer: true });
     Object.entries({ websiteId: this.WEBSITE, excludeSearch: "true", excludeHash: "true", doNotTrack: "true", beforeSend: "umamiBeforeSend" })
       .forEach(([k, v]) => { s.dataset[k] = v; });
     document.head.appendChild(s);
