@@ -55,6 +55,7 @@ h1, h2, h3, p { margin: 0; }
 .card li { margin: 6px 0; }
 .note { color: var(--muted); font-size: 13px; margin-top: 16px; }
 .link { color: var(--muted); text-decoration: underline; font-size: 13px; }
+.source-note { margin-top: 20px; }
 .brand { color: var(--accent); margin-bottom: 6px; }
 /* after the days, on the example plan: one plain call to action */
 .cta { margin: 28px 0 8px; }
