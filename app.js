@@ -552,8 +552,8 @@ document.addEventListener("visibilitychange", () => {
 });
 
 // A demo's still for exercise rows: YouTube's thumbnail (or the still in `thumb`, for a black
-// first frame; tools/thumbs.mjs), faded in once loaded so a slow network shows a calm placeholder
-const thumb = (v) => `<img class="thumb" src="https://i.ytimg.com/vi/${v.id}/${v.thumb || "mqdefault"}.jpg" alt="" loading="lazy" decoding="async" width="320" height="180" onload="this.classList.add('in')">`;
+// first frame; tools/thumbs.mjs), on a calm placeholder while it loads
+const thumb = (v) => `<img src="https://i.ytimg.com/vi/${v.id}/${v.thumb || "mqdefault"}.jpg" alt="" loading="lazy" width="320" height="180">`;
 const SWAP_ICON = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4 3 8l4 4"/><path d="M3 8h14"/><path d="m17 20 4-4-4-4"/><path d="M21 16H7"/></svg>`;
 // Icons for the plan menu (outline, like the swap icon)
 const MENU_ICON = (d) => `<span class="menu-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg></span>`;
@@ -719,12 +719,16 @@ const UI = {
      creating your own comes after browsing */
   goal: null,
   plans() {
+    // rebuilt only when something on it changed, so coming back to the tab doesn't reload its photos
+    const key = JSON.stringify([this.goal, Plans.current?.link, Plans.recent().map((p) => p.link)]);
+    if (key === this.plansKey) return;
+    this.plansKey = key;
     const chip = (k, name) => `<button class="chip" data-goal="${k}" aria-pressed="${this.goal === k}">${esc(name)}</button>`;
     $("plans-goals").innerHTML = chip("", "All").replace('aria-pressed="false"', `aria-pressed="${!this.goal}"`) + Object.entries(GOALS).map(([k, n]) => chip(k, n)).join("");
     const own = this.goal ? [] : this.ownPlans(), ready = this.readyPlans().filter((e) => !this.goal || e.goals.includes(this.goal));
-    const cards = (list) => `<div class="plan-cards">${list.map((e) => this.planTile(e)).join("")}</div>`;
-    $("plans-list").innerHTML = (own.length ? `<div class="label section-label">Your plans</div>${cards(own)}<div class="label section-label">Ready-made plans</div>` : "")
-      + cards(ready) + `<div class="create-tile"><b>None of these quite fit?</b>
+    const cards = (list, first) => `<div class="plan-cards">${list.map((e, i) => this.planTile(e, first && i < 2)).join("")}</div>`;
+    $("plans-list").innerHTML = (own.length ? `<div class="label section-label">Your plans</div>${cards(own, true)}<div class="label section-label">Ready-made plans</div>` : "")
+      + cards(ready, !own.length) + `<div class="create-tile"><b>None of these quite fit?</b>
         <span class="muted">Tell an AI your goals, any aches and what you train with, and it builds a plan for you.</span>
         <button class="link-accent" id="plans-create-2">Create your own with AI ›</button></div>`;
     $("plans-create-2").onclick = () => this.create(false);
@@ -751,15 +755,15 @@ const UI = {
   planEntry(id) { return [...this.ownPlans(), ...this.readyPlans()].find((e) => e.id === id); },
   // The card facts for any plan: a ready-made one's, or worked out for one you made
   entryOf(plan) { return this.readyPlans().find((e) => e.plan.link === plan.link) || this.ownEntry(plan, "own"); },
-  // A card that makes one statement: how many days, what it is, what you need, and a clear way in
-  planTile(e) {
+  // A card that makes one statement: how many days, what it is, what you need (the whole card opens it)
+  planTile(e, eager) {
     const mine = Plans.current?.link === e.plan.link;
-    return `<button class="plan-tile" data-id="${e.id}"><img class="plan-photo" src="${photoUrl(e)}" alt="" loading="lazy">
+    return `<button class="plan-tile" data-id="${e.id}"><img class="plan-photo" src="${photoUrl(e)}" alt=""${eager ? "" : ' loading="lazy"'}>
       ${mine ? '<span class="mine">Your week</span>' : ""}
       ${this.planDays(e.plan)}
       <span class="plan-name">${esc(e.plan.title)}</span>
       <span class="plan-meta"><span class="plan-level">${this.levelLabel(e)}</span>${esc(this.planFacts(e, false))}</span>
-      <span class="plan-cta">View plan <span aria-hidden="true">→</span></span></button>`;
+      <span class="plan-chev" aria-hidden="true">›</span></button>`;
   },
   programPlan(p) {
     if (p.link === EXAMPLE_PLAN.link) return examplePlan();
@@ -790,7 +794,7 @@ const UI = {
     // each day opens its day screen (muscles, exercises to preview, even a try-out session)
     const dayCard = (d, i) => `<button class="card plan-day" data-day="${i}"><span><span class="label">${DAY_NAMES[d.d]}</span><b>${esc(d.name)}</b>
       <span class="muted">${esc(d.kind === "activity" ? this.daySummary(d) : d.items.map((x) => EX[x.key].name).join(" · "))}</span></span><span class="chev">›</span></button>`;
-    $("plan-view-body").innerHTML = `<div class="plan-hero"><img class="plan-photo" src="${photoUrl(e)}" alt="" decoding="async">
+    $("plan-view-body").innerHTML = `<div class="plan-hero"><img class="plan-photo" src="${photoUrl(e)}" alt="">
         <div>${this.planDays(e.plan)}<h1 class="title">${esc(plan.title)}</h1></div></div>
       <p class="plan-meta view-meta"><span class="plan-level">${this.levelLabel(e)}</span>${esc(this.planFacts(e, false))}</p>
       <p class="card-text">${esc(e.about)}</p>
@@ -837,6 +841,9 @@ const UI = {
     });
   },
   exerciseList() {
+    const listKey = JSON.stringify([this.exFilter, Figure.kind]);   // unchanged: keep the list (and its loaded thumbnails)
+    if (listKey === this.exListKey) return;
+    this.exListKey = listKey;
     const F = this.exFilter, keys = this.exerciseMatches(), n = keys.length;
     // "18 leg exercises you can do with dumbbells or just your body weight"
     const kit = { bodyweight: "with just your body weight", bands: "with bands or just your body weight",
@@ -995,6 +1002,13 @@ const UI = {
       ? `<div class="muscle-group ${tone}"><div class="label">${label}</div><div class="names" data-keys="${keys.join(",")}">${esc(muscleList(keys))}</div></div>` : "";
     return `<div class="muscle-groups">${group("Main", "main", m.main)}${group("Helping", "help", m.help)}</div>`;
   },
+  // Swapping the figure redraws only the figure card, not the exercise rows
+  redrawDayMuscles() {
+    const card = $("day-body").querySelector(".day-muscles");
+    card.outerHTML = this.dayMuscles(this.dayMain);
+    Figure.paint($("day-body").querySelector(".day-muscles"));
+    this.fitMuscleKey();
+  },
   // The day card's key stays within the figures' height: a long list ends "and 3 more" (helping
   // muscles give way first); the figures still show every muscle
   fitMuscleKey() {
@@ -1004,15 +1018,16 @@ const UI = {
     const groups = [...key.querySelectorAll(".names")].map((el) => ({ el, keys: el.dataset.keys.split(","), n: 0 }));
     const show = (g) => { g.el.textContent = muscleList(g.keys.slice(0, g.n)) + (g.n < g.keys.length ? ` and ${g.keys.length - g.n} more` : ""); };
     groups.forEach((g) => { g.n = g.keys.length; show(g); });
-    for (const g of [...groups].reverse()) while (key.offsetHeight > fig.offsetHeight && g.n > 1) { g.n--; show(g); }
+    const over = () => key.getBoundingClientRect().bottom > fig.getBoundingClientRect().bottom + 0.5;   // below the feet
+    for (const g of [...groups].reverse()) while (over() && g.n > 1) { g.n--; show(g); }
   },
   section(label, entries) { return entries.length ? `<div class="label section-label">${label}</div><div class="ex-list">${entries.map((e) => this.exRow(e)).join("")}</div>` : ""; },
   // An optional part of the day (warm-up, cool-down): its section header carries the switch, and
-  // its exercises are listed only while it's on
+  // its exercises are listed only while it's on (switching just shows or hides them: nothing reloads)
   optional(id, on, label, sub, entries, what) {
     return `<div class="section-head"><span class="label">${label}</span><small>${sub}</small>
       <button class="switch" id="${id}" aria-pressed="${on}" aria-label="Include the ${what}"></button></div>
-      ${on ? `<div class="ex-list">${entries.map((e) => this.exRow(e)).join("")}</div>` : ""}`;
+      <div class="ex-list" id="${id}-list"${on ? "" : " hidden"}>${entries.map((e) => this.exRow(e)).join("")}</div>`;
   },
   day() {
     const W = Workout, day = W.day, all = W.parts(day), p = W.parts(day, W.warm, W.cool), label = `${DAY_NAMES[day.d]} · ${day.name}`;
@@ -1025,21 +1040,23 @@ const UI = {
       $("start-pre").onclick = () => W.start({ warm: true, cool: false, label: `${label} · warm-up` });
       $("start-post").onclick = () => W.start({ warm: false, cool: true, label: `${label} · cool-down` });
     } else {
+      this.dayMain = all.main;
       $("day-body").innerHTML = this.dayMuscles(all.main)
         + this.optional("wu-toggle", W.warm, "Warm-up", `${WARMUP.length} moves · 6–8 min`, all.warm, "warm-up")
         + this.section(day.kind === "stretch" ? "Stretches" : "Workout", p.main)
         + (all.cool.length ? this.optional("cd-toggle", W.cool, "Cool-down stretches", `${all.cool.length} · about ${all.cool.length * 3} min`, all.cool, "cool-down stretches") : "");
       $("start-bar").innerHTML = `<button class="big-btn" id="start-btn">Start workout ▶</button>`;
       $("start-btn").onclick = () => W.start({ warm: W.warm, cool: W.cool, label });
-      $("wu-toggle").onclick = () => { W.warm = !W.warm; this.day(); };
-      if ($("cd-toggle")) $("cd-toggle").onclick = () => { W.cool = !W.cool; this.day(); };
+      const flip = (id, part) => { W[part] = !W[part]; $(id).setAttribute("aria-pressed", W[part]); $(`${id}-list`).hidden = !W[part]; };
+      $("wu-toggle").onclick = () => flip("wu-toggle", "warm");
+      if ($("cd-toggle")) $("cd-toggle").onclick = () => flip("cd-toggle", "cool");
     }
     // Only phones mirror to a TV; the tip sits where you're about to start
     if (matchMedia("(pointer: coarse)").matches)
       $("day-body").insertAdjacentHTML("beforeend", `<p class="note tv-tip">Want it bigger? Mirror your phone to a TV: turn off Rotation Lock, hold the phone sideways, then Control Center → Screen Mirroring.</p>`);
     $("day-body").onclick = (e) => {
       const f = e.target.closest(".fig-toggle");
-      if (f) { Figure.choose(f.dataset.kind); return this.day(); }
+      if (f) { Figure.choose(f.dataset.kind); return this.redrawDayMuscles(); }
       const r = e.target.closest(".ex-row"); if (r) { const x = this.rows[+r.dataset.r]; this.preview(x.key, x.dose); }
     };
     Figure.paint($("day-body"));
@@ -1077,10 +1094,6 @@ const UI = {
   },
 
   /* ---------- player: exercise */
-  // The panel's top line, with "Skip warm-up" at its end during the warm-up
-  contextRow(context) {
-    return Workout.inWarmup() ? `<div class="context-row">${context}<button class="skip-warm" id="c-skipwarm">Skip warm-up ›</button></div>` : context;
-  },
   context(st) {
     const what = st.preview ? `${this.facts(st.key, Workout.variantOf(st.key)).level}${st.sets > 1 ? ` · ${st.sets} sets` : ""}`
       : st.section === "warm" ? "Warm-up"
@@ -1105,7 +1118,7 @@ const UI = {
   work(st) {
     const vi = Workout.variantOf(st.key), v = variant(st.key, vi), hold = st.dose.time && !st.preview, f = st.preview && this.facts(st.key, vi);
     $("panel").innerHTML = `<div class="panel-body">
-      ${this.contextRow(`<div class="context">${this.context(st)}</div>`)}
+      <div class="context">${this.context(st)}</div>
       <div class="head"><div class="head-text"><h2 class="name">${esc(v.name)}</h2>
         ${hold ? `<div class="hold" id="hold"><span class="clock" id="clock"></span><span class="state" id="hold-state"></span></div>`
                : `<div class="target-row"><div class="target">${this.target(st.dose)}</div>${f ? `<p class="equip">${esc(f.equip)}</p>` : ""}</div>`}</div>
@@ -1122,7 +1135,8 @@ const UI = {
       </div>
       <div class="controls">
         ${st.preview ? `<button class="ctl primary" id="c-done">Close</button>`
-          : `<button class="ctl" id="c-prev" aria-label="Back">‹</button>${hold ? `<button class="ctl" id="c-pause">Pause</button>` : ""}
+          : `<button class="ctl" id="c-prev" aria-label="Back">‹</button>${hold ? `<button class="ctl" id="c-pause">Pause</button>` : ""}${
+             Workout.inWarmup() ? `<button class="ctl" id="c-skipwarm">Skip warm-up</button>` : ""}
              <button class="ctl primary" id="c-done">${hold ? "Skip ›" : "Done ✓"}</button>`}
       </div>`;
     $("c-done").onclick = st.preview ? () => Workout.exit() : () => { Beep.done(); Workout.go(1); };
@@ -1166,7 +1180,7 @@ const UI = {
     const nex = next && variant(next.key, Workout.variantOf(next.key));
     const detail = next ? [next.section === "warm" ? "" : `Set ${next.set} of ${next.sets}`, next.side].filter(Boolean).join(" · ") : "";
     $("panel").innerHTML = `<div class="panel-body">
-      ${this.contextRow('<div class="context rest">Rest</div>')}
+      <div class="context rest">Rest</div>
       <div class="rest-main">
         <div class="ring">
           <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" fill="none" stroke="var(--line)" stroke-width="8"/>
@@ -1186,7 +1200,6 @@ const UI = {
     $("c-prev").onclick = () => Workout.go(-1);
     $("c-add").onclick = () => Workout.addRest(15);
     $("c-skip").onclick = () => Workout.go(1);
-    if ($("c-skipwarm")) $("c-skipwarm").onclick = () => Workout.skipWarmup();
     Figure.paint($("panel"));
   },
 

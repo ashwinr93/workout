@@ -290,7 +290,7 @@
     for (const p of PROGRAMS) parsePlan(p.link).plan.days.filter((d) => d.kind !== "activity").forEach((day) => {
       UI.openDay(day);
       const card = $("day-body").querySelector(".day-muscles"), key = card.querySelector(".muscle-groups").getBoundingClientRect(), fig = card.querySelector(".fig.full").getBoundingClientRect();
-      if (key.height > fig.height + 1) fails.push(`${p.id} ${day.name}: the day card's muscle names run past the figures`);
+      if (key.bottom > fig.bottom + 1) fails.push(`${p.id} ${day.name}: the day card's muscle names run past the figures`);
     });
     return { name: `Layout ${innerWidth}×${innerHeight}`, steps: 0, lines: 0, fails: [...new Set(fails)] };
   }
@@ -391,6 +391,20 @@
     Workout.startPreview("catcow"); await settle(1);
     check(!$("c-skipwarm"), "a preview offers Skip warm-up");
     Workout.exit(); await settle(0.5);
+    // switches and the figure swap change the day screen in place: its rows (and their thumbnails) stay loaded
+    openDay(0);
+    const row = $("day-body").querySelector(".ex-row img");
+    $("wu-toggle").click();
+    check($("wu-toggle-list").hidden && $("wu-toggle").getAttribute("aria-pressed") === "false" && !Workout.warm, "the warm-up switch didn't hide the warm-up");
+    $("wu-toggle").click();
+    const kind = Figure.kind;
+    $("day-body").querySelector(".fig-toggle").click();
+    check($("day-body").contains(row) && Figure.kind !== kind, "switching the warm-up or the figure rebuilt the day's rows");
+    $("day-body").querySelector(".fig-toggle").click();
+    // coming back to Plans keeps its cards (and their photos) as they were
+    UI.tab("plans"); const tile = $("plans-list").querySelector(".plan-tile"); UI.tab("home"); UI.tab("plans");
+    check($("plans-list").contains(tile), "Plans rebuilt its cards on coming back to the tab");
+    UI.show("home");
     // every plan photo and icon is there
     const files = [...new Set([...PROGRAMS, ...Object.values(OWN_PHOTOS).map((photo) => ({ photo }))].map(photoUrl)),
       "icons/icon.svg", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png", "manifest.webmanifest"];
