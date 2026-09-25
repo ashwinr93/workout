@@ -385,9 +385,17 @@
     // Skip warm-up: offered during the warm-up only, and lands on the first main exercise
     openDay(0); Workout.start({ warm: true, cool: false, label: "skip" }); await settle(1);
     check(!!$("c-skipwarm"), "no Skip warm-up during the warm-up");
+    check(!$("c-prev"), "the first step offers ‹ with nothing to go back to");
+    // ✕ mid-workout asks first (clock paused); Keep going carries on
+    $("exit-btn").click();
+    check(!$("exit-sheet").hidden && !$("player").hidden, "✕ didn't ask before leaving the workout");
+    $("exit-keep").click();
+    check($("exit-sheet").hidden && !$("player").hidden, "Keep going didn't return to the workout");
     $("c-skipwarm")?.click(); await settle(1);
     check(Workout.step().type === "work" && Workout.step().section === "main" && !$("c-skipwarm"), "Skip warm-up didn't land on the first main exercise");
-    Workout.exit(); await settle(0.5);
+    check(!!$("c-prev"), "no ‹ once there's a step to go back to");
+    $("exit-btn").click(); $("exit-leave").click(); await settle(0.5);
+    check($("player").hidden && $("exit-sheet").hidden, "Leave workout didn't leave");
     Workout.startPreview("catcow"); await settle(1);
     check(!$("c-skipwarm"), "a preview offers Skip warm-up");
     Workout.exit(); await settle(0.5);

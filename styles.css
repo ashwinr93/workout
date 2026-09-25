@@ -183,6 +183,7 @@ h1, h2, h3, p { margin: 0; }
 .week-hero .subtitle { margin: 4px 0 0; color: rgba(255, 255, 255, .82); }
 .create-tile { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; padding: 16px 18px; border-radius: 16px; background: var(--panel); border: 1px dashed #3a4250; }
 .create-tile .link-accent { align-self: flex-start; margin-top: 6px; }
+#plan-view-back { margin-bottom: 12px; }
 .plan-day { margin-top: 10px; width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; }
 .plan-day > span:first-child { flex: 1; min-width: 0; }
 .plan-day .label { display: block; }
@@ -233,7 +234,6 @@ h1, h2, h3, p { margin: 0; }
 .progress i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
 .tool { min-height: 40px; min-width: 40px; padding: 0 12px; border-radius: 10px; background: var(--panel-2);
   display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px; white-space: nowrap; }
-.tool.confirm { background: var(--danger); color: #fff; }
 .demos { display: flex; align-items: center; gap: 4px; }
 .demos .count { color: var(--muted); font-size: 12px; padding: 0 4px; max-width: 12em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
 .sound { color: var(--muted); font-size: 13px; font-weight: 600; min-width: 64px; }

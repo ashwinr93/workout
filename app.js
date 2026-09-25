@@ -479,6 +479,7 @@ const Workout = {
   },
   exit() {
     clearInterval(this.tickId); this.tickId = null;
+    $("exit-sheet").hidden = true;
     Voice.reset(); Video.stop(); UI.stopCues();
     try { this.wakeLock?.release(); } catch {}
     const back = this.returnTo; this.returnTo = null;
@@ -692,7 +693,7 @@ window.addEventListener("hashchange", () => {
 
 /* ============================================================ UI */
 const UI = {
-  cueIdx: 0, cueTimer: null, exitArmed: 0, rows: [],
+  cueIdx: 0, cueTimer: null, rows: [],
   TABS: ["home", "plans", "exercises"],
 
   show(screen) {
@@ -1135,13 +1136,13 @@ const UI = {
       </div>
       <div class="controls">
         ${st.preview ? `<button class="ctl primary" id="c-done">Close</button>`
-          : `<button class="ctl" id="c-prev" aria-label="Back">‹</button>${hold ? `<button class="ctl" id="c-pause">Pause</button>` : ""}${
+          : `${Workout.cur > 0 ? `<button class="ctl" id="c-prev" aria-label="Previous step" title="Previous step">‹</button>` : ""}${hold ? `<button class="ctl" id="c-pause">Pause</button>` : ""}${
              Workout.inWarmup() ? `<button class="ctl" id="c-skipwarm">Skip warm-up</button>` : ""}
              <button class="ctl primary" id="c-done">${hold ? "Skip ›" : "Done ✓"}</button>`}
       </div>`;
     $("c-done").onclick = st.preview ? () => Workout.exit() : () => { Beep.done(); Workout.go(1); };
     if ($("c-skipwarm")) $("c-skipwarm").onclick = () => Workout.skipWarmup();
-    if (!st.preview) $("c-prev").onclick = () => Workout.go(-1);
+    if ($("c-prev")) $("c-prev").onclick = () => Workout.go(-1);   // only when there's a step to go back to
     if (hold) $("c-pause").onclick = () => Workout.togglePause();
     $("cues").onclick = () => this.showCue(this.cueIdx + 1, true);   // tap for the next cue
     this.cueIdx = 0; this.restartCues();
@@ -1193,7 +1194,7 @@ const UI = {
       </div>
       </div>
       <div class="controls">
-        <button class="ctl" id="c-prev" aria-label="Back">‹</button>
+        <button class="ctl" id="c-prev" aria-label="Previous step" title="Previous step">‹</button>
         <button class="ctl" id="c-add">+15s</button>
         <button class="ctl primary rest" id="c-skip">Skip rest ›</button>
       </div>`;
@@ -1220,14 +1221,21 @@ const UI = {
     Figure.paint($("finished"));
   },
 
+  // ✕ closes a preview (or a finished workout) at once; mid-workout it asks first, with the clock paused
   exitButton() {
-    // Leaving a workout takes two taps; a preview closes at once
-    if (Workout.preview || Date.now() - this.exitArmed < 2500) { this.exitArmed = 0; this.resetExit(); return Workout.exit(); }
-    this.exitArmed = Date.now();
-    $("exit-btn").textContent = "Tap again to exit"; $("exit-btn").classList.add("confirm");
-    setTimeout(() => { if (Date.now() - this.exitArmed >= 2400) this.resetExit(); }, 2600);
+    if (Workout.preview || !$("finished").hidden) return Workout.exit();
+    const t = Workout.timer, wasPaused = t.paused;
+    if (t.phase) { t.paused = true; this.pauseButton(); }
+    const close = (leave) => {
+      $("exit-sheet").hidden = true;
+      if (leave) return Workout.exit();
+      if (t.phase) { t.paused = wasPaused; this.pauseButton(); }
+    };
+    $("exit-keep").onclick = () => close(false);
+    $("exit-leave").onclick = () => close(true);
+    $("exit-sheet").onclick = (e) => { if (e.target === $("exit-sheet")) close(false); };
+    $("exit-sheet").hidden = false;
   },
-  resetExit() { $("exit-btn").textContent = "✕"; $("exit-btn").classList.remove("confirm"); },
 };
 
 /* ============================================================ Diagnostics panel & phone check */

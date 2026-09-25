@@ -179,6 +179,14 @@
     <div class="panel" id="panel"></div>
   </div>
   <div class="finished" id="finished" hidden></div>
+  <div class="sheet-wrap" id="exit-sheet" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="exit-title">
+      <h2 id="exit-title">Leave this workout?</h2>
+      <p class="muted">The clock is paused. If you leave, this session isn't kept.</p>
+      <button class="big-btn" id="exit-keep">Keep going</button>
+      <button class="ghost-btn" id="exit-leave">Leave workout</button>
+    </div>
+  </div>
 </section>
 
 <script src="library.js?v=dev"></script>
