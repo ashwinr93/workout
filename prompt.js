@@ -8,29 +8,25 @@ const SITE = typeof location !== "undefined" && /^https?:/.test(location.protoco
   ? location.origin + location.pathname.replace(/[^/]*$/, "")
   : "https://ashwinr93.github.io/workout/";
 
-// Chats that take the message in their address (checked in a real browser, Sep 2026). A chat's
-// server refuses an address longer than its `max` (Grok's is about 5,000 characters; Perplexity
-// and Le Chat fail somewhere past 15,000 and 12,000), so for those, and for Gemini, which has no
-// such address at all, the app copies the message and opens the chat for the person to paste.
-// Claude and Copilot need an account to try; their limits are unknown.
+// The AIs the app opens directly (checked in a real browser, Sep 2026). ChatGPT and Claude take the
+// message in their address; Gemini and DeepSeek can't (no such parameter, and DeepSeek's sign-in
+// drops it), so the app copies the message and opens them for the person to paste. Any other AI:
+// "Copy the message". `note` is what the button promises.
 const AI_CHATS = [
-  { name: "ChatGPT", url: "https://chatgpt.com/?q=", plus: true },
-  { name: "Claude", url: "https://claude.ai/new?q=" },
-  { name: "Gemini", url: "https://gemini.google.com/app", paste: true },
-  { name: "Microsoft Copilot", url: "https://copilot.microsoft.com/?q=" },
-  { name: "Perplexity", url: "https://www.perplexity.ai/search?q=", max: 14000, plus: true },
-  { name: "Grok", url: "https://grok.com/?q=", max: 4000, plus: true },
-  { name: "Le Chat", url: "https://chat.mistral.ai/chat?q=", max: 11000 },
+  { name: "ChatGPT", url: "https://chatgpt.com/?q=", plus: true, note: "Opens with your message ready" },
+  { name: "Claude", url: "https://claude.ai/new?q=", note: "Opens with your message ready (sign in to Claude first)" },
+  { name: "Gemini", url: "https://gemini.google.com/app", paste: true, note: "Copies your message: paste it in and send" },
+  { name: "DeepSeek", url: "https://chat.deepseek.com/", paste: true, note: "Copies your message: paste it in and send" },
 ];
 // The message in an address, as short as the address rules allow: punctuation that's valid in a
 // query stays as it is, and a space is "+" where the chat was seen to read it that way (`plus`);
-// line breaks and the characters that end a query (# & = +) are escaped
+// line breaks and the characters that end a query (# & = +) are escaped. (Long addresses fail on
+// some chats' servers, so the message is kept compact: about 11,000 characters for ChatGPT.)
 const inQuery = (text, plus) => {
   const q = encodeURIComponent(text).replace(/%(2C|3A|2F|3B|40|3F|21|24|27)/g, (m) => decodeURIComponent(m));
   return plus ? q.replace(/%20/g, "+") : q;
 };
-const pastes = (ai, text) => !!ai.paste || (!!ai.max && (ai.url + inQuery(text, ai.plus)).length > ai.max);
-const chatLink = (ai, text) => (pastes(ai, text) ? ai.url.replace(/[?].*$/, "") : ai.url + inQuery(text, ai.plus));
+const chatLink = (ai, text) => (ai.paste ? ai.url : ai.url + inQuery(text, ai.plus));
 
 function coachPrompt(current) {
   const joints = (list) => list.map((j) => JOINTS[j]).join(", ");

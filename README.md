@@ -63,7 +63,7 @@ The **Plans** tab has nine plans to start from: a first full-body plan at home, 
 
 ## Get your own plan (no code needed)
 
-Tap **+ Create** on the Plans tab and pick an AI you already use (ChatGPT, Claude, Gemini, Copilot, Perplexity, Grok or Le Chat). It opens a new chat with a message that turns the AI into a coach: it asks about your goals, any aches, where you train (at home or in a gym) and how much time you have, one question at a time, then gives you a link. Tap the link and your plan opens in the app, with the same videos, coach voice and timers.
+Tap **+ Create** on the Plans tab and pick the AI you already use: ChatGPT, Claude, Gemini or DeepSeek (or copy the message into any other). It opens a new chat with a message that turns the AI into a coach: it asks about your goals, any aches, where you train (at home or in a gym) and how much time you have, one question at a time, then gives you a link. Tap the link and your plan opens in the app, with the same videos, coach voice and timers.
 
 - **It's free.** The AI runs on your own account; this site has no server.
 - **Your plan lives in its link.** Bookmark it or add it to your Home Screen. The app also remembers the last plan you opened on that phone.
@@ -73,7 +73,7 @@ Tap **+ Create** on the Plans tab and pick an AI you already use (ChatGPT, Claud
 - **Cardio and sport** become activity days (a walk, a run, your football match), with the warm-up before and the stretches after.
 - If an AI makes a mistake in the link, the app says what's wrong and gives you a message to paste back into the chat.
 
-Gemini can't receive a message through a link, so for Gemini the app copies the message and you paste it in.
+ChatGPT and Claude open with the message ready (sign in to Claude first). Gemini and DeepSeek can't receive a message through a link, so the app copies it and you paste it in. If the chat shows your link as plain text rather than a link you can tap, copy it and paste it into **Got your link?** on the same screen.
 
 The AI can only choose from the app's exercise library, where every exercise has a checked demo video, cues that match it and a recorded coach voice. The library is growing.
 

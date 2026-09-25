@@ -940,16 +940,29 @@ const UI = {
     $("create-back").onclick = () => this.back(from || "home");
     $("create-title").textContent = change ? "Change your plan" : "Create your own plan";
     $("create-intro").textContent = change
-      ? "Pick an AI you use. It gets your current plan, asks what you'd like to change, and gives you a new link."
-      : "Pick an AI you already use. It asks about your goals, any aches, where you train (at home, in a gym or anywhere) and what's there, and how much time you have. Then it gives you a link to your own plan in this app. It uses your own AI account, so it's free.";
+      ? "Your AI chat changes your plan with you. It takes a few minutes."
+      : "Your own AI chat builds a plan around you, in about five minutes.";
+    // what happens, in the order it happens: you leave for your AI, answer it, come back with a link
+    const steps = change ? [
+      ["Choose your AI", "It opens with your current plan and a message that makes it your coach."],
+      ["Say what to change", "An extra day, a sore knee, less time: it asks what it needs to, then shows you the new plan."],
+      ["Tap your new link", "It opens here as your week."],
+    ] : [
+      ["Choose your AI", "It opens with a message that turns it into your personal coach. It's your own account, so it's free, and your answers stay there."],
+      ["Answer its questions", "About 8 short ones, one at a time: what you want, any aches, where you train and how much time you have. Then it shows you the plan."],
+      ["Tap the link it gives you", "Your plan opens here as your week, with the videos, coach voice and timers."],
+    ];
+    $("create-how").innerHTML = steps.map(([t, d]) => `<li><b>${t}</b><span>${d}</span></li>`).join("");
     // Every choice is a plain link, so the phone can hand it to the AI's app when it's installed.
-    // Where the chat can't take the message in its address (Gemini), the same tap copies it first.
-    $("ai-list").innerHTML = AI_CHATS.map((ai, i) => `<a class="ai-btn" data-i="${i}" href="${esc(chatLink(ai, text))}" target="_blank" rel="noopener">Open ${esc(ai.name)}${
-      pastes(ai, text) ? " <small>Copies the message; paste it in</small>" : ""}</a>`).join("");
+    // Where the chat can't take the message in its address, the same tap copies it first.
+    $("ai-list").innerHTML = AI_CHATS.map((ai, i) => `<a class="ai-btn" data-i="${i}" href="${esc(chatLink(ai, text))}" target="_blank" rel="noopener">
+      <b>${esc(ai.name)}</b><small>${esc(ai.note)}</small></a>`).join("");
+    const say = (msg) => { $("create-status").textContent = msg; $("create-status").hidden = !msg; };
     $("ai-list").onclick = (e) => {
       const a = e.target.closest("a.ai-btn"), ai = a && AI_CHATS[+a.dataset.i];
-      if (!ai || !pastes(ai, text)) return;
-      copyText(text).then((ok) => { $("create-status").textContent = ok ? `Message copied. Paste it into ${ai.name}'s message box and send.` : "Couldn't copy the message. Use the button below."; });
+      if (!ai?.paste) return;
+      copyText(text).then((ok) => say(ok ? `✓ Your message is copied. In ${ai.name}, tap the message box, paste, and send.`
+        : `Couldn't copy the message. Tap "Copy the message" below, then paste it into ${ai.name}.`));
     };
     // the link pasted back from the chat: a whole address, a Markdown link, or just the plan part
     $("plan-paste").value = ""; $("plan-paste-status").textContent = "";
@@ -959,8 +972,8 @@ const UI = {
       if (!plan) { $("plan-paste-status").textContent = "That doesn't look like a plan link. It starts with the app's address and has #v1/ in it."; return; }
       Plans.open(plan);
     };
-    $("copy-prompt").onclick = async () => { $("create-status").textContent = (await copyText(text)) ? "Message copied. Paste it into any AI chat." : "Couldn't copy the message."; };
-    $("create-status").textContent = "";
+    $("copy-prompt").onclick = async () => say((await copyText(text)) ? "✓ Your message is copied. Paste it into any AI chat and send." : "Couldn't copy the message.");
+    say("");
     this.show("create");
   },
 
