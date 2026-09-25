@@ -502,8 +502,16 @@
     check(parsePlan("").plan === null && parsePlan("").problems.length === 1, "an empty link wasn't reported");
     check(parsePlan("v2/t:X/mon:A:sarow").problems.some((p) => /newer version/.test(p)), "a newer link version wasn't reported");
     // the AI message lists every exercise, and its example link is valid
-    const prompt = coachPrompt(), exampleLink = prompt.match(/^Example:\n(\S+)/m)?.[1];
-    for (const k of Object.keys(EX)) if (!WARMUP.includes(k)) check(new RegExp(`^${k} - `, "m").test(prompt), `the AI message doesn't list ${k}`);
+    const prompt = coachPrompt(), exampleLink = prompt.match(/^Example: (\S+)/m)?.[1];
+    for (const k of Object.keys(EX)) if (!WARMUP.includes(k)) check(new RegExp(`^${k}: `, "m").test(prompt), `the AI message doesn't list ${k}`);
+    // each chat's link fits what that chat accepts (or it copies instead), and carries the message exactly
+    for (const cur of [null, EXAMPLE_PLAN.link]) for (const ai of AI_CHATS) {
+      const text = coachPrompt(cur), link = chatLink(ai, text);
+      if (pastes(ai, text)) { check(!link.includes("?q="), `${ai.name}: copy-and-paste, but the link still carries the message`); continue; }
+      check(!ai.max || link.length <= ai.max, `${ai.name}: a ${link.length}-character link is past its ${ai.max} limit`);
+      const q = link.slice(ai.url.length), back = decodeURIComponent(ai.plus ? q.replace(/\+/g, " ") : q);
+      check(back === text && !/[#&]/.test(q), `${ai.name}: the link doesn't carry the message exactly`);
+    }
     const exP = parsePlan(exampleLink || "");
     check(exampleLink && !exP.problems.length && !exP.fixes.length, `the AI message's example link isn't valid: ${[...exP.problems, ...exP.fixes].join("; ")}`);
     check(coachPrompt(EXAMPLE_PLAN.link).includes(EXAMPLE_PLAN.link), "the change-my-plan message doesn't include the plan");

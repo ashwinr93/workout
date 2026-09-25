@@ -8,60 +8,70 @@ const SITE = typeof location !== "undefined" && /^https?:/.test(location.protoco
   ? location.origin + location.pathname.replace(/[^/]*$/, "")
   : "https://ashwinr93.github.io/workout/";
 
-// Chats that accept a message in the address (checked by hand, Sep 2026). Gemini doesn't:
-// the app copies the message and opens Gemini for the person to paste.
+// Chats that take the message in their address (checked in a real browser, Sep 2026). A chat's
+// server refuses an address longer than its `max` (Grok's is about 5,000 characters; Perplexity
+// and Le Chat fail somewhere past 15,000 and 12,000), so for those, and for Gemini, which has no
+// such address at all, the app copies the message and opens the chat for the person to paste.
+// Claude and Copilot need an account to try; their limits are unknown.
 const AI_CHATS = [
-  { name: "ChatGPT", url: "https://chatgpt.com/?q=" },
+  { name: "ChatGPT", url: "https://chatgpt.com/?q=", plus: true },
   { name: "Claude", url: "https://claude.ai/new?q=" },
   { name: "Gemini", url: "https://gemini.google.com/app", paste: true },
   { name: "Microsoft Copilot", url: "https://copilot.microsoft.com/?q=" },
-  { name: "Perplexity", url: "https://www.perplexity.ai/search?q=" },
-  { name: "Grok", url: "https://grok.com/?q=" },
-  { name: "Le Chat", url: "https://chat.mistral.ai/chat?q=" },
+  { name: "Perplexity", url: "https://www.perplexity.ai/search?q=", max: 14000, plus: true },
+  { name: "Grok", url: "https://grok.com/?q=", max: 4000, plus: true },
+  { name: "Le Chat", url: "https://chat.mistral.ai/chat?q=", max: 11000 },
 ];
-const chatLink = (ai, text) => (ai.paste ? ai.url : ai.url + encodeURIComponent(text));
+// The message in an address, as short as the address rules allow: punctuation that's valid in a
+// query stays as it is, and a space is "+" where the chat was seen to read it that way (`plus`);
+// line breaks and the characters that end a query (# & = +) are escaped
+const inQuery = (text, plus) => {
+  const q = encodeURIComponent(text).replace(/%(2C|3A|2F|3B|40|3F|21|24|27)/g, (m) => decodeURIComponent(m));
+  return plus ? q.replace(/%20/g, "+") : q;
+};
+const pastes = (ai, text) => !!ai.paste || (!!ai.max && (ai.url + inQuery(text, ai.plus)).length > ai.max);
+const chatLink = (ai, text) => (pastes(ai, text) ? ai.url.replace(/[?].*$/, "") : ai.url + inQuery(text, ai.plus));
 
 function coachPrompt(current) {
   const joints = (list) => list.map((j) => JOINTS[j]).join(", ");
+  // one line per exercise: "bwsquat: Bodyweight Squat | squat, beginner | quads, glutes | loads knees | no kit | harder: gobletsquat"
   const line = (k) => {
-    const ex = EX[k], how = ex.time ? "hold, seconds" : ex.measure === "m" ? "carry, metres" : ex.perSide || /each side/.test(ex.unit) ? "reps each side" : "reps";
+    const ex = EX[k], how = ex.time ? " (hold)" : ex.measure === "m" ? " (carry, metres)" : ex.perSide || /each side/.test(ex.unit) ? " (each side)" : "";
     // a demo variant can be easier or harder than the main one (goblet vs sumo): give the range
     const levels = [...new Set(ex.videos.map((_, vi) => variant(k, vi).level))].sort();
     // joints every version loads, then what a particular version adds ("pigeon version also loads knees")
     const vs = ex.videos.map((_, vi) => variant(k, vi)), common = vs[0].loads.filter((j) => vs.every((v) => v.loads.includes(j)));
     const extra = vs.map((v) => [v.name, v.loads.filter((j) => !common.includes(j))]).filter(([, l]) => l.length)
       .map(([n, l]) => `${n.toLowerCase()} version ${common.length ? "also " : ""}loads ${joints(l)}`);
-    return [`${k} - ${ex.name} (${how})`, `${TYPES[ex.type]}, ${levels.join(" to ")}`,
-      `works ${muscleList(ex.muscles.main).toLowerCase()}`,
-      ex.easyOn.length ? `easy on ${joints(ex.easyOn)}` : "", common.length ? `loads ${joints(common)}` : "", ...extra,
-      `needs ${ex.equip}`,
-      ex.easier ? `easier: ${ex.easier.join(", ")}` : "", ex.harder ? `harder: ${ex.harder.join(", ")}` : ""].filter(Boolean).join(" - ");
+    const joint = [ex.easyOn.length ? `easy on ${joints(ex.easyOn)}` : "", common.length ? `loads ${joints(common)}` : "", ...extra].filter(Boolean).join("; ");
+    const alt = [ex.easier ? `easier: ${ex.easier.join(", ")}` : "", ex.harder ? `harder: ${ex.harder.join(", ")}` : ""].filter(Boolean).join("; ");
+    return [`${k}: ${ex.name}${how}`, `${TYPES[ex.type]}, ${levels.join(" to ")}`, muscleList(ex.muscles.main).toLowerCase(),
+      joint || "-", ex.equip === "none" ? "no kit" : ex.equip, ...(alt ? [alt] : [])].join(" | ");
   };
   const keys = Object.keys(EX).filter((k) => !WARMUP.includes(k));
   const strength = keys.filter((k) => EX[k].type !== "stretch"), stretches = keys.filter((k) => EX[k].type === "stretch");
-  const acts = Object.entries(ACTIVITIES).map(([k, a]) => `${k} (${a.name.toLowerCase()})`).join(", ");
+  const acts = Object.keys(ACTIVITIES).join(", ");
   const R = DOSE.reps, H = DOSE.hold;
   const example = `${SITE}#v1/t:Home-Strength/mon:Full-Body-A:boxsquat.3x10-12,sarow.3x10,slbridge.2x10,planktaps.3x30s`
     + `/wed:Brisk-Walk:walk.30m/fri:Full-Body-B:rdl.3x8-10,floorpress.3x10,stepup.2x8,suitcase.3x40/sun:Stretch:couch.1x60s,pigeon.1x60s`;
 
-  return `You are a friendly, encouraging strength coach. Help me build a weekly workout for a free app that plays each exercise with a demo video, a coach voice and timers. I may be a complete beginner and a bit shy about exercise, so keep things simple and kind.
+  return `You're a friendly, encouraging strength coach. Help me build a weekly plan for a free app that plays each exercise with a demo video, a coach voice and timers. I may be a beginner and a bit shy about exercise, so keep it simple and kind.
 
-STEP 1 - INTERVIEW ME
-Talk like a coach chatting with me, not a form. Ask one short question at a time in everyday words, and wait for my answer. Before each new question, respond to what I just said in a way that shows you understood it (no bare "Got it."). If I give a short or vague answer, ask what I mean before moving on, and offer a few examples I can pick from, since I may not know the right words.
-For example, if I say "posture", ask what bothers me about it: shoulders rounding forward, head poking forward, a stiff or achy back after sitting, or how I look in photos. Then connect it to the next question.
-Things to find out:
-- what I want to get out of it, in my own words
-- anything that aches or has been injured, and when I notice it (link this to my goal where it fits)
-- where I'll train: at home, in a gym, outdoors, or a mix. If it's a gym, assume a normal gym and only ask if there's anything I can't or don't want to use; don't make me list equipment. If it's at home, ask what I have, and "nothing" is a fine answer.
-- how many days a week, and how many minutes a session
+1. INTERVIEW ME
+Chat like a coach, not a form: one short question at a time, in everyday words. Before each question, respond to my last answer so I know you understood (not just "Got it"). If an answer is short or vague, ask what I mean and offer examples to pick from (for "posture": rounded shoulders, head poking forward, a stiff back after sitting).
+Find out, one thing per question, in about 8 questions:
+- what I want from it, in my own words
+- anything that aches or was injured, and when I notice it
+- where I'll train: home, gym, outdoors or a mix. Gym: assume a normal gym and only ask what I can't or won't use. Home: ask what I have ("nothing" is fine).
+- days a week, and minutes per session
 - how much I've trained before
 - any sport or cardio I already do (these become activity days)
-Only ask about one thing per question. Stop after about 8 questions.
-If I mention chest pain, dizziness or fainting, recent surgery, a new injury, or pain that is severe or constant, kindly tell me to see a doctor or physiotherapist first, and don't build a plan.
+If I mention chest pain, dizziness or fainting, recent surgery, a new injury, or severe or constant pain, kindly tell me to see a doctor or physio first and don't build a plan.
+When you have what you need, show the plan in that same reply.
 
-STEP 2 - BUILD THE PLAN
-Use ONLY exercises from this list, by their id. Never invent one, even if it would suit me better. If the list can't cover something I need, tell me.
-Format: id - name (how it's counted) - movement, level - main muscles - joints it is easy on / puts load on - equipment - easier / harder alternatives
+2. BUILD THE PLAN
+Use only these exercises, by id. Never invent one; if something I need isn't covered, say so.
+id: name (reps unless marked) | movement, level | main muscles | joints | kit | easier/harder
 
 Strength
 ${strength.map(line).join("\n")}
@@ -69,35 +79,27 @@ ${strength.map(line).join("\n")}
 Stretches (holds; good on recovery days)
 ${stretches.map(line).join("\n")}
 
-Activities, for cardio and sport days (no exercises that day): ${acts}.
+Activities (a whole day, no exercises): ${acts}.
 
-The app adds a 5-minute warm-up before and a short cool-down stretch after every session automatically, so don't include them.
+The app adds a warm-up and cool-down stretches to every session; don't include them.
+- At least 2 strength days a week, plus 150-300 minutes of brisk activity (walks count). For weight loss, aim high and keep the strength days.
+- 3-6 exercises a day, fitting my session length (about 5 minutes per strength exercise, 2 per stretch).
+- Balance the week: squat or lunge, hinge, push, pull and core, with at least as many pulls as pushes (more if my shoulders bother me).
+- For anything that hurts, avoid exercises that load that joint and prefer ones easy on it. Say why you chose them.
+- Beginners: beginner exercises, fewer sets, and the easier alternative where there is one.
+- Gym machines only if I train in a gym; barbells only if I already lift with one.
+- Sets ${DOSE.sets.min}-${DOSE.sets.max}. Reps ${R.min}-${R.max}, or a range: ${R.ranges.map((r) => r.replace("–", "-")).join(", ")} (per side for "each side"). Holds ${H.min}-${H.max} seconds in steps of ${H.step}. Carries ${DOSE.metres.join(", ")} metres. Activities: minutes in steps of 5.
+- Only the days I said I can train.
 
-Guidelines
-- Aim for at least 2 strength days a week, plus cardio: 150 to 300 minutes a week of brisk activity (walks count). If I want to lose weight, lean toward the higher end and keep the strength days, as they hold on to muscle.
-- 3 to 6 exercises on a strength day; fit my session length (about 5 minutes per strength exercise, 2 per stretch).
-- Balance the week's movements: cover squat or lunge, hinge, push, pull and core across the week, and at least as many pulls as pushes (more pulls if my shoulders bother me).
-- For anything I said hurts, avoid exercises that load that joint and prefer ones that are easy on it. Tell me why you chose what you did.
-- Beginners: beginner-level exercises, fewer sets, and the easier alternative where there is one.
-- Gym machines only if I train in a gym. Barbell exercises only if I tell you I already lift with a barbell; otherwise use their easier alternatives.
-- Sets ${DOSE.sets.min}-${DOSE.sets.max}. Reps: a number from ${R.min} to ${R.max}, or one of these ranges: ${R.ranges.map((r) => r.replace("–", "-")).join(", ")}. For "each side" exercises, reps are per side. Holds: ${H.min} to ${H.max} seconds, in steps of ${H.step}. Carries: ${DOSE.metres.join(", ")} metres. Activities: minutes, in steps of 5.
-- Only plan the days I said I can train; leave the other days out.
-
-STEP 3 - GIVE ME MY LINK
-Show a short summary of the plan (days, exercises, sets and reps, one line on why). Ask if I want any changes. When I'm happy, reply with one line of encouragement, then the link below on a line of its own, as plain text, not in a code block and not hidden behind link text.
-
-Link format:
-${SITE}#v1/t:TITLE/DAY:NAME:ITEMS/DAY:NAME:ITEMS
-- TITLE: a short name for my plan, words joined with hyphens
-- DAY: mon, tue, wed, thu, fri, sat or sun
-- NAME: a short name for that day, words joined with hyphens
-- ITEMS: comma-separated exercises, each written as id.SETSxREPS (or id.SETSxLOW-HIGH for a range), id.SETSxSECONDSs for holds, id.SETSxMETRES for carries. An activity day has just one item: activity.MINUTESm
-- Use only letters, numbers and the characters / : . , -  No spaces.
-
-Example:
-${example}
+3. MY LINK
+Show a short summary: the days, each exercise by its name (never the id), sets and reps, and one line on why. Ask if I want changes. When I'm happy, reply with one line of encouragement, then the link on its own line as a Markdown link whose text is the whole address, like [https://…](https://…), not in a code block.
+Format: ${SITE}#v1/t:TITLE/DAY:NAME:ITEMS/DAY:NAME:ITEMS
+- TITLE and NAME: short, words joined with hyphens. DAY: mon, tue, wed, thu, fri, sat or sun.
+- ITEMS, comma-separated: id.SETSxREPS (or id.SETSxLOW-HIGH), id.SETSxSECONDSs for holds, id.SETSxMETRES for carries. An activity day has one item: activity.MINUTESm
+- Only letters, numbers and / : . , - (no spaces).
+Example: ${example}
 
 ${current
     ? `This is my current plan: ${SITE}#${current}\nRead it, tell me briefly what's in it, and ask what I'd like to change. Then give me a new link in the same format.`
-    : `If I come back later with my link and want changes, read the plan from the link, ask what I'd like to change, and give me a new link in the same format.\n\nLet's start: ask me your first question.`}`;
+    : `If I come back later with my link and want changes, read the plan from the link, ask what I'd like to change, and give me a new link.\n\nLet's start: ask me your first question.`}`;
 }

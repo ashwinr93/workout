@@ -942,10 +942,10 @@ const UI = {
     // Every choice is a plain link, so the phone can hand it to the AI's app when it's installed.
     // Where the chat can't take the message in its address (Gemini), the same tap copies it first.
     $("ai-list").innerHTML = AI_CHATS.map((ai, i) => `<a class="ai-btn" data-i="${i}" href="${esc(chatLink(ai, text))}" target="_blank" rel="noopener">Open ${esc(ai.name)}${
-      ai.paste ? " <small>Copies the message; paste it in</small>" : ""}</a>`).join("");
+      pastes(ai, text) ? " <small>Copies the message; paste it in</small>" : ""}</a>`).join("");
     $("ai-list").onclick = (e) => {
       const a = e.target.closest("a.ai-btn"), ai = a && AI_CHATS[+a.dataset.i];
-      if (!ai?.paste) return;
+      if (!ai || !pastes(ai, text)) return;
       copyText(text).then((ok) => { $("create-status").textContent = ok ? `Message copied. Paste it into ${ai.name}'s message box and send.` : "Couldn't copy the message. Use the button below."; });
     };
     $("copy-prompt").onclick = async () => { $("create-status").textContent = (await copyText(text)) ? "Message copied. Paste it into any AI chat." : "Couldn't copy the message."; };
