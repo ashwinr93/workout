@@ -488,6 +488,18 @@
     check(!$("plan-menu").hidden && ["pm-change", "pm-share", "pm-switch"].every((id) => $(id)), "My week's plan row doesn't open the change/share/switch sheet");
     $("pm-switch").click();
     check(!$("plans").hidden && $("plan-menu").hidden, "the sheet's Switch plan didn't open Plans");
+    // Analytics: events name a plan only by a ready-made id or "own", and nothing personal leaves
+    const sent = [], was = { on: Analytics.on, umami: window.umami };
+    Object.assign(Analytics, { on: true }); window.umami = { track: (name, data) => sent.push([name, data]) };
+    UI.planView("gym-first"); $("plan-view-back").click();
+    const aiPlan = parsePlan("v1/t:Sams-Knee-Plan/mon:Legs:boxsquat.3x10").plan;
+    UI.startPlan(aiPlan); Plans.use(null);
+    check(sent.some(([n, d]) => n === "plan-view" && d.plan === "gym-first"), "viewing a plan isn't counted");
+    check(sent.some(([n, d]) => n === "plan-start" && d.plan === "own"), "starting an AI plan isn't counted as \"own\"");
+    check(!JSON.stringify(sent).match(/Knee|#v1|v1\//), "an event carries a plan's title or contents");
+    const out = Analytics.scrub({ title: "Sam's Knee Plan · Workout Coach", referrer: "https://chatgpt.com/?q=my+knees+hurt", url: "/workout/" });
+    check(out.title === "Workout Coach" && out.referrer === "https://chatgpt.com", "the page title or the full referring address would be sent");
+    Object.assign(Analytics, { on: was.on }); window.umami = was.umami;
     // Home Screen: a row for phones in a browser, its sheet (pictures, or Chrome's Install), gone after Got it
     const hs = { ...HomeScreen }, seen = store.get("homeSeen", false);
     const phone = (ios, standalone) => Object.assign(HomeScreen, { ios: () => ios, android: () => !ios, standalone: () => standalone });

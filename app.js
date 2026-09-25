@@ -40,6 +40,40 @@ async function copyText(text) {
   t.remove(); return ok;
 }
 
+/* ============================================================ Analytics: anonymous counts
+   Umami (cloud.umami.is), cookieless: how many people visit, where from, and how far they get
+   (a plan viewed, started, a workout finished). Only on the live site, so staging, tests, this Mac
+   and anyone's fork don't count. Never sent: the plan (the address keeps only its path), a plan's
+   title (the page title is replaced), anything typed, or where exactly someone came from (the
+   referring site only). Events carry a ready-made plan's id or "own", never an AI plan's content. */
+const Analytics = {
+  WEBSITE: "798c8feb-9a52-4620-bc98-d9516d4055c2",
+  on: location.hostname === "ashwinr93.github.io" && !STORE_PREFIX && !TEST_MODE && !REVIEW_MODE,
+  load() {
+    if (!this.on) return;
+    window.umamiBeforeSend = (type, payload) => this.scrub(payload);
+    const s = Object.assign(document.createElement("script"), { src: "https://cloud.umami.is/script.js", defer: true });
+    Object.entries({ websiteId: this.WEBSITE, excludeSearch: "true", excludeHash: "true", doNotTrack: "true", beforeSend: "umamiBeforeSend" })
+      .forEach(([k, v]) => { s.dataset[k] = v; });
+    document.head.appendChild(s);
+  },
+  // what leaves the page: no plan title, and only which site someone came from
+  scrub(payload) {
+    let ref = "";
+    try { ref = payload.referrer ? new URL(payload.referrer, location.href).origin : ""; } catch {}
+    return { ...payload, title: "Workout Coach", referrer: ref === location.origin ? "" : ref };
+  },
+  // name and a few plain values; the tracker may still be loading (or blocked), so this never throws
+  event(name, data) {
+    if (!this.on) return;
+    const send = () => { try { window.umami?.track(name, data); } catch {} };
+    window.umami ? send() : setTimeout(send, 3000);
+  },
+  // which plan, without its content: a ready-made plan's id, or "own" for one made with AI
+  plan: (plan) => (plan && PROGRAMS.find((p) => p.link === plan.link)?.id) || "own",
+};
+Analytics.load();
+
 /* ============================================================ Diag */
 const Diag = {
   lines: store.get("diag", []),
@@ -480,6 +514,7 @@ const Workout = {
   start({ warm, cool, label }) {
     this.begin(this.build(this.day, warm, cool), label, false);
     log("start workout:", label, "sound:", Sound.mode);
+    Analytics.event("workout-start", { plan: Analytics.plan(Plans.current), warmup: !!warm, cooldown: !!cool });
   },
   startPreview(key, d = dose(key)) {
     this.begin([{ type: "work", key, set: 1, sets: d.sets, side: null, section: "main", dose: d, preview: true }], "Preview", true);
@@ -535,6 +570,7 @@ const Workout = {
     Video.stop(); UI.stopCues();
     const mins = Math.round((Date.now() - this.startedAt) / 60000);
     UI.finished(mins);
+    if (!this.preview) Analytics.event("workout-finish", { plan: Analytics.plan(Plans.current), mins, sound: Sound.mode, from: HomeScreen.standalone() ? "home screen" : "browser" });
     Voice.sayNow([SAY.done()]);
     if (REVIEW_MODE) return;
     const history = store.get("log", []);
@@ -684,6 +720,7 @@ const Plans = {
   // A plan link from an AI (or a bookmark): open it, or explain what needs fixing
   open(text) {
     const r = parsePlan(text);
+    if (text !== this.saved()) Analytics.event("plan-link", { result: r.problems.length || !r.plan ? "needs a fix" : "ok", plan: Analytics.plan(r.plan) });
     log("plan link:", r.plan ? r.plan.title : "none", "problems:", r.problems.length, "fixes:", r.fixes.join("; "));
     if (r.problems.length || !r.plan) return UI.fix(r);
     store.set("leftForChat", 0);                    // the chat's link arrived: no need to ask for it
@@ -865,6 +902,7 @@ const UI = {
     $("plan-start").onclick = () => (Plans.current ? this.confirmPlan(plan) : this.startPlan(plan));
     $("plan-view-back").onclick = () => this.tab("plans");
     this.show("plan-view");
+    Analytics.event("plan-view", { plan: Analytics.plan(plan) });
   },
   confirmPlan(plan) {
     $("plan-confirm-title").textContent = `Switch to ${plan.title}?`;
@@ -874,7 +912,7 @@ const UI = {
     $("plan-confirm-yes").onclick = () => { $("plan-confirm").hidden = true; this.startPlan(plan); };
     $("plan-confirm-no").onclick = () => { $("plan-confirm").hidden = true; };
   },
-  startPlan(plan) { log("start plan:", plan.title); Plans.use(plan.example ? null : plan); }, 
+  startPlan(plan) { log("start plan:", plan.title); Analytics.event("plan-start", { plan: Analytics.plan(plan) }); Plans.use(plan.example ? null : plan); },
 
   /* ---------- Exercises: the library, searchable and filterable */
   exFilter: { q: "", gear: null, area: null },
@@ -973,6 +1011,7 @@ const UI = {
   // How to put the app on the Home Screen: Chrome's install prompt where there is one, else pictures
   homeSheet() {
     const install = !!HomeScreen.prompt, steps = install ? [] : HomeScreen.steps();
+    Analytics.event("home-screen-help", { phone: HomeScreen.android() ? "android" : "iphone", install });
     $("home-how").innerHTML = steps.map(([t, d, pic]) => `<li>${pic}<b>${t}</b><span>${d}</span></li>`).join("");
     $("home-how").setAttribute("aria-label", steps.map(([t, d]) => `${t}: ${d}`).join(". "));
     $("home-how").hidden = install;
@@ -982,6 +1021,7 @@ const UI = {
       HomeScreen.prompt.prompt();
       const { outcome } = await HomeScreen.prompt.userChoice;
       log("install prompt:", outcome);
+      Analytics.event("install", { outcome });
       HomeScreen.prompt = null; close();
       if (outcome === "accepted") { store.set("homeSeen", true); this.planCard(); }
     };
@@ -1002,6 +1042,7 @@ const UI = {
     $("pm-switch").onclick = () => { close(); this.tab("plans"); };
     // the phone's share sheet where there is one (Messages, WhatsApp, AirDrop…); otherwise copy the link
     $("pm-share").onclick = async () => {
+      Analytics.event("share", { plan: Analytics.plan(Plans.current) });
       const url = Plans.link();
       if (navigator.share) {
         try { await navigator.share({ title: Plans.current.title, url }); close(); return; }
@@ -1046,6 +1087,7 @@ const UI = {
       const a = e.target.closest("a.ai-btn"), ai = a && AI_CHATS[+a.dataset.i];
       if (!ai) return;
       this.leftForChat();
+      Analytics.event("ai-chat", { ai: ai.name, change: !!change });
       if (!ai.paste) return;
       copyText(text).then((ok) => say(ok ? `✓ Your message is copied. In ${ai.name}, tap the message box, paste, and send.`
         : `Couldn't copy the message. Tap "Copy the message" below, then paste it into ${ai.name}.`));
@@ -1068,7 +1110,7 @@ const UI = {
       if (!plan) { $("plan-paste-status").textContent = "That doesn't look like a plan link. It starts with the app's address and has #v1/ in it."; return; }
       Plans.open(plan);
     };
-    $("copy-prompt").onclick = async () => { this.leftForChat(); say((await copyText(text)) ? "✓ Your message is copied. Paste it into any AI chat and send." : "Couldn't copy the message."); };
+    $("copy-prompt").onclick = async () => { this.leftForChat(); Analytics.event("ai-chat", { ai: "other", change: !!change }); say((await copyText(text)) ? "✓ Your message is copied. Paste it into any AI chat and send." : "Couldn't copy the message."); };
     say("");
     this.show("create");
   },
@@ -1484,6 +1526,7 @@ log("--- page loaded", navigator.userAgent.replace(/^Mozilla\/5.0 /, ""), "stand
 Voice.load();
 Video.load();
 Plans.boot();
+Analytics.event("open", { from: HomeScreen.standalone() ? "home screen" : "browser", plan: Plans.current ? Analytics.plan(Plans.current) : "none" });
 Figure.load();
 if (QUERY.has("debug")) debugBar();
 if (TEST_MODE) document.body.appendChild(Object.assign(document.createElement("script"), { src: "tests/selftest.js" }));

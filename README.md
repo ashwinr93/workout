@@ -60,7 +60,7 @@ It then opens full-screen like an app, with no browser bars.
 
 **The coach tells you what each exercise works** during the rest before it ("This one works your quads and glutes"), and the muscle figure on screen lights them up, so the gym words become familiar.
 
-There are no accounts, no tracking and no ads (every demo video is checked for ads). Nothing leaves your phone except the YouTube embeds.
+There are no accounts and no ads (every demo video is checked for ads), and nothing about you is tracked. The app counts anonymous visits with [Umami](https://umami.is) (no cookies, nothing that recognises you, and never your plan) so I can see whether it's useful. Your browser's Do Not Track setting turns even that off.
 
 ## Ready-made plans
 
@@ -84,7 +84,7 @@ The AI can only choose from the app's exercise library, where every exercise has
 
 ## Under the hood
 
-If you'd rather run your own copy (your own exercises, videos and wording), fork this repo. There's no build step: it's plain HTML, CSS and JavaScript.
+If you'd rather run your own copy (your own exercises, videos and wording), fork this repo. There's no build step: it's plain HTML, CSS and JavaScript. The visit counting only runs on my address, so your copy counts nothing unless you put your own Umami ID in `Analytics` in `app.js`.
 
 | File | What's in it |
 |---|---|
