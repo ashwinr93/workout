@@ -1,4 +1,5 @@
-.claude/
+.claude/*
+!.claude/skills/
 voice-samples/
 .DS_Store
 __pycache__/

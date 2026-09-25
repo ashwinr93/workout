@@ -70,18 +70,7 @@ The full detail and the reasons are in `docs/decisions.md`, one section per feat
 5. **Afterwards, always:** `xcrun simctl shutdown all` (a demo left playing in the simulator loops audio on the owner's speakers), close browser-pane tabs, stop test servers. Test audio plays on the owner's Mac.
 6. Things only the real phone shows (AirPlay, Low Power Mode): ask the owner for Home → Diagnostics → Run phone check → Copy log.
 
-## Changing the coach's wording
-Edit text in `library.js` (cues, Focus, safety) or `speech.js` (coach phrases), then re-record only the changed phrases:
-```
-.venv/bin/python tools/make_audio.py --models <dir with kokoro-v1.0.onnx and voices-v1.0.bin>
-```
-Setup (if the venv/models are gone — they were kept in `/private/tmp/claude-501/tts`, which a restart clears): see the header of `tools/make_audio.py` (kokoro-onnx, soundfile; model files from github.com/thewh1teagle/kokoro-onnx releases, `model-files-v1.0`). Voice: `af_heart`, speed 0.95. Every phrase the app can say must have a clip; the self-test fails on "no recording for …".
-
-## Adding or swapping a demo video
-1. Find candidates (YouTube search); prefer short, clear, side-on demos.
-2. `node tests/e2e/ad-scan.mjs --talk <ids>` — reject any "AD"; the output tells you which have a voice (`voice: true`).
-3. `node tests/e2e/vet.mjs --out <dir> <ids>` — title, channel, length and a frame sheet (every ~1 s) per video: pick `start`/`end` past logos, "subscribe" end cards and chatter, and write cues from what the frames show.
-4. `node tests/e2e/trims.mjs --out <dir> <ids>` — the real player's frames at the chosen start, +1 s, +2.5 s and just before the end: the first must already show the exercise (no logo, intro or other exercise), the last no end cards (`--at 40,42,44` probes exact seconds). Run it with no ids to check every demo before a release.
-5. `node tools/credits.mjs` to update the README credits.
-6. Fill in `equip`, `type`, `level`, `easyOn`/`loads` (check each joint claim against a published source), `easier`/`harder` and `muscles` so the AI prompt describes it; record its clips (`make_audio.py`).
-7. Run the tests.
+## Recipes (skills)
+Step-by-step procedures live in `.claude/skills/` and load when the task comes up:
+- `change-coach-wording`: editing cues, Focus, safety lines or coach phrases, and re-recording the voice clips.
+- `add-demo-video`: adding an exercise, or adding, swapping or re-trimming a demo video.
