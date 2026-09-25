@@ -29,7 +29,7 @@ Live: https://ashwinr93.github.io/workout/ (branch `main`). Staging: https://ash
 | `tools/make_audio.py` | Records every phrase from `allPhrases()` with the Kokoro voice `af_heart` |
 | `tests/selftest.js` | Fast self-test (virtual clock, fake YouTube); runs with `index.html?selftest` |
 | `tests/review.js` | `index.html?review=<screen>` opens one screen for screenshots (home, home-end, day, day-end, create, player, rest, finish; a plan link after `#`); nothing is saved |
-| `tests/e2e/` | Playwright: `real-browsers.mjs` (real YouTube, real clicks), `ad-scan.mjs` (ads + which demos have a voice), `review.mjs` (review screenshots, below), `screenshots.mjs` (regenerates `docs/*.png` for the README, and `docs/share.png`, the link preview), `icons.mjs` (app icon PNGs) |
+| `tests/e2e/` | Playwright: `real-browsers.mjs` (real YouTube, real clicks), `ad-scan.mjs` (ads + which demos have a voice), `review.mjs` (review screenshots, below), `trims.mjs` (every demo's start/end frames), `screenshots.mjs` (regenerates `docs/*.png` for the README, and `docs/share.jpg`, the link preview (under 300 KB for WhatsApp)), `icons.mjs` (app icon PNGs) |
 | `README.md` | The owner's own words at the top (what it is, how I use it, why this exists, make it yours: vibe coded with Claude, fork it), then usage tips and the technical guide ("Under the hood") — keep it true when behaviour changes; re-run `screenshots.mjs` after visual changes. Public wording rules (owner): don't make any one way of using it sound required (TV, phone, a particular AI), no counts that go stale (plans, exercises), modest (a simple app built to scratch an itch), British spelling, never reuse the owner's old posts verbatim |
 
 ### Exercise data (`EX` in `library.js`)
@@ -86,6 +86,7 @@ Setup (if the venv/models are gone — they were kept in `/private/tmp/claude-50
 1. Find candidates (YouTube search); prefer short, clear, side-on demos.
 2. `node tests/e2e/ad-scan.mjs --talk <ids>` — reject any "AD"; the output tells you which have a voice (`voice: true`).
 3. `node tests/e2e/vet.mjs --out <dir> <ids>` — title, channel, length and a frame sheet (every ~1 s) per video: pick `start`/`end` past logos, "subscribe" end cards and chatter, and write cues from what the frames show.
-4. `node tools/credits.mjs` to update the README credits.
-5. Fill in `equip`, `type`, `level`, `easyOn`/`loads` (check each joint claim against a published source), `easier`/`harder` and `muscles` so the AI prompt describes it; record its clips (`make_audio.py`).
-6. Run the tests.
+4. `node tests/e2e/trims.mjs --out <dir> <ids>` — the real player's frames at the chosen start, +1 s, +2.5 s and just before the end: the first must already show the exercise (no logo, intro or other exercise), the last no end cards (`--at 40,42,44` probes exact seconds). Run it with no ids to check every demo before a release.
+5. `node tools/credits.mjs` to update the README credits.
+6. Fill in `equip`, `type`, `level`, `easyOn`/`loads` (check each joint claim against a published source), `easier`/`harder` and `muscles` so the AI prompt describes it; record its clips (`make_audio.py`).
+7. Run the tests.

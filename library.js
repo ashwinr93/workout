@@ -61,8 +61,8 @@ const EX = {
     ],
     stop: "If you feel a pinch at the top or front of the shoulder, make the circles smaller.",
     videos: [
-      { id: "ndmSvkEdNQQ", voice: true },
-      { id: "UVMEnIaY8aU", label: "Alternate", start: 8, end: 21, voice: true }
+      { id: "ndmSvkEdNQQ", end: 19.5, voice: true },
+      { id: "UVMEnIaY8aU", label: "Alternate", start: 8, end: 19.8, voice: true }
     ]
   },
   threadneedle: {
@@ -98,7 +98,7 @@ const EX = {
     ],
     stop: "If the inside or outside of your knee hurts, set your feet wider and don't go as far.",
     videos: [
-      { id: "YxECcOkUCEY", end: 38, voice: true },
+      { id: "YxECcOkUCEY", end: 36.5, voice: true },
       { id: "F1XdXdCjERk", label: "Alternate", start: 4, end: 16 }
     ]
   },
@@ -139,7 +139,7 @@ const EX = {
     stop: "If you feel a pinch at the front of the shoulder, don't lower as far, or use a lighter weight.",
     videos: [
       { id: "2SU_K4-knrc", start: 4, voice: true },
-      { id: "g4tj2lnUgpM", label: "Alternate", end: 11 }
+      { id: "g4tj2lnUgpM", label: "Alternate", end: 9.8 }
     ]
   },
   sarow: {
@@ -177,7 +177,7 @@ const EX = {
     stop: "If your elbow or shoulder hurts at the bottom, use a lighter weight and slow the lowering down.",
     videos: [
       { id: "oqnNivBhveM", end: 11, voice: true },
-      { id: "IaY4EncHDHU", label: "Alternate", start: 4, end: 20, voice: true }
+      { id: "IaY4EncHDHU", label: "Alternate", start: 4, end: 18.5, voice: true }
     ]
   },
   csrow: {
@@ -195,7 +195,7 @@ const EX = {
     ],
     stop: "If your neck tenses up, tuck your chin and keep your shoulders down.",
     videos: [
-      { id: "ym-Mp8tCF00", start: 8, end: 76, voice: true }
+      { id: "ym-Mp8tCF00", start: 8, end: 71, voice: true }
     ]
   },
   facepull: {
@@ -277,7 +277,7 @@ const EX = {
     ],
     stop: "If your hamstring cramps, move your foot closer to your hips.",
     videos: [
-      { id: "vdmlNaXSjd4", start: 4 },
+      { id: "vdmlNaXSjd4", start: 5 },
       { id: "AVAXhy6pl7o", label: "Alternate", start: 2, voice: true }
     ]
   },
@@ -296,7 +296,7 @@ const EX = {
     stop: "If your Achilles hurts, skip the step and use a smaller range.",
     videos: [
       { id: "SRUtMJ0tE2A", start: 2, end: 23, voice: true },
-      { id: "ADIDoYt_ko4", label: "Alternate", end: 11 }
+      { id: "ADIDoYt_ko4", label: "Alternate", end: 9.8 }
     ]
   },
   planktaps: {
@@ -313,7 +313,7 @@ const EX = {
     ],
     stop: "If your wrists or lower back hurt, drop to your knees.",
     videos: [
-      { id: "0PrTUpElJ44", start: 3, end: 13 }
+      { id: "0PrTUpElJ44", start: 4, end: 13 }
     ]
   },
 
@@ -333,7 +333,7 @@ const EX = {
     stop: "If your kneecap feels pressure, add padding or move the knee farther from the wall.",
     videos: [
       { id: "fHKndvWwenc", start: 16, end: 57, voice: true },
-      { id: "Fg-lwNBzVV8", label: "Alternate", start: 4, end: 50, voice: true }
+      { id: "Fg-lwNBzVV8", label: "Alternate", start: 4, end: 42.5, voice: true }
     ]
   },
   doorway: {
@@ -388,7 +388,7 @@ const EX = {
     ],
     stop: "If your shoulder pinches, shorten the range.",
     videos: [
-      { id: "7oH0algsdww", start: 4, voice: true }
+      { id: "7oH0algsdww", start: 5, voice: true }
     ]
   },
   pullover: {
@@ -407,7 +407,7 @@ const EX = {
     stop: "If your shoulder feels uncomfortable, stop earlier.",
     videos: [
       { id: "qALakTR1nRI", name: "Floor Pullovers", label: "Floor", start: 1, end: 19 },
-      { id: "FK4rHfWKEac", name: "Bench Pullovers", label: "Bench", start: 7, end: 55, voice: true,
+      { id: "FK4rHfWKEac", name: "Bench Pullovers", label: "Bench", start: 7, end: 48.5, voice: true,
         cues: [
           "Lie on a bench with feet flat, one dumbbell held over your chest with both hands",
           "Keep a slight bend in your elbows and don't let it change",
@@ -433,7 +433,7 @@ const EX = {
     stop: "If the front of your shoulder strains at the bottom, raise the bench.",
     videos: [
       { id: "1Z6XiaBxwHQ", end: 11 },
-      { id: "cbRSu8Ws_hs", label: "Alternate", end: 48, voice: true }
+      { id: "cbRSu8Ws_hs", label: "Alternate", start: 8, end: 46, voice: true }
     ]
   },
   triceps: {
@@ -499,7 +499,7 @@ const EX = {
     ],
     stop: "If your front knee hurts, take a shorter step, don't go as deep, or use lighter weights.",
     videos: [
-      { id: "RZKXLMxPF_I", start: 9, end: 54, voice: true }
+      { id: "RZKXLMxPF_I", start: 15, end: 46, voice: true }
     ]
   },
   sumodl: {
@@ -645,7 +645,7 @@ const EX = {
     stop: "If you feel tingling down the leg, back off. That's a nerve, not the muscle.",
     videos: [
       { id: "VWk9QD10Xjg", start: 1, voice: true },
-      { id: "b7k-9CZVYbA", label: "Alternate", end: 49, voice: true }
+      { id: "b7k-9CZVYbA", label: "Alternate", start: 1, end: 49, voice: true }
     ]
   },
   // ---------- Bodyweight and bands (batch 1) ----------
@@ -715,7 +715,7 @@ const EX = {
     ],
     stop: "If your wrists or shoulders hurt, use a higher surface.",
     videos: [
-      { id: "E--Ls5QtFqI", end: 13 }
+      { id: "E--Ls5QtFqI", end: 11.8 }
     ]
   },
   pushup: {
@@ -851,7 +851,7 @@ const EX = {
     ],
     stop: "If you feel a sharp pinch, stop lower down.",
     videos: [
-      { id: "Eaj_NG5_hIo", start: 9, end: 46, voice: true }
+      { id: "Eaj_NG5_hIo", start: 10, end: 44.5, voice: true }
     ]
   }
 ,
@@ -1009,7 +1009,7 @@ const EX = {
     ],
     stop: "If your lower back aches, don't lean as far forward.",
     videos: [
-      { id: "rqTOAM8WoeM", start: 10, end: 26, voice: true }
+      { id: "rqTOAM8WoeM", start: 10, end: 24.5, voice: true }
     ]
   },
 
@@ -1095,7 +1095,7 @@ const EX = {
     ],
     stop: "If your kneecaps hurt, use a lighter weight and stop short of straightening your legs fully.",
     videos: [
-      { id: "EAR4tit2Dac", start: 10, end: 53 }
+      { id: "EAR4tit2Dac", start: 10, end: 33 }
     ]
   }
 };

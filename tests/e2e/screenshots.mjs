@@ -59,15 +59,25 @@ await playFirst(page, "Monday");
 await page.screenshot({ path: `${OUT}/player.png` });
 await page.close();
 
-// The link preview a chat app shows when the site is shared (og:image, 1200×630)
+// The link preview chat apps and X show when the site is shared (og:image): a card, not a screenshot,
+// 1200×630 and a small JPEG (WhatsApp drops preview images over about 300 KB). The app's name, what it
+// is in one line, and the player as it looks mid-set.
+const img = (f) => `data:image/png;base64,${fs.readFileSync(path.join(OUT, f)).toString("base64")}`;
+const icon = `data:image/svg+xml;base64,${fs.readFileSync(path.join(ROOT, "icons/icon.svg")).toString("base64")}`;
 page = await browser.newPage({ viewport: { width: 1200, height: 630 } });
-await page.addInitScript(() => localStorage.setItem("plan", "null"));
-await page.goto(BASE);
-await page.evaluate(() => UI.tab("plans"));
-await sleep(2000);
-await page.screenshot({ path: `${OUT}/share.png` });
+await page.setContent(`<body style="margin:0;width:1200px;height:630px;background:#0d1015;color:#eef1f5;font-family:-apple-system,system-ui,sans-serif;display:flex;align-items:center;overflow:hidden">
+  <div style="padding:0 0 0 60px;width:430px;flex:none">
+    <img src="${icon}" style="width:84px;height:84px;border-radius:20px">
+    <div style="font-size:62px;font-weight:800;letter-spacing:-1.5px;line-height:1.02;margin-top:26px">Workout Coach</div>
+    <div style="font-size:28px;line-height:1.3;margin-top:18px;color:#c9ced6">A simple, free workout coach in your browser.</div>
+    <div style="font-size:22px;line-height:1.45;margin-top:26px;color:#3ddc97;font-weight:650">Demo videos · a coach voice · timers</div>
+    <div style="font-size:22px;line-height:1.45;color:#8b95a3">No sign-up, no ads, nothing to install.</div>
+  </div>
+  <img src="${img("player.png")}" style="width:660px;border-radius:18px;margin-left:24px;box-shadow:0 20px 60px rgba(0,0,0,.6);border:1px solid #232a33">
+</body>`);
+await page.screenshot({ path: `${OUT}/share.jpg`, type: "jpeg", quality: 82 });
 await page.close();
 
 await browser.close();
 server.close();
-console.log("wrote docs/home.png, docs/plans.png, docs/day.png, docs/player.png, docs/share.png");
+console.log("wrote docs/home.png, docs/plans.png, docs/day.png, docs/player.png, docs/share.jpg");
