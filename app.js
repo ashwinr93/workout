@@ -954,7 +954,7 @@ const UI = {
         `<div class="mock chat">${bubbles(change
           ? [["them", "What would you like to change?"], ["me", "Add a Thursday"], ["them", "Here's your new week…"]]
           : [["them", "What do you want from it?"], ["me", "Get stronger"], ["them", "Does anything ache?"]])}</div>`],
-      [change ? "Tap your new link" : "Tap your link", "It opens here as your week",
+      [change ? "Tap your new link" : "Tap your link", "It opens here as your weekly plan",
         `<div class="mock chat">${bubbles([["them", "Here's your plan: <u>tap to open</u>"]])}<i class="tap"></i>
           <div class="mock-week"><strong>My week</strong><span>Mon · Full body</span></div></div>`],
     ];
