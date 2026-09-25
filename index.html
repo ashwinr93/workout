@@ -53,9 +53,13 @@
         <button class="ghost-btn" id="plan-menu-cancel">Cancel</button>
       </div>
     </div>
-    <div class="empty" id="week-empty" hidden>
-      <p>You haven't picked a plan yet. Choose a ready-made one, or have an AI build one around your goals.</p>
-      <div class="card-actions"><button class="big-btn" id="week-browse">Browse plans</button><button class="ghost-btn" id="week-create">Create your own with AI</button></div>
+    <!-- No plan yet: a photo fills the screen, the choices sit at the bottom where a thumb reaches -->
+    <div class="week-empty" id="week-empty" hidden>
+      <div class="plan-hero empty-hero"><img class="plan-photo" id="empty-photo" alt="">
+        <div><h1 class="title">Your week starts here</h1>
+          <p class="empty-text">Pick a ready-made plan, or have an AI build one around your goals.</p>
+          <p class="empty-perks">Demo videos · A coach voice · Timers</p></div></div>
+      <div class="empty-actions"><button class="big-btn" id="week-browse">Browse plans</button><button class="ghost-btn" id="week-create">Create your own with AI</button></div>
     </div>
     <p class="note"><button class="link" id="diag-open">Diagnostics</button></p>
     <div class="card" id="diag" hidden>

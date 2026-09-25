@@ -899,7 +899,12 @@ const UI = {
     for (const id of ["week-hero", "days", "plan-card"]) $(id).hidden = !plan;
     $("week-browse").onclick = () => this.tab("plans");
     $("week-create").onclick = () => this.create(false);
-    if (!plan) { $("plan-title").textContent = ""; document.title = "Workout Coach"; return; }
+    $("home").classList.toggle("no-plan", !plan);
+    if (!plan) {
+      $("plan-title").textContent = ""; document.title = "Workout Coach";
+      $("empty-photo").src = photoUrl(PROGRAMS.find((p) => p.id === "start"));
+      return;
+    }
     document.title = `${plan.title} · Workout Coach`;
     $("plan-title").textContent = plan.title;
     $("week-photo").src = photoUrl(this.entryOf(plan));

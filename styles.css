@@ -235,9 +235,20 @@ h1, h2, h3, p { margin: 0; }
 .menu-opt { padding: 12px 2px; }
 .menu-opt + .menu-opt { border-top: 1px solid var(--line); }
 #plan-menu-status:empty { display: none; }
-.empty { margin-top: 12px; }
-.empty p { color: var(--muted); max-width: 52ch; }
-.empty .big-btn { min-width: 0; }
+/* My week with no plan: the screen is one photo with the choices at its foot, above the tabs */
+#home.no-plan { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+#home.no-plan .wrap { flex: 1; display: flex; flex-direction: column; width: 100%; }
+.week-empty { flex: 1; display: flex; flex-direction: column; gap: 12px; margin-top: 6px; }
+.empty-hero { flex: 1; min-height: 240px; margin: 0; padding: 22px 20px; }
+.empty-hero .plan-photo { object-position: 50% 25%; }
+.empty-hero .title { font-size: 30px; }
+.empty-text { margin-top: 8px; color: rgba(255, 255, 255, .85); max-width: 34ch; }
+.empty-perks { margin-top: 12px; font-size: 13px; font-weight: 600; color: var(--accent); }
+.empty-actions { display: grid; gap: 10px; }
+@media (min-width: 700px) { .empty-actions { grid-template-columns: 1fr 1fr; } }
+.empty-actions > * { width: 100%; min-width: 0; border-radius: 14px; }
+.empty-actions .ghost-btn { padding: 15px; font-size: 16px; }
+#home.no-plan .note { margin-top: 12px; text-align: center; }
 
 /* ------------------------------------------------------------------ Exercises */
 .search { width: 100%; margin: 14px 0 10px; padding: 11px 14px; border-radius: 12px; border: 1px solid var(--line);
@@ -363,6 +374,9 @@ h1, h2, h3, p { margin: 0; }
   .plan-name { font-size: 20px; }
 
   .plan-hero { min-height: 150px; }
+  .empty-hero { min-height: 150px; padding: 16px 18px; }
+  .empty-hero .title { font-size: 24px; }
+  .empty-actions { grid-template-columns: 1fr 1fr; }
   .tabbar { padding-top: 3px; padding-bottom: max(4px, env(safe-area-inset-bottom, 0px)); }
   .tabbar button span { display: none; }
   .screen.tabbed { padding-bottom: calc(50px + env(safe-area-inset-bottom, 0px)); }
