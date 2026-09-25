@@ -125,20 +125,21 @@
       <h1 class="title" id="create-title"></h1>
     </div>
     <p class="card-text" id="create-intro"></p>
+    <!-- Shown once you've gone to a chat and come back (or asked for it): where the link goes -->
+    <div class="card paste-card" id="paste-card" hidden>
+      <b id="paste-title"></b>
+      <p class="muted" id="paste-text"></p>
+      <form class="paste-row" id="plan-paste-form">
+        <input id="plan-paste" type="text" inputmode="url" placeholder="Your plan link" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Your plan link">
+        <button class="big-btn" type="submit" id="plan-paste-go">Paste</button>
+      </form>
+      <p class="note" id="plan-paste-status" role="status"></p>
+    </div>
     <ol class="how" id="create-how"></ol>
     <div class="label section-label">Choose your AI</div>
     <div class="ai-list" id="ai-list"></div>
     <p class="copied" id="create-status" role="status" hidden></p>
-    <div class="card paste-card">
-      <b>Got your link?</b>
-      <p class="muted">Tap it in the chat. If the chat shows it as plain text, copy it and paste it here.</p>
-      <form class="paste-row" id="plan-paste-form">
-        <input id="plan-paste" type="text" inputmode="url" placeholder="Paste your plan link" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Your plan link">
-        <button class="big-btn" type="submit">Open</button>
-      </form>
-      <p class="note" id="plan-paste-status" role="status"></p>
-    </div>
-    <p class="note"><button class="link" id="copy-prompt">Using another AI? Copy the message and paste it in</button></p>
+    <p class="note"><button class="link" id="copy-prompt">Using another AI? Copy the message</button> · <button class="link" id="show-paste">Already have a plan link?</button></p>
     <p class="note">Your answers stay in your AI chat. Your plan's link holds only exercises and numbers.</p>
     <p class="note">This isn't medical advice. If something hurts, check with a doctor or physiotherapist first.</p>
   </div>

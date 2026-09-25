@@ -546,6 +546,8 @@ const Workout = {
 
 document.addEventListener("visibilitychange", () => {
   log(document.hidden ? "app hidden" : "app visible");
+  // back from an AI chat on the Create screen: ask for the link it gave you
+  if (!document.hidden && UI.screen === "create" && Date.now() - store.get("leftForChat", 0) < 3600e3) UI.showPaste(true);
   if (document.hidden || !Video.active) return;
   if (Voice.playing && Voice.el.paused) Voice.el.play().catch((e) => log("voice resume failed:", e.name));
   Workout.keepAwake();
@@ -662,6 +664,7 @@ const Plans = {
     const r = parsePlan(text);
     log("plan link:", r.plan ? r.plan.title : "none", "problems:", r.problems.length, "fixes:", r.fixes.join("; "));
     if (r.problems.length || !r.plan) return UI.fix(r);
+    store.set("leftForChat", 0);                    // the chat's link arrived: no need to ask for it
     this.use(r.plan);
   },
   // Make a plan your week (null: the owner's week, the example)
@@ -942,17 +945,21 @@ const UI = {
     $("create-intro").textContent = change
       ? "Your AI chat changes your plan with you. It takes a few minutes."
       : "Your own AI chat builds a plan around you, in about five minutes.";
-    // what happens, in the order it happens: you leave for your AI, answer it, come back with a link
-    const steps = change ? [
-      ["Choose your AI", "It opens with your current plan and a message that makes it your coach."],
-      ["Say what to change", "An extra day, a sore knee, less time: it asks what it needs to, then shows you the new plan."],
-      ["Tap your new link", "It opens here as your week."],
-    ] : [
-      ["Choose your AI", "It opens with a message that turns it into your personal coach. It's your own account, so it's free, and your answers stay there."],
-      ["Answer its questions", "About 8 short ones, one at a time: what you want, any aches, where you train and how much time you have. Then it shows you the plan."],
-      ["Tap the link it gives you", "Your plan opens here as your week, with the videos, coach voice and timers."],
+    // what happens, as three small pictures you can take in at a glance: pick an AI, chat, tap the link
+    const bubbles = (lines) => lines.map(([who, t]) => `<p class="${who}">${t}</p>`).join("");
+    const steps = [
+      ["Pick your AI", change ? "It gets your plan" : "It becomes your coach",
+        `<div class="mock pick">${AI_CHATS.map((ai, i) => `<span${i === 1 ? ' class="on"' : ""}>${esc(ai.name)}</span>`).join("")}<i class="tap"></i></div>`],
+      [change ? "Say what to change" : "Answer its questions", change ? "It asks, then updates it" : "About 8, one at a time",
+        `<div class="mock chat">${bubbles(change
+          ? [["them", "What would you like to change?"], ["me", "Add a Thursday"], ["them", "Here's your new week…"]]
+          : [["them", "What do you want from it?"], ["me", "Get stronger"], ["them", "Does anything ache?"]])}</div>`],
+      [change ? "Tap your new link" : "Tap your link", "It opens here as your week",
+        `<div class="mock chat">${bubbles([["them", "Here's your plan: <u>tap to open</u>"]])}<i class="tap"></i>
+          <div class="mock-week"><strong>My week</strong><span>Mon · Full body</span></div></div>`],
     ];
-    $("create-how").innerHTML = steps.map(([t, d]) => `<li><b>${t}</b><span>${d}</span></li>`).join("");
+    $("create-how").innerHTML = steps.map(([t, d, pic]) => `<li>${pic}<b>${t}</b><span>${d}</span></li>`).join("");
+    $("create-how").setAttribute("aria-label", steps.map(([t, d]) => `${t}: ${d}`).join(". "));
     // Every choice is a plain link, so the phone can hand it to the AI's app when it's installed.
     // Where the chat can't take the message in its address, the same tap copies it first.
     $("ai-list").innerHTML = AI_CHATS.map((ai, i) => `<a class="ai-btn" data-i="${i}" href="${esc(chatLink(ai, text))}" target="_blank" rel="noopener">
@@ -960,21 +967,44 @@ const UI = {
     const say = (msg) => { $("create-status").textContent = msg; $("create-status").hidden = !msg; };
     $("ai-list").onclick = (e) => {
       const a = e.target.closest("a.ai-btn"), ai = a && AI_CHATS[+a.dataset.i];
-      if (!ai?.paste) return;
+      if (!ai) return;
+      this.leftForChat();
+      if (!ai.paste) return;
       copyText(text).then((ok) => say(ok ? `✓ Your message is copied. In ${ai.name}, tap the message box, paste, and send.`
         : `Couldn't copy the message. Tap "Copy the message" below, then paste it into ${ai.name}.`));
     };
-    // the link pasted back from the chat: a whole address, a Markdown link, or just the plan part
+    // the link pasted back from the chat: a whole address, a Markdown link, or just the plan part.
+    // Its box appears once you've been to a chat and come back (or ask for it), not before.
     $("plan-paste").value = ""; $("plan-paste-status").textContent = "";
-    $("plan-paste-form").onsubmit = (e) => {
+    $("paste-card").hidden = true;
+    if (Date.now() - store.get("leftForChat", 0) < 3600e3) this.showPaste(true);
+    $("show-paste").onclick = () => this.showPaste(false);
+    const label = () => { $("plan-paste-go").textContent = $("plan-paste").value.trim() ? "Open" : "Paste"; };
+    $("plan-paste").oninput = label; label();
+    $("plan-paste-form").onsubmit = async (e) => {
       e.preventDefault();
+      if (!$("plan-paste").value.trim()) {                  // "Paste": take it from the clipboard (asks on phones)
+        try { $("plan-paste").value = await navigator.clipboard.readText(); } catch { return $("plan-paste").focus(); }
+        label();
+      }
       const plan = planInText($("plan-paste").value);
       if (!plan) { $("plan-paste-status").textContent = "That doesn't look like a plan link. It starts with the app's address and has #v1/ in it."; return; }
       Plans.open(plan);
     };
-    $("copy-prompt").onclick = async () => say((await copyText(text)) ? "✓ Your message is copied. Paste it into any AI chat and send." : "Couldn't copy the message.");
+    $("copy-prompt").onclick = async () => { this.leftForChat(); say((await copyText(text)) ? "✓ Your message is copied. Paste it into any AI chat and send." : "Couldn't copy the message."); };
     say("");
     this.show("create");
+  },
+
+  // Off to an AI chat: when you come back, Create asks for the link it gave you
+  leftForChat() { store.set("leftForChat", Date.now()); },
+  showPaste(back) {
+    $("paste-title").textContent = back ? "Back from your chat?" : "Paste your plan link";
+    $("paste-text").textContent = back ? "Tap the link your AI gave you. If you can't tap it, copy it and paste it here."
+      : "The link your AI gave you at the end of the chat.";
+    $("paste-card").hidden = false;
+    $("paste-card").classList.toggle("back", back);
+    if (back) window.scrollTo(0, 0);
   },
 
   /* ---------- a plan link with mistakes: say what, and give the person a message for their AI */

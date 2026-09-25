@@ -418,7 +418,13 @@
     for (const text of [`https://x.io/workout/#${L}`, `[https://x.io/#${L}](https://x.io/#${L})`, ` ${L} `, `Here you go: https://x.io/#${L}.`.replace(/\.$/, "")])
       check(planInText(text) === L, `pasting "${text}" didn't find the plan`);
     check(planInText("hello there") === null, "pasting text with no plan found one");
-    UI.create(false); $("plan-paste").value = `https://x.io/workout/#${L}`; $("plan-paste-form").requestSubmit();
+    // the paste box waits until you've been to a chat (or ask for it)
+    store.set("leftForChat", 0); UI.create(false);
+    check($("paste-card").hidden && !!$("show-paste"), "Create asks for a plan link before you've been to a chat");
+    UI.leftForChat(); UI.create(false);
+    check(!$("paste-card").hidden && /Back from your chat/.test($("paste-title").textContent), "coming back from a chat doesn't ask for the link");
+    $("plan-paste").value = `https://x.io/workout/#${L}`; $("plan-paste-form").requestSubmit();
+    check(store.get("leftForChat", 0) === 0, "opening the chat's plan didn't stop Create asking for it");
     check(Plans.current?.title === "Pasted" && !$("home").hidden, "pasting a plan link on Create didn't open the plan");
     Plans.use(null);
     // every plan photo and icon is there
