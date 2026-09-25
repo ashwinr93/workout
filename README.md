@@ -33,8 +33,9 @@ So don't feel like you need to understand every line of code before touching thi
 ## Using it: tips
 
 **Make it an app on your phone.**
-- iPhone: open the site in Safari → Share → **Add to Home Screen** (keep "Open as Web App" on).
-- Android: open it in Chrome → ⋮ → **Add to Home screen**.
+- iPhone: open the site in Safari → Share (on iOS 26 it's in the ⋯ menu beside the address) → **Add to Home Screen** (under View More if it isn't listed; keep "Open as Web App" on).
+- Android: open it in Chrome → ⋮ → **Add to Home screen** (or Install app).
+- The icon opens your plan. My week also shows these steps on a phone.
 
 It then opens full-screen like an app, with no browser bars.
 

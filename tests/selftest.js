@@ -456,7 +456,7 @@
     }
     // every plan photo and icon is there
     const files = [...new Set([...PROGRAMS, ...Object.values(OWN_PHOTOS).map((photo) => ({ photo }))].map(photoUrl)),
-      "icons/icon.svg", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png", "manifest.webmanifest"];
+      "icons/icon.svg", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "manifest.webmanifest"];
     for (const f of files) { const r = await fetch(f, { method: "HEAD" }).catch(() => null); check(r?.ok, `missing ${f}`); }
     return { name: "Player extras and files", steps: files.length, lines: 0, fails };
   }
@@ -488,6 +488,24 @@
     check(!$("plan-menu").hidden && ["pm-change", "pm-share", "pm-switch"].every((id) => $(id)), "My week's plan row doesn't open the change/share/switch sheet");
     $("pm-switch").click();
     check(!$("plans").hidden && $("plan-menu").hidden, "the sheet's Switch plan didn't open Plans");
+    // Home Screen: a row for phones in a browser, its sheet (pictures, or Chrome's Install), gone after Got it
+    const hs = { ...HomeScreen }, seen = store.get("homeSeen", false);
+    const phone = (ios, standalone) => Object.assign(HomeScreen, { ios: () => ios, android: () => !ios, standalone: () => standalone });
+    store.set("homeSeen", false); phone(true, false); UI.planCard();
+    check(!!$("pc-home"), "no Add to Home Screen row on an iPhone in Safari");
+    $("pc-home")?.click();
+    check(!$("home-sheet").hidden && $("home-how").children.length === 3 && $("home-install").hidden, "the Home Screen sheet doesn't show three pictures on an iPhone");
+    $("home-done").click();
+    check($("home-sheet").hidden && !$("pc-home"), "Got it didn't put the Home Screen row away");
+    store.set("homeSeen", false); phone(false, false);
+    HomeScreen.prompt = { prompt() {}, userChoice: Promise.resolve({ outcome: "dismissed" }) };
+    UI.planCard(); $("pc-home")?.click();
+    check(!$("home-install").hidden && $("home-how").hidden, "Android with Chrome's install prompt doesn't offer Install");
+    $("home-done").click(); HomeScreen.prompt = null;
+    phone(true, true); UI.planCard();
+    check(!$("pc-home"), "the Home Screen app offers to add itself");
+    Object.assign(HomeScreen, hs); store.set("homeSeen", seen); UI.planCard();
+    check(Plans.link().includes("#v1/"), "the example plan's link doesn't carry the plan (a Home Screen icon or a share would open no plan)");
     const before = Plans.current.link;
     UI.tab("plans"); UI.planView("gym-first");
     check(Plans.current.link === before, "opening a plan's preview changed your week");
