@@ -68,7 +68,7 @@ const icon = `data:image/svg+xml;base64,${fs.readFileSync(path.join(ROOT, "icons
 page = await browser.newPage({ viewport: { width: 1200, height: 630 } });
 await page.setContent(`<body style="margin:0;width:1200px;height:630px;background:#0d1015;color:#eef1f5;font-family:-apple-system,system-ui,sans-serif;overflow:hidden;
     display:flex;flex-direction:column;align-items:center;padding-top:44px;box-sizing:border-box;text-align:center">
-  <div style="display:flex;align-items:center;gap:14px">
+  <div style="display:flex;align-items:center;gap:4px">   <!-- the icon's dark square is ~10px of padding round the ring: ~14px shows -->
     <img src="${icon}" style="width:60px;height:60px">
     <div style="font-size:50px;font-weight:800;letter-spacing:-1.2px;line-height:1">Workout Coach</div>
   </div>
