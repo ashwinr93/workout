@@ -4,7 +4,7 @@ A static web app that plays a weekly workout plan with YouTube demo videos, a pr
 
 Anyone can get their own plan without code: **Create your own plan** opens an AI chat (their own account) with a message from `prompt.js`; the AI interviews them and writes the plan as a link (`#v1/…`), which the app reads. Audience: beginners to moderately experienced people (not bodybuilders), at home or in a gym, including shy gym-goers.
 
-Live: https://ashwinr93.github.io/workout/ (branch `main`). Staging: https://ashwinr93.github.io/workout/staging/ (branch `staging`). Both are published by `.github/workflows/pages.yml` (GitHub Pages, source "GitHub Actions"); a push to either branch redeploys both. Staging keeps its saved data under separate keys (`STORE_PREFIX`). `gh` is logged in as ashwinr93.
+Live: https://workout.ashwinraghavan.com/ (branch `main`). Staging: https://workout.ashwinraghavan.com/staging/ (branch `staging`). Both are published by `.github/workflows/pages.yml` (GitHub Pages, source "GitHub Actions"); a push to either branch redeploys both. Staging keeps its saved data under separate keys (`STORE_PREFIX`). The domain is a Pages custom domain with DNS in Cloudflare; the old ashwinr93.github.io/workout/ address redirects (Domain). `gh` is logged in as ashwinr93.
 
 ## Files
 

@@ -2,7 +2,7 @@
 // (the iPhone simulator's Safari) and an iPhone in landscape (WebKit at 852×393; this Mac can't
 // rotate the simulator). Writes one contact sheet per device, plus the single shots.
 //   cd tests/e2e && node review.mjs [--screens home,create] [--base <url>] [--out <dir>] [--no-sim]
-//   --base  review a deployed copy (e.g. https://ashwinr93.github.io/workout/staging/) instead of this folder
+//   --base  review a deployed copy (e.g. https://workout.ashwinraghavan.com/staging/) instead of this folder
 // Screens are opened by tests/review.js (index.html?review=…).
 import { chromium, webkit } from "playwright";
 import { execFileSync } from "node:child_process";

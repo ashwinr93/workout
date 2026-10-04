@@ -48,7 +48,7 @@ async function copyText(text) {
    referring site only). Events carry a ready-made plan's id or "own", never an AI plan's content. */
 const Analytics = {
   WEBSITE: "798c8feb-9a52-4620-bc98-d9516d4055c2",
-  on: location.hostname === "ashwinr93.github.io" && !STORE_PREFIX && !TEST_MODE && !REVIEW_MODE,
+  on: location.hostname === "workout.ashwinraghavan.com" && !STORE_PREFIX && !TEST_MODE && !REVIEW_MODE,
   load() {
     if (!this.on) return;
     window.umamiBeforeSend = (type, payload) => this.scrub(payload);
@@ -775,7 +775,7 @@ const HomeScreen = {
       <figure><i></i></figure><figure><i></i></figure><figure><i></i></figure><figure><i></i></figure><figure><i></i></figure></div>`;
     const open = ["Open it from the icon", "Your plan opens with it", icon];
     return this.android()
-      ? [["Open Chrome's menu", "The ⋮ at the top", `<div class="mock bar"><span class="url">ashwinr93.github.io</span><span class="on">⋮</span><i class="tap"></i></div>`],
+      ? [["Open Chrome's menu", "The ⋮ at the top", `<div class="mock bar"><span class="url">workout.ashwinraghavan.com</span><span class="on">⋮</span><i class="tap"></i></div>`],
         ["Add to Home screen", "Or Install app", menu(["New tab", "Bookmarks"], "Add to Home screen")], open]
       : [["Tap Share", "In Safari's toolbar, or its ⋯ menu", menu(["Bookmarks", "Find on Page"], "Share")],
         ["Add to Home Screen", "Under View More if it's not listed", menu(["Favorites", "Find on Page"], "Add to Home Screen")], open];

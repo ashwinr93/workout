@@ -6,7 +6,7 @@
 // local server); outside a browser (the tools), at the live site
 const SITE = typeof location !== "undefined" && /^https?:/.test(location.protocol)
   ? location.origin + location.pathname.replace(/[^/]*$/, "")
-  : "https://ashwinr93.github.io/workout/";
+  : "https://workout.ashwinraghavan.com/";
 
 // The AIs the app opens directly (checked in a real browser, Sep 2026). ChatGPT and Claude take the
 // message in their address; Gemini and DeepSeek can't (no such parameter, and DeepSeek's sign-in

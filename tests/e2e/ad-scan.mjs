@@ -35,7 +35,7 @@ for (const id of ids) {
       if (/"adPlacements"|"playerAds"|"adSlots"/.test(body)) adData = true; // this video carries ads
       if (/"captionTracks"/.test(body)) talk = true;                          // speech → YouTube made captions
     });
-    await page.goto(`https://www.youtube.com/embed/${id}?autoplay=1&mute=1&playsinline=1`, { referer: "https://ashwinr93.github.io/" });
+    await page.goto(`https://www.youtube.com/embed/${id}?autoplay=1&mute=1&playsinline=1`, { referer: "https://workout.ashwinraghavan.com/" });
     const start = Date.now();
     let ad = false, playedAt = 0;
     while (Date.now() - start < WATCH_MS) {

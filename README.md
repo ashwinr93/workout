@@ -4,7 +4,7 @@ This is a small workout app for people who would rather press a button and get o
 
 The intention is to make following a plan feel a little less intimidating. There are ready-made plans to start from, but the app is also designed so you can bring your own plan into it without having to learn how to code.
 
-**Try it:** https://ashwinr93.github.io/workout/
+**Try it:** https://workout.ashwinraghavan.com/
 
 <p>
   <img src="docs/home.png" width="32%" alt="My week: the plan's photo, then the week's days, today first">

@@ -69,3 +69,6 @@ The Pages workflow stamps each copy's commit into `index.html` (`?v=` on every s
 
 ## Link preview card
 `docs/share.jpg`, built by `tests/e2e/screenshots.mjs`: 1200×630, under 300 KB (WhatsApp drops bigger images). Everything centred, because WhatsApp on a phone shows only the middle square; `SHARE_CROP=<file>` also writes that square to check. The icon's ring (not its dark square) sets the spacing and alignment. Bump `?v=` on `og:image` when the card changes, or chat apps keep the old one.
+
+## Domain
+Owner, Oct 2026: the app lives at workout.ashwinraghavan.com, set as the repo's GitHub Pages custom domain (`gh api repos/ashwinr93/workout/pages`), with a DNS-only CNAME `workout` → `ashwinr93.github.io` in Cloudflare (the same setup as markets.ashwinraghavan.com). GitHub now sends the old address (ashwinr93.github.io/workout/…, staging included) to the new one at the server, keeping the path; the browser keeps the `#` part, so old plan links and old Home Screen icons still open the right plan. What a browser saved on the old address (last plan, sound mode, figure, saved plans) stays behind, because it belongs to the old address. A handover would have meant keeping a page at the old address (Cloudflare Pages or a second hosting repo), and the owner chose the simpler move. Analytics counts only the new hostname; Umami's website domain should match.
