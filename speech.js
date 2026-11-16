@@ -16,6 +16,7 @@ const SPOKEN_NAMES = {
   sumodl: "Sumo deadlift", stepup: "Step ups", suitcase: "Suitcase carries",
   pigeon: "Pigeon pose, or figure four", crossbody: "Cross body shoulder stretch",
   tricepsstretch: "Overhead triceps stretch", hamstring: "Hamstring doorway stretch", lyinghamstring: "Lying hamstring stretch",
+  nordic: "Nordic hamstring curl", copenhagen: "Copenhagen plank",
   bwsquat: "Bodyweight squat", gobletsquat: "Goblet squat", splitsquat: "Split squat",
   inclinepushup: "Incline push ups", pushup: "Push ups", bandpulldown: "Band pulldown",
   bandrow: "Band seated row", glutebridge: "Glute bridge", deadbug: "Dead bug", birddog: "Bird dog",

@@ -572,6 +572,11 @@
     check(bad.plan?.days.length === 2, "the usable days of a link with problems weren't kept");
     check(parsePlan("").plan === null && parsePlan("").problems.length === 1, "an empty link wasn't reported");
     check(parsePlan("v2/t:X/mon:A:sarow").problems.some((p) => /newer version/.test(p)), "a newer link version wasn't reported");
+    // the warm-up and cool-down never repeat a move the day already has
+    for (const p of PROGRAMS) for (const day of parsePlan(p.link).plan.days) {
+      const parts = Workout.parts(day), own = new Set(day.items.map((i) => i.key));
+      check(![...parts.warm, ...parts.cool].some((e) => own.has(e.key)), `${p.id} ${day.name}: the warm-up or cool-down repeats one of the day's own moves`);
+    }
     // the AI message lists every exercise, and its example link is valid
     const prompt = coachPrompt(), exampleLink = prompt.match(/^Example: (\S+)/m)?.[1];
     for (const k of Object.keys(EX)) if (!WARMUP.includes(k)) check(new RegExp(`^${k}: `, "m").test(prompt), `the AI message doesn't list ${k}`);

@@ -158,6 +158,7 @@ h1, h2, h3, p { margin: 0; }
 .muscle-group .names { margin-top: 3px; line-height: 1.4; }
 .muscle-group.help .names { color: var(--muted); }
 .finished .muscle-groups { max-width: 340px; }
+.finished .next-time { max-width: 340px; font-size: 13px; }
 /* player: the badge sits to the right of the name and target, so it never adds height */
 .head { display: flex; align-items: center; gap: inherit; column-gap: 12px; }
 .head-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: inherit; align-items: flex-start; }
@@ -428,7 +429,10 @@ h1, h2, h3, p { margin: 0; }
   .finished { display: grid; grid-template-columns: auto auto; grid-auto-flow: dense; align-content: center; justify-content: center;
     justify-items: start; column-gap: 28px; row-gap: 6px; text-align: left; }
   .finished > * { grid-column: 2; }
-  .finished .fig.full { --h: 62vh; grid-column: 1; grid-row: 1 / span 5; align-self: center; margin: 0; }
+  /* the button must fit a 320 px tall screen, so the quiet lines follow it */
+  .finished .next-time { max-width: none; order: 1; }
+  .finished .link { order: 2; }
+  .finished .fig.full { --h: 62vh; grid-column: 1; grid-row: 1 / span 6; align-self: center; margin: 0; }
 }
 
 /* ------------------------------------------------------------------ Phone, portrait */

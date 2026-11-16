@@ -477,13 +477,14 @@ const Workout = {
   },
   nextWork() { return this.steps.slice(this.cur + 1).find((s) => s.type === "work") || null; },
 
-  // The day's parts, each exercise with its dose: warm-up, the day's own exercises (a stretch day's
-  // are cool-down stretches), then the cool-down stretches the day doesn't already have
+  // The day's parts, each exercise with its dose: the warm-up moves the day doesn't already have,
+  // the day's own exercises (a stretch day's are cool-down stretches), then the cool-down stretches
+  // the day doesn't already have
   parts(day, warm = true, cool = true) {
     const own = new Set(day.items.map((i) => i.key)), main = day.kind === "stretch" ? "cool" : "main";
     const entry = (key, item, section) => ({ key, section, dose: dose(key, item, section) });
     return {
-      warm: warm ? WARMUP.map((key) => entry(key, {}, "warm")) : [],
+      warm: warm ? WARMUP.filter((k) => !own.has(k)).map((key) => entry(key, {}, "warm")) : [],
       main: day.items.map((i) => entry(i.key, i, main)),
       cool: cool && day.kind !== "stretch" ? COOLDOWN.filter((k) => !own.has(k)).map((key) => entry(key, {}, "cool")) : [],
     };
@@ -863,6 +864,7 @@ const UI = {
     if (p.link === EXAMPLE_PLAN.link) return examplePlan();
     const plan = parsePlan(p.link).plan;
     if (p.title) plan.title = p.title;
+    if (p.dayGoals) plan.days.forEach((d) => { d.goal = p.dayGoals[d.key]; });
     return plan;
   },
   // "3 days a week + 1 walk", with the number big
@@ -1217,13 +1219,13 @@ const UI = {
     } else {
       this.dayMain = all.main;
       $("day-body").innerHTML = this.dayMuscles(all.main)
-        + this.optional("wu-toggle", W.warm, "Warm-up", `${WARMUP.length} moves · 6–8 min`, all.warm, "warm-up")
+        + (all.warm.length ? this.optional("wu-toggle", W.warm, "Warm-up", `${all.warm.length} moves · ${all.warm.length === WARMUP.length ? "6–8" : `about ${Math.round(all.warm.length * 1.4)}`} min`, all.warm, "warm-up") : "")
         + this.section(day.kind === "stretch" ? "Stretches" : "Workout", p.main)
         + (all.cool.length ? this.optional("cd-toggle", W.cool, "Cool-down stretches", `${all.cool.length} · about ${all.cool.length * 3} min`, all.cool, "cool-down stretches") : "");
       $("start-bar").innerHTML = `<button class="big-btn" id="start-btn">Start workout ▶</button>`;
       $("start-btn").onclick = () => W.start({ warm: W.warm, cool: W.cool, label });
       const flip = (id, part) => { W[part] = !W[part]; $(id).setAttribute("aria-pressed", W[part]); $(`${id}-list`).hidden = !W[part]; };
-      $("wu-toggle").onclick = () => flip("wu-toggle", "warm");
+      if ($("wu-toggle")) $("wu-toggle").onclick = () => flip("wu-toggle", "warm");
       if ($("cd-toggle")) $("cd-toggle").onclick = () => flip("cd-toggle", "cool");
     }
     // Only phones mirror to a TV; the tip sits where you're about to start
@@ -1399,6 +1401,7 @@ const UI = {
       <p class="muted">${esc(Workout.label)} · ${mins} min</p>
       ${Figure.slot("full", worked, muscleList(worked.main))}
       ${this.muscleGroups(worked)}
+      ${main.some((st) => !["stretch", "mobility"].includes(EX[st.key].type)) && !Workout.preview ? '<p class="muted next-time">Every set at the top of its range? Make it a little harder next time.</p>' : ""}
       <button class="big-btn" id="done-close">Back to the plan</button>
       ${Plans.current?.example && !Workout.preview ? '<button class="link" id="done-create">Create your own plan</button>' : ""}`;
     $("done-close").onclick = () => { Workout.day = null; Workout.exit(); };

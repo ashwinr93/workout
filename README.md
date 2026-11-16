@@ -150,7 +150,7 @@ This is a player for a plan, not medical advice. The cues and "back off" lines c
 ## Demo videos
 
 <!-- credits:start -->
-Every demo is the creator's own video, played through YouTube's embedded player (start and end points only; nothing is downloaded or edited). Thank you to these 59 channels:
+Every demo is the creator's own video, played through YouTube's embedded player (start and end points only; nothing is downloaded or edited). Thank you to these 60 channels:
 
 - **[Advanced Therapy and Performance](https://www.youtube.com/@advancedtherapyperformance)**: [90/90 Hip Swivels](https://www.youtube.com/watch?v=YxECcOkUCEY)
 - **[Andrew Coates](https://www.youtube.com/@Andrewcoatesfitness)**: [Neutral-Grip Incline Press](https://www.youtube.com/watch?v=2SU_K4-knrc)
@@ -198,7 +198,7 @@ Every demo is the creator's own video, played through YouTube's embedded player 
 - **[Rehab My Patient](https://www.youtube.com/@RehabMyPatient)**: [Kneeling Side Plank](https://www.youtube.com/watch?v=UurF0EhHFLg)
 - **[Renaissance Periodization](https://www.youtube.com/@RenaissancePeriodization)**: [Single-Arm Row](https://www.youtube.com/watch?v=DMo3HJoawrU), [Face Pulls](https://www.youtube.com/watch?v=nzTY7j9ocR8)
 - **[REP](https://www.youtube.com/@repfitnessequipment)**: [Seated Cable Row](https://www.youtube.com/watch?v=f_r95UajQcg)
-- **[Runna](https://www.youtube.com/@Runna)**: [Bodyweight Squat](https://www.youtube.com/watch?v=P-yaD24bUE8), [Barbell Deadlift](https://www.youtube.com/watch?v=S5JSZKURFPo), [Barbell Bent-Over Row](https://www.youtube.com/watch?v=rqTOAM8WoeM)
+- **[Runna](https://www.youtube.com/@Runna)**: [Bodyweight Squat](https://www.youtube.com/watch?v=P-yaD24bUE8), [Barbell Deadlift](https://www.youtube.com/watch?v=S5JSZKURFPo), [Barbell Bent-Over Row](https://www.youtube.com/watch?v=rqTOAM8WoeM), [Copenhagen Plank](https://www.youtube.com/watch?v=bU8aazv5voo)
 - **[Simone Sports Performance](https://www.youtube.com/@SimoneSportsPerformance)**: [Y-T-W Raises](https://www.youtube.com/watch?v=WAnSCSJbQYw)
 - **[Steam Training Fitness](https://www.youtube.com/@steamtrainingfitness720)**: [Sumo Deadlift](https://www.youtube.com/watch?v=xK4ED_yQcoU)
 - **[Streamline Performance Physical Therapy](https://www.youtube.com/@ptstreamline)**: [Thread the Needle](https://www.youtube.com/watch?v=YuAJ1i76Hek)
@@ -210,6 +210,7 @@ Every demo is the creator's own video, played through YouTube's embedded player 
 - **[Three Lakes Physical Therapy](https://www.youtube.com/@threelakesphysicaltherapya927)**: [Cat-Cow → Child's Pose](https://www.youtube.com/watch?v=Kegpy6v-NfA)
 - **[UC Davis Health](https://www.youtube.com/@UCDavisHealth)**: [Lat Pulldown](https://www.youtube.com/watch?v=oMJmAHRZXBk)
 - **[Wade Bass](https://www.youtube.com/@Tglcoach)**: [Tibialis Raises](https://www.youtube.com/watch?v=OPEuhclsTUQ)
+- **[www.sportsinjuryclinic.net](https://www.youtube.com/@SportsinjuryclinicNet)**: [Nordic Hamstring Curl](https://www.youtube.com/watch?v=qPRZcNx_C0A)
 - **[YMCA Calgary](https://www.youtube.com/@ymcacalgary)**: [Seated Leg Curl](https://www.youtube.com/watch?v=TAbolZJ6Lg4)
 
 The plan photos come from [Unsplash](https://unsplash.com) (free to use under the [Unsplash License](https://unsplash.com/license)) (copies are saved in `photos/`). Thank you to these photographers:

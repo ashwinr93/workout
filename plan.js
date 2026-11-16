@@ -34,11 +34,11 @@ const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Frid
 const EXAMPLE_PLAN = {
   link: "v1/t:Joint-Friendly-Strength-and-Flexibility"
     + "/mon:Upper-Body-A:inclinepress.3x8-10,sarow.3x10-12,floorpress.3x10-12,csrow.3x12-15,facepull.3x15-20"
-    + "/tue:Lower-Body-A:rdl.3x8-10,boxsquat.3x10-12,slbridge.3x12,calfraise.3x15,planktaps.3x45s"
+    + "/tue:Lower-Body-A:rdl.3x8-10,boxsquat.3x10-12,slbridge.3x12,calfraise.3x15,copenhagen.2x20s,planktaps.3x45s"
     + "/wed:Active-Recovery:couch.2x120s,doorway.2x120s,tibraise.2x20"
     + "/thu:Football-Match:sport"
     + "/fri:Upper-Body-B:seatedohp.3x10-12,pullover.3x12,hammercurl.3x12,triceps.3x12-15,ytw.2x10"
-    + "/sat:Lower-Body-B:dbrevlunge.3x10,sumodl.3x10-12,stepup.3x10,suitcase.3x40"
+    + "/sat:Lower-Body-B:dbrevlunge.3x10,sumodl.3x10-12,stepup.3x10,nordic.2x5,suitcase.3x40"
     + "/sun:Rest-and-Recovery:pigeon.1x120s,couch.1x120s,crossbody.1x30s,tricepsstretch.1x30s,lyinghamstring.1x60s",
   title: "Joint-Friendly Strength & Flexibility",
   subtitle: "4-day upper/lower split · Dumbbells & bench · Football-optimized",

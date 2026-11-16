@@ -54,6 +54,7 @@ The full detail and the reasons are in `docs/decisions.md`, one section per feat
 - **AI chats:** ChatGPT, Claude, Gemini, DeepSeek; keep the message compact (links under 16,000 characters); no custom GPTs/Gems/Projects (AI chats).
 - **Home Screen:** the icon must open the person's plan; the manifest has no `start_url` (Home Screen).
 - **Day screen:** warm-up and cool-down are optional sections with a switch; day kinds are workout, stretch and activity (Day screen).
+- **Ready-made plans** were reviewed as a whole; each one's sets, rests and extras have a recorded reason (Ready-made plans).
 - **Releases** stamp the commit into `index.html` so phones never mix old and new files (Releases). The link preview card is `docs/share.jpg`; bump its `?v=` when it changes (Link preview card).
 - Polish and clean engineering matter to the owner: no patch-on-patch fixes; restructure when needed.
 

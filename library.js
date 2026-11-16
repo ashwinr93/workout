@@ -945,7 +945,7 @@ const EX = {
     ]
   },
   bbsquat: {
-    name: "Barbell Back Squat", sets: 3, reps: "6–8", unit: "reps", rest: 120,
+    name: "Barbell Back Squat", sets: 3, reps: "6–8", unit: "reps", rest: 180,
     equip: "a barbell and squat rack", gear: ["gym"],
     muscles: { main: ["quads", "glutes"], help: ["adductors", "hams", "lowerback", "abs"] },
     type: "squat", level: "intermediate", easyOn: [], loads: ["knees", "lowerback"], easier: ["gobletsquat"],
@@ -963,7 +963,7 @@ const EX = {
     ]
   },
   deadlift: {
-    name: "Barbell Deadlift", sets: 3, reps: "5", unit: "reps", rest: 120,
+    name: "Barbell Deadlift", sets: 3, reps: "5", unit: "reps", rest: 180,
     equip: "a barbell and plates", gear: ["gym"],
     muscles: { main: ["glutes", "hams", "lowerback"], help: ["quads", "traps", "forearms", "upperback"] },
     type: "hinge", level: "intermediate", easyOn: ["knees"], loads: ["lowerback"], easier: ["rdl"],
@@ -981,7 +981,7 @@ const EX = {
     ]
   },
   benchpress: {
-    name: "Barbell Bench Press", sets: 3, reps: "6–8", unit: "reps", rest: 120,
+    name: "Barbell Bench Press", sets: 3, reps: "6–8", unit: "reps", rest: 180,
     equip: "a barbell, bench and rack", gear: ["gym"],
     muscles: { main: ["chest", "triceps"], help: ["delts"] },
     type: "push", level: "intermediate", easyOn: [], loads: ["shoulders"], easier: ["chestpress"],
@@ -998,7 +998,7 @@ const EX = {
     ]
   },
   ohp: {
-    name: "Barbell Overhead Press", sets: 3, reps: "6–8", unit: "reps", rest: 90,
+    name: "Barbell Overhead Press", sets: 3, reps: "6–8", unit: "reps", rest: 120,
     equip: "a barbell and rack", gear: ["gym"],
     muscles: { main: ["delts", "triceps"], help: ["traps", "upperback", "abs"] },
     type: "pushup", level: "intermediate", easyOn: [], loads: ["shoulders", "lowerback"], easier: ["seatedohp"],
@@ -1081,6 +1081,43 @@ const EX = {
     stop: "Don't curl up any higher. If your neck strains, tuck your chin slightly.",
     videos: [
       { id: "I_drRVYlHbc", start: 5, end: 33, voice: true }
+    ]
+  },
+  // ---------- Injury prevention for field sports ----------
+  nordic: {
+    name: "Nordic Hamstring Curl", sets: 2, reps: "5", unit: "reps", rest: 90,
+    equip: "a partner or heavy anchor for your ankles, a cushion", gear: ["bodyweight"],
+    muscles: { main: ["hams"], help: ["glutes", "calves"] },
+    type: "hinge", level: "intermediate", easyOn: [], loads: ["knees"],
+    key: "Lower as slowly as you can",
+    why: "Strengthens the hamstrings while they lengthen, which is how they work when you sprint.",
+    cues: [
+      "Kneel on a cushion with your ankles held down",
+      "Keep a straight line from your knees to your head, hands ready at your chest",
+      "Lean forward from the knees without bending at the hips",
+      "Catch yourself on your hands at the bottom and push back up"
+    ],
+    stop: "Stop if you feel a sharp pull or a cramp at the back of your thigh.",
+    videos: [
+      { id: "qPRZcNx_C0A", start: 3, end: 27 }
+    ]
+  },
+  copenhagen: {
+    name: "Copenhagen Plank", sets: 2, time: 20, perSide: true, rest: 45,
+    equip: "a bench or sturdy chair", gear: ["bodyweight"],
+    muscles: { main: ["adductors"], help: ["obliques", "abs", "delts"] },
+    type: "core", level: "intermediate", easyOn: [], loads: ["shoulders", "knees"],
+    key: "Hips up; a straight line from knee to shoulder",
+    why: "Strengthens the inner thigh muscles that take the strain when you kick and change direction.",
+    cues: [
+      "Lie on your side next to a bench, with your elbow under your shoulder",
+      "Rest the knee of your top leg on the bench and bend the bottom leg underneath",
+      "Press that knee down into the bench and lift your hips off the floor",
+      "Hold there and breathe steadily"
+    ],
+    stop: "If you feel pain in the groin or on the inside of the knee, lower down and rest.",
+    videos: [
+      { id: "bU8aazv5voo", start: 12, end: 21.5, voice: true }
     ]
   },
   legcurl: {
