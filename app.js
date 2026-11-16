@@ -239,7 +239,7 @@ const Video = {
   create() {
     this.yt = new YT.Player("yt", {
       playerVars: { autoplay: 1, mute: 1, playsinline: 1, controls: 1, rel: 0, modestbranding: 1, iv_load_policy: 3,
-        disablekb: 1, fs: 0, cc_load_policy: 1, cc_lang_pref: "en", hl: "en" },
+        disablekb: 1, fs: 0, cc_load_policy: 0, hl: "en" },
       events: {
         onReady: () => { this.ready = true; this.applySound(); if (this.pending && this.active) this.play(this.pending); this.pending = null; },
         onStateChange: (e) => this.onState(e.data),
@@ -253,7 +253,15 @@ const Video = {
     if (!this.active) { if (state === S.PLAYING || state === S.BUFFERING) this.yt.pauseVideo(); return; }
     if (state === S.ENDED) this.restart();                       // demos loop
     if (state === S.CUED) this.yt.playVideo();
-    if (state === S.PLAYING) { clearTimeout(this.stallTimer); if (!this.blocked) this.hint(null); this.watchSound(); }
+    if (state === S.PLAYING) { clearTimeout(this.stallTimer); if (!this.blocked) this.hint(null); this.watchSound(); this.hideCaptions(); }
+  },
+  // The demo's own subtitles follow its speaker, not the coach, and cover the movement. YouTube
+  // still shows them (a muted autoplay, or the viewer's YouTube setting) despite cc_load_policy 0,
+  // so they're switched off once per loaded demo; CC on YouTube's bar turns them back on until the next one.
+  hideCaptions() {
+    if (this.captionsOff === this.loads) return;
+    this.captionsOff = this.loads;
+    try { this.yt.unloadModule?.("captions"); this.yt.unloadModule?.("cc"); } catch {}
   },
 
   current() { return this.list[this.idx]; },
@@ -287,6 +295,7 @@ const Video = {
     if (!this.active) return;
     if (!this.ready) { this.pending = v; return; }
     $("video-fallback").hidden = true;
+    this.loads = (this.loads || 0) + 1;
     this.yt.loadVideoById({ videoId: v.id, startSeconds: v.start || 0, endSeconds: v.end || undefined });
     this.applySound();
     if (!this.blocked) this.hint(null);

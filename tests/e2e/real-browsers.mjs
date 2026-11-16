@@ -65,6 +65,21 @@ async function runBrowser(name, launcher, opts) {
     if (slow.length) fail(`slow demos (>6 s): ${slow.join(", ")}`);
     if (!dead.length && !slow.length) pass(`${sample.length} demos start within 6 s`);
 
+    // 1b. No YouTube subtitles: they follow the demo's speaker, not the coach (face pulls: a talking demo with captions)
+    await page.evaluate(() => { Workout.exit(); Workout.startPreview("facepull"); });
+    await waitFor(page, () => Video.yt.getPlayerState() === 1, 15000);
+    await sleep(5000);
+    const yt = page.frames().find((f) => /youtube/.test(f.url()));
+    const captions = async () => yt ? yt.locator(".ytp-caption-segment").count() : -1;
+    const shown = await captions();
+    await page.evaluate(() => Video.yt.loadModule("captions"));                // control: the check can see them when on
+    await sleep(4000);
+    const control = await captions();
+    shown === 0 && control > 0 ? pass("demo plays without YouTube subtitles") :
+      shown === 0 ? lines.push("  – no YouTube subtitles shown (couldn't confirm the check sees them when on)") :
+      fail(`YouTube subtitles shown on the demo (${shown} lines)`);
+    await page.evaluate(() => Workout.exit());
+
     // 2. A real workout with real clicks (Monday: its first demo has a voice)
     await page.evaluate(() => { Sound.mode = "video"; });                 // left in Video last time…
     await page.click("text=Monday");
