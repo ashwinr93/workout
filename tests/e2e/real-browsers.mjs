@@ -72,12 +72,16 @@ async function runBrowser(name, launcher, opts) {
     const yt = page.frames().find((f) => /youtube/.test(f.url()));
     const captions = async () => yt ? yt.locator(".ytp-caption-segment").count() : -1;
     const shown = await captions();
-    await page.evaluate(() => Video.yt.loadModule("captions"));                // control: the check can see them when on
+    await page.evaluate(() => { Sound.set("video"); Sound.set("coach"); });   // muted again, as on every rest: YouTube turns them on
+    await sleep(5000);
+    const afterMute = await captions();
+    await page.evaluate(() => { Video._hide = Video.hideCaptions; Video.hideCaptions = () => {}; Video.yt.loadModule("captions"); });  // control: the check sees them when on
     await sleep(4000);
     const control = await captions();
-    shown === 0 && control > 0 ? pass("demo plays without YouTube subtitles") :
-      shown === 0 ? lines.push("  – no YouTube subtitles shown (couldn't confirm the check sees them when on)") :
-      fail(`YouTube subtitles shown on the demo (${shown} lines)`);
+    shown || afterMute ? fail(`YouTube subtitles shown on the demo (${shown} lines at the start, ${afterMute} after a mute)`) :
+      control > 0 ? pass("demo plays without YouTube subtitles, also after a mute") :
+      lines.push("  – no YouTube subtitles shown (couldn't confirm the check sees them when on)");
+    await page.evaluate(() => { Video.hideCaptions = Video._hide; Video.hideCaptions(); });
     await page.evaluate(() => Workout.exit());
 
     // 2. A real workout with real clicks (Monday: its first demo has a voice)

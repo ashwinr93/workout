@@ -6,7 +6,7 @@ feature changes.
 
 ## Sound
 `Sound.mode` is `coach` | `video` | `off`. Coach is the default at the start of every workout/preview; Video lasts only for that session. On a demo with no voice, the coach speaks even in Video mode. Unmuting with YouTube's own speaker switches to Video. The app never mutes a video on a guess.
-YouTube's subtitles are off (`cc_load_policy: 0`, and `Video.hideCaptions()` unloads them once per demo, since YouTube shows them anyway on a muted autoplay or by the viewer's own setting): they follow the demo's speaker, not the coach, and cover the movement. Owner, 2026-11-16. CC on YouTube's bar still turns them on for that demo.
+YouTube's subtitles are always off: they follow the demo's speaker, not the coach, and cover the movement (owner, 2026-11-16). `cc_load_policy: 0` isn't enough: YouTube turns them on by itself when a demo is muted (each rest) or by the viewer's YouTube setting, so `Video.hideCaptions()` unloads them whenever YouTube reports loading them (`onApiChange`) and when a demo starts playing. CC on YouTube's bar therefore does nothing; the coach's words are on screen anyway.
 
 ## Demo variants
 When a demo is a different variant (pigeon vs figure-4, floor vs bench, sumo vs goblet…), give that video entry its own `name`/`key`/`cues`/`stop`; the screen and the coach then use the active demo's text (`variant(key, vi)`), switching demos restarts the coaching, and the choice is remembered per exercise (`store "demos"`). Plain alternates showing the same movement share the exercise's text.

@@ -52,7 +52,9 @@ for (const [name, viewport] of [["portrait", { width: 393, height: 852 }], ["lan
     await sleep(2500);                                   // the demo loads, the screen settles
     const file = `${name}-${String(shots.length + 1).padStart(2, "0")}.png`;
     await page.screenshot({ path: path.join(OUT, file) });
-    const line = `${name} ${shots.length + 1} (${label}): ${await says(page)}`;
+    const yt = page.frames().find((f) => /youtube/.test(f.url()));
+    const subs = yt ? await yt.locator(".ytp-caption-segment").count().catch(() => 0) : 0;
+    const line = `${name} ${shots.length + 1} (${label}): ${await says(page)}${subs ? " · ✗ YouTube subtitles showing" : ""}`;
     shots.push({ file, label }); log.push(line); console.log(line);
   };
   await shot("the app opens");
