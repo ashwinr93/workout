@@ -1122,10 +1122,10 @@ const EX = {
 // The optional warm-up before every session, and the cool-down stretches after it
 // (one round each side, short rests; stretches the day already has are left out).
 // Both are ordered by position so nobody gets up and down: the warm-up goes from the floor to
-// standing, gentle to dynamic; the cool-down from standing to lying down. Neither needs a fixture
-// that a home or gym may not have (the reason, and what was weighed: docs/decisions.md, Day screen).
+// standing, gentle to dynamic; the cool-down from standing to lying down. Nothing in them is awkward to
+// set up at home or in a gym (the reason, and what was weighed: docs/decisions.md, Day screen).
 const WARMUP = ["catcow", "threadneedle", "hip9090", "armcircles", "revlungetwist"];
-const COOLDOWN = ["crossbody", "tricepsstretch", "couch", "pigeon", "lyinghamstring"];
+const COOLDOWN = ["crossbody", "doorway", "couch", "pigeon", "lyinghamstring"];
 
 // Activity days: cardio or sport done on your own, with the warm-up before and the stretches after.
 // No demo video; the day screen shows the activity and a tip.
