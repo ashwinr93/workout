@@ -76,7 +76,7 @@ const PROGRAMS = [
   { id: "mobility", photo: { img: "1758599879024-7379d769f664", by: "Vitaly Gariev", page: "EUk6LRg9alk" }, title: "Mobility and Recovery", goals: ["move"], level: "beginner", gear: "Bodyweight", mins: 20,
     about: "Short sessions to loosen stiff hips, back and shoulders. Good on rest days or on their own.",
     link: "v1/t:Mobility-and-Recovery"
-      + "/wed:Mobility:hip9090.2x8,threadneedle.2x10,wallslide.2x10,couch.1x60s,pigeon.1x60s,hamstring.1x60s"
-      + "/sat:Stretch:doorway.1x60s,crossbody.1x30s,tricepsstretch.1x30s,pigeon.1x60s,hamstring.1x60s,couch.1x60s" },
+      + "/wed:Mobility:hip9090.2x8,threadneedle.2x10,wallslide.2x10,couch.1x60s,pigeon.1x60s,lyinghamstring.1x60s"
+      + "/sat:Stretch:doorway.1x60s,crossbody.1x30s,tricepsstretch.1x30s,pigeon.1x60s,lyinghamstring.1x60s,couch.1x60s" },
 ];
 PROGRAMS.find((p) => p.id === "joint").link = EXAMPLE_PLAN.link;

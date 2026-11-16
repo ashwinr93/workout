@@ -150,7 +150,7 @@ This is a player for a plan, not medical advice. The cues and "back off" lines c
 ## Demo videos
 
 <!-- credits:start -->
-Every demo is the creator's own video, played through YouTube's embedded player (start and end points only; nothing is downloaded or edited). Thank you to these 58 channels:
+Every demo is the creator's own video, played through YouTube's embedded player (start and end points only; nothing is downloaded or edited). Thank you to these 59 channels:
 
 - **[Advanced Therapy and Performance](https://www.youtube.com/@advancedtherapyperformance)**: [90/90 Hip Swivels](https://www.youtube.com/watch?v=YxECcOkUCEY)
 - **[Andrew Coates](https://www.youtube.com/@Andrewcoatesfitness)**: [Neutral-Grip Incline Press](https://www.youtube.com/watch?v=2SU_K4-knrc)
@@ -179,11 +179,12 @@ Every demo is the creator's own video, played through YouTube's embedded player 
 - **[Joanna Soh](https://www.youtube.com/@ExerciseLibraryJoannaSoh)**: [Plank with Shoulder Taps](https://www.youtube.com/watch?v=0PrTUpElJ44)
 - **[kafetters](https://www.youtube.com/@kafetters)**: [Goblet Deadlift](https://www.youtube.com/watch?v=TC2jOPCNYhU)
 - **[ken whittier](https://www.youtube.com/@kenwhittier7243)**: [Suitcase Carries](https://www.youtube.com/watch?v=bAnCoDrvXc4)
-- **[Lamiss Fitness](https://www.youtube.com/@lamissfitness3102)**: [Low-Impact Jacks](https://www.youtube.com/watch?v=0N6_Pqk5DPI)
+- **[Lamiss Fitness](https://www.youtube.com/@lamissfitness)**: [Low-Impact Jacks](https://www.youtube.com/watch?v=0N6_Pqk5DPI)
 - **[Luke Briggs](https://www.youtube.com/@lukebriggs3231)**: [Floor Press](https://www.youtube.com/watch?v=IaY4EncHDHU)
 - **[Medibank](https://www.youtube.com/@medibank)**: [90/90 Hip Swivels](https://www.youtube.com/watch?v=F1XdXdCjERk)
 - **[MedStar Health](https://www.youtube.com/@medstarhealth)**: [Single-Leg Glute Bridge](https://www.youtube.com/watch?v=AVAXhy6pl7o)
 - **[Men's Health](https://www.youtube.com/@menshealthmag)**: [Couch Stretch](https://www.youtube.com/watch?v=Fg-lwNBzVV8), [Bench Pullovers](https://www.youtube.com/watch?v=FK4rHfWKEac)
+- **[Michigan Medicine](https://www.youtube.com/@MichiganMedicine)**: [Lying Hamstring Stretch](https://www.youtube.com/watch?v=rRh5NT4N6Zg)
 - **[Middlebury College](https://www.youtube.com/@middlebury_college)**: [Single-Leg Glute Bridge](https://www.youtube.com/watch?v=vdmlNaXSjd4)
 - **[MidwestOrtho](https://www.youtube.com/@MidwestOrtho)**: [Doorway Chest Stretch](https://www.youtube.com/watch?v=CEQMx4zFwYs)
 - **[MyChart - Scottish Rite for Children](https://www.youtube.com/@MyChartScottishRiteforChildren)**: [Hamstring Doorway Stretch](https://www.youtube.com/watch?v=VWk9QD10Xjg)
@@ -192,7 +193,7 @@ Every demo is the creator's own video, played through YouTube's embedded player 
 - **[OPEX Fitness](https://www.youtube.com/@OPEXFitness)**: [Neutral-Grip Incline Press](https://www.youtube.com/watch?v=g4tj2lnUgpM), [Floor Press](https://www.youtube.com/watch?v=oqnNivBhveM), [Standing Calf Raises](https://www.youtube.com/watch?v=ADIDoYt_ko4), [Incline Hammer Curls](https://www.youtube.com/watch?v=1Z6XiaBxwHQ), [Overhead Triceps Extensions](https://www.youtube.com/watch?v=HADoxgsslvw), [Incline Push-Up](https://www.youtube.com/watch?v=E--Ls5QtFqI)
 - **[Prime Health Co.](https://www.youtube.com/@primehealthco_)**: [McGill Curl-Up](https://www.youtube.com/watch?v=I_drRVYlHbc)
 - **[PrimeMVMNT](https://www.youtube.com/@PrimeMVMNT)**: [Tibialis Raises](https://www.youtube.com/watch?v=nQKgHwi8W9E)
-- **[PureGym](https://www.youtube.com/@PureGymVideo)**: [Single-Arm Row](https://www.youtube.com/watch?v=ZRSGpBUVcNw), [Step-Ups](https://www.youtube.com/watch?v=DxUNi119Qzs), [Glute Bridge](https://www.youtube.com/watch?v=tqp5XQPpTxY), [Leg Press](https://www.youtube.com/watch?v=p5dCqF7wWUw), [Machine Chest Press](https://www.youtube.com/watch?v=sqNwDkUU_Ps)
+- **[PureGym](https://www.youtube.com/@PureGymVideo)**: [Single-Arm Row](https://www.youtube.com/watch?v=ZRSGpBUVcNw), [Step-Ups](https://www.youtube.com/watch?v=DxUNi119Qzs), [Lying Hamstring Stretch](https://www.youtube.com/watch?v=5P3E8Pec_L8), [Glute Bridge](https://www.youtube.com/watch?v=tqp5XQPpTxY), [Leg Press](https://www.youtube.com/watch?v=p5dCqF7wWUw), [Machine Chest Press](https://www.youtube.com/watch?v=sqNwDkUU_Ps)
 - **[React Physical Therapy](https://www.youtube.com/@ReactPhysicalTherapyChicago)**: [Cross-Body Shoulder Stretch](https://www.youtube.com/watch?v=aIq0fLi8iak), [Overhead Triceps Stretch](https://www.youtube.com/watch?v=_IOHtPSYGbk)
 - **[Rehab My Patient](https://www.youtube.com/@RehabMyPatient)**: [Kneeling Side Plank](https://www.youtube.com/watch?v=UurF0EhHFLg)
 - **[Renaissance Periodization](https://www.youtube.com/@RenaissancePeriodization)**: [Single-Arm Row](https://www.youtube.com/watch?v=DMo3HJoawrU), [Face Pulls](https://www.youtube.com/watch?v=nzTY7j9ocR8)

@@ -648,6 +648,25 @@ const EX = {
       { id: "b7k-9CZVYbA", label: "Alternate", start: 1, end: 49, voice: true }
     ]
   },
+  lyinghamstring: {
+    name: "Lying Hamstring Stretch", sets: 1, time: 60, perSide: true, rest: 10,
+    muscles: { main: ["hams"], help: ["calves"] },
+    type: "stretch", level: "beginner", easyOn: ["lowerback"], loads: [],
+    equip: "none", gear: ["bodyweight"],
+    key: "Keep your lower back flat on the floor",
+    why: "Stretches the hamstrings while the floor supports your back, anywhere you can lie down.",
+    cues: [
+      "Lie on your back with both legs straight",
+      "Lift one leg and hold it behind the thigh with both hands",
+      "Straighten that knee toward the ceiling until you feel the stretch at the back of the thigh",
+      "Breathe slowly and let the leg relax"
+    ],
+    stop: "If you feel tingling down the leg, back off. That's a nerve, not the muscle.",
+    videos: [
+      { id: "rRh5NT4N6Zg", start: 5, end: 35, voice: true },
+      { id: "5P3E8Pec_L8", label: "Alternate", start: 3, voice: true }
+    ]
+  },
   // ---------- Bodyweight and bands (batch 1) ----------
   bwsquat: {
     name: "Bodyweight Squat", sets: 3, reps: "10–12", unit: "reps", rest: 60,
@@ -1101,9 +1120,12 @@ const EX = {
 };
 
 // The optional warm-up before every session, and the cool-down stretches after it
-// (one round each side, short rests; stretches the day already has are left out)
-const WARMUP = ["catcow", "armcircles", "threadneedle", "hip9090", "revlungetwist"];
-const COOLDOWN = ["pigeon", "couch", "crossbody", "tricepsstretch", "hamstring"];
+// (one round each side, short rests; stretches the day already has are left out).
+// Both are ordered by position so nobody gets up and down: the warm-up goes from the floor to
+// standing, gentle to dynamic; the cool-down from standing to lying down. Neither needs a fixture
+// that a home or gym may not have (the reason, and what was weighed: docs/decisions.md, Day screen).
+const WARMUP = ["catcow", "threadneedle", "hip9090", "armcircles", "revlungetwist"];
+const COOLDOWN = ["crossbody", "tricepsstretch", "couch", "pigeon", "lyinghamstring"];
 
 // Activity days: cardio or sport done on your own, with the warm-up before and the stretches after.
 // No demo video; the day screen shows the activity and a tip.

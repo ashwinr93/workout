@@ -39,7 +39,7 @@ const EXAMPLE_PLAN = {
     + "/thu:Football-Match:sport"
     + "/fri:Upper-Body-B:seatedohp.3x10-12,pullover.3x12,hammercurl.3x12,triceps.3x12-15,ytw.2x10"
     + "/sat:Lower-Body-B:dbrevlunge.3x10,sumodl.3x10-12,stepup.3x10,suitcase.3x40"
-    + "/sun:Rest-and-Recovery:pigeon.1x120s,couch.1x120s,crossbody.1x30s,tricepsstretch.1x30s,hamstring.1x60s",
+    + "/sun:Rest-and-Recovery:pigeon.1x120s,couch.1x120s,crossbody.1x30s,tricepsstretch.1x30s,lyinghamstring.1x60s",
   title: "Joint-Friendly Strength & Flexibility",
   subtitle: "4-day upper/lower split · Dumbbells & bench · Football-optimized",
   goals: {
