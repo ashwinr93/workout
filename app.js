@@ -920,15 +920,21 @@ const UI = {
     const e = this.planEntry(id), plan = e.plan, mine = Plans.current?.link === plan.link;
     // each day's next date: your week as it stands, or as it would fall if you started today
     const s = schedule(plan, mine ? History.all() : [], Date.now(), 14);
-    const when = (i) => { const u = s.upcoming.find((x) => x.i === i); return u ? this.when(u.date) : DAY_NAMES[plan.days[i].d]; };
+    const next = (i) => s.upcoming.find((x) => x.i === i)?.date ?? null;
+    const when = (i) => (next(i) == null ? DAY_NAMES[plan.days[i].d] : this.when(next(i)));
     // each day opens its day screen (muscles, exercises to preview, even a try-out session)
     const dayCard = (d, i) => `<button class="card plan-day" data-day="${i}"><span><span class="label">${when(i)}</span><b>${esc(d.name)}</b>
       <span class="muted">${esc(d.kind === "activity" ? this.daySummary(d) : d.items.map((x) => EX[x.key].name).join(" · "))}</span></span><span class="chev">›</span></button>`;
+    // in the order they'll come, with the rest days between them
+    const order = plan.days.map((_, i) => i).sort((a, b) => (next(a) ?? Infinity) - (next(b) ?? Infinity));
+    let days = "", prev = addDays(dayStart(Date.now()), -1);
+    for (const i of order) { if (next(i) != null) days += this.restRow(prev, next(i)); days += dayCard(plan.days[i], i); prev = next(i) ?? prev; }
+    days += this.restRow(prev, addDays(dayStart(Date.now()), 7));
     $("plan-view-body").innerHTML = `<div class="plan-hero"><img class="plan-photo" src="${photoUrl(e)}" alt="">
         <div>${this.planDays(e.plan)}<h1 class="title">${esc(plan.title)}</h1></div></div>
       <p class="plan-meta view-meta"><span class="plan-level">${this.levelLabel(e)}</span>${esc(this.planFacts(e, false))}</p>
       <p class="card-text">${esc(e.about)}</p>
-      ${plan.days.map(dayCard).join("")}
+      ${days}
       ${s.fixed || mine ? "" : '<p class="note">Your first workout is the day you start. Miss a day and the plan waits for you.</p>'}
       <p class="note"><button class="link" id="plan-adjust">Adjust it to suit you with AI</button>${
         e.own && !mine ? ' · <button class="link" id="plan-forget">Remove from Your plans</button>' : ""}</p>`;
@@ -1042,12 +1048,26 @@ const UI = {
         ${s.done.map((e) => `<div class="round-row"><span><span class="tick" aria-hidden="true">✓</span>${esc(e.day.name)}</span><span class="muted">${this.when(e.at)}</span></div>`).join("")}</div>`;
     }
     html = `<div class="week-top">${html}</div>`;
-    if (rest.length) html += `<div class="label section-label">Coming up</div><div class="coming">${rest.map((u, k) => `<button class="coming-row" data-u="${k + 1}">
-        <span><b>${esc(u.day.name)}</b><small>${esc(what(u.day))}</small></span><span class="muted">${this.when(u.date)}</span><span class="chev" aria-hidden="true">›</span></button>`).join("")}</div>`;
+    if (rest.length) {
+      let rows = "", prev = top.date;
+      rest.forEach((u, k) => {
+        rows += this.restRow(prev, u.date) + `<button class="coming-row" data-u="${k + 1}">
+          <span><b>${esc(u.day.name)}</b><small>${esc(what(u.day))}</small></span><span class="muted">${this.when(u.date)}</span><span class="chev" aria-hidden="true">›</span></button>`;
+        prev = u.date;
+      });
+      html += `<div class="label section-label">Coming up</div><div class="coming">${rows + this.restRow(prev, addDays(dayStart(now), 7))}</div>`;
+    }
     const total = History.count(), note = [s.fixed ? "" : "Miss a day and your plan waits for you.", total ? `Workouts done: ${total}` : ""].filter(Boolean).join(" · ");
     if (note) html += `<p class="note">${note}</p>`;
     $("days").innerHTML = html;
     $("days").onclick = (e) => { const b = e.target.closest("[data-u]"); if (b) { const u = s.upcoming[+b.dataset.u]; this.openDay(u.day, "home", plan, this.when(u.date)); } };
+  },
+  // The days with nothing on them between two dates (neither included), as one quiet row
+  restRow(after, before) {
+    const first = addDays(after, 1), last = addDays(before, -1);
+    if (first > last) return "";
+    const n = daysBetween(first, last) + 1, a = this.when(first), b = this.when(last);
+    return `<div class="rest-row"><span>${n === 1 ? a : n === 2 ? `${a} and ${b}` : `${a} to ${b}`}</span><span>Rest day${n === 1 ? "" : "s"}</span></div>`;
   },
   // "Today", "Tomorrow", "Yesterday", a weekday this coming week, "3 days ago" (a weekday could be
   // either way: last Saturday beside next Saturday), else "8 Nov"
@@ -1065,8 +1085,10 @@ const UI = {
       const act = ACTIVITIES[day.activity.key].name, mins = day.activity.mins ? `${day.activity.mins} min` : "";
       return [act.toLowerCase() === day.name.toLowerCase() ? "" : act, mins].filter(Boolean).join(" · ") || act;
     }
-    const n = day.items.length;
-    return `${n} ${day.kind === "stretch" ? "stretch" : "exercise"}${n === 1 ? "" : day.kind === "stretch" ? "es" : "s"}`;
+    const n = day.items.length, count = `${n} ${day.kind === "stretch" ? "stretch" : "exercise"}${n === 1 ? "" : day.kind === "stretch" ? "es" : "s"}`;
+    // the body areas it works, in the day's order (main lifts come first): "Chest, back, shoulders and arms · 6 exercises"
+    const areas = [...new Set(day.items.flatMap((x) => areasOf(x.key)))].map((a, k) => (k ? AREAS[a].name.toLowerCase() : AREAS[a].name));
+    return areas.length ? `${areas.length > 1 ? `${areas.slice(0, -1).join(", ")} and ${areas.at(-1)}` : areas[0]} · ${count}` : count;
   },
   // Under the days: one row that opens a sheet to change your week with AI, share it, or switch plan
   planCard() {

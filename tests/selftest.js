@@ -634,6 +634,11 @@
     check(top && /Today/.test(top.textContent) && top.textContent.includes("Full Body A"), "a new plan's first workout isn't today");
     check(!el.querySelector(".round"), "an empty round is shown");
     check(el.textContent.includes("Miss a day and your plan waits for you"), "My week doesn't say the plan waits for you");
+    check(/Tomorrow\s*Rest day/.test(el.querySelector(".coming .rest-row")?.textContent || ""), "Coming up doesn't show the rest day between sessions");
+    check(/^[A-Z][a-z]+(, [a-z]+)*( and [a-z]+)? · \d+ exercises$/.test(UI.daySummary(start.days[0])), `a day's line doesn't name the body areas it works: "${UI.daySummary(start.days[0])}"`);
+    UI.planView("start");
+    check([...$("plan-view-body").querySelectorAll(".rest-row")].length >= 2, "a plan's preview doesn't show its rest days");
+    check(/Today/.test($("plan-view-body").querySelector(".plan-day .label")?.textContent || ""), "a plan's preview doesn't start today");
     el = draw([{ day: "t", at: now - day, mins: 30, plan: id, i: 0 }]); top = el.querySelector(".day-card.today");
     check(/Up next/.test(top.textContent) && top.textContent.includes("Full Body B") && /Rest today/.test(top.textContent), "the day after a session doesn't say rest, then what's next");
     check(/1 of 3/.test(el.querySelector(".round")?.textContent || "") && /Yesterday/.test(el.querySelector(".round").textContent), "this round doesn't show yesterday's session");
