@@ -654,6 +654,18 @@ const MENU_ICONS = {
   home: MENU_ICON('<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8"/><path d="M8 12h8"/>'),
   swap: MENU_ICON('<path d="M7 4 3 8l4 4"/><path d="M3 8h14"/><path d="m17 20 4-4-4-4"/><path d="M21 16H7"/>'),
 };
+// Days with no muscle map (rest, and each kind in ACTIVITIES) get an icon in the badge's place in Coming up
+const DAY_ICON = (d) => `<span class="day-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg></span>`;
+const DAY_ICONS = {
+  rest: DAY_ICON('<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>'),
+  walk: DAY_ICON('<path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/><path d="M16 17h4"/><path d="M4 13h4"/>'),
+  run: DAY_ICON('<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>'),
+  cycle: DAY_ICON('<circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/>'),
+  swim: DAY_ICON('<path d="M2 7c.6.5 1.2 1 2.5 1C7 8 7 6 9.5 6c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 17c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>'),
+  hike: DAY_ICON('<path d="m8 3 4 8 5-5 5 15H2L8 3z"/>'),
+  sport: DAY_ICON('<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>'),
+  class: DAY_ICON('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'),
+};
 
 /* ============================================================ Figure: the muscle map
    Body art traced from the owner's images (figures/<male|female>.json, see design/README.md):
@@ -1057,7 +1069,7 @@ const UI = {
       rest.forEach((u, k) => {
         const m = u.day.kind === "activity" ? null : Figure.session(u.day.items);
         rows += this.restRow(prev, u.date, true) + `<button class="coming-row" data-u="${k + 1}">
-          ${m ? Figure.slot("badge", m, muscleList(m.main)) : '<span class="no-fig" aria-hidden="true"></span>'}<span><b>${esc(u.day.name)}</b><small>${esc(what(u.day))}</small></span><span class="muted">${this.when(u.date)}</span><span class="chev" aria-hidden="true">›</span></button>`;
+          ${m ? Figure.slot("badge", m, muscleList(m.main)) : DAY_ICONS[u.day.activity.key]}<span><b>${esc(u.day.name)}</b><small>${esc(what(u.day))}</small></span><span class="muted">${this.when(u.date)}</span><span class="chev" aria-hidden="true">›</span></button>`;
         prev = u.date;
       });
       html += `<div class="label section-label">Coming up</div><div class="coming">${rows + this.restRow(prev, addDays(dayStart(now), 7), true)}</div>`;
@@ -1077,7 +1089,7 @@ const UI = {
     const n = daysBetween(first, last) + 1, a = this.when(first), b = this.when(last);
     const days = n === 1 ? a : n === 2 ? `${a} and ${b}` : `${a} to ${b}`, what = `Rest day${n === 1 ? "" : "s"}`;
     return inList
-      ? `<div class="coming-row rest"><span class="no-fig" aria-hidden="true"></span><span><b>${what}</b><small>Time to recover</small></span><span class="muted">${days}</span><span class="chev" aria-hidden="true">›</span></div>`
+      ? `<div class="coming-row rest">${DAY_ICONS.rest}<span><b>${what}</b><small>Time to recover</small></span><span class="muted">${days}</span><span class="chev" aria-hidden="true">›</span></div>`
       : `<div class="rest-row"><span>${days}</span><span>${what}</span></div>`;
   },
   // "Today", "Tomorrow", "Yesterday", a weekday this coming week, "3 days ago" (a weekday could be
