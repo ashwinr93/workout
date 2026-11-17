@@ -466,9 +466,25 @@ const Narration = {
   },
 };
 
+/* ============================================================ History: finished sessions, on this phone only
+   { day: what the finished screen showed, at, mins, plan: planId, i: the plan day's index,
+   part?: "warm-up" / "cool-down" of an activity day }. Entries from before plans had a schedule
+   carry only day, at and mins. Test and review runs keep theirs in memory. */
+const History = {
+  MAX: 500,
+  mem: [],
+  all() { return TEST_MODE || REVIEW_MODE ? this.mem : store.get("log", []); },
+  add(entry) {
+    const list = [...this.all(), entry].slice(-this.MAX);
+    if (TEST_MODE || REVIEW_MODE) this.mem = list; else store.set("log", list);
+  },
+  // workouts finished on any plan (an activity day's warm-up or cool-down isn't one)
+  count() { return this.all().filter((e) => !e.part && !/ · (warm-up|cool-down)$/.test(e.day || "")).length; },
+};
+
 /* ============================================================ Workout: the session */
 const Workout = {
-  day: null, warm: true, cool: true,
+  day: null, plan: null, warm: true, cool: true, recorded: false,
   steps: [], cur: 0, preview: false, label: "", startedAt: 0, tickId: null, wakeLock: null,
   timer: { phase: null, left: 0, total: 0, paused: false, t0: 0 },
 
@@ -531,7 +547,7 @@ const Workout = {
   begin(steps, label, preview) {
     Sound.sessionDefault();
     Voice.unlock();                              // inside the tap that started the session
-    Object.assign(this, { steps, cur: 0, preview, label, startedAt: Date.now() });
+    Object.assign(this, { steps, cur: 0, preview, label, startedAt: Date.now(), recorded: false });
     UI.show("player");
     $("stage").hidden = false; $("finished").hidden = true;
     Video.start();
@@ -557,6 +573,7 @@ const Workout = {
   render() {
     const st = this.step();
     log("step", `${this.cur + 1}/${this.steps.length}`, st.type, st.key || "", st.set ? `set ${st.set}` : "", st.side || "");
+    if (st.section === "cool" && this.day?.kind === "workout") this.record();
     UI.progress();
     if (st.type === "work") {
       Video.endRest();
@@ -581,10 +598,15 @@ const Workout = {
     UI.finished(mins);
     if (!this.preview) Analytics.event("workout-finish", { plan: Analytics.plan(Plans.current), mins, sound: Sound.mode, from: HomeScreen.standalone() ? "home screen" : "browser" });
     Voice.sayNow([SAY.done()]);
-    if (REVIEW_MODE) return;
-    const history = store.get("log", []);
-    history.push({ day: this.label, at: Date.now(), mins });
-    store.set("log", history.slice(-60));
+    this.record();
+  },
+  // A session counts once its exercises are done: at the cool-down (which is optional) or the end
+  record() {
+    if (this.preview || this.recorded || !this.day || !this.plan) return;
+    this.recorded = true;
+    const i = this.plan.days.indexOf(this.day), mins = Math.round((Date.now() - this.startedAt) / 60000);
+    History.add({ day: this.label, at: Date.now(), mins, plan: planId(this.plan), i,
+      ...(this.day.kind === "activity" ? { part: this.label.split(" · ").pop() } : {}) });
   },
 
   tick() {
@@ -612,6 +634,7 @@ document.addEventListener("visibilitychange", () => {
   log(document.hidden ? "app hidden" : "app visible");
   // back from an AI chat on the Create screen: ask for the link it gave you
   if (!document.hidden && UI.screen === "create" && Date.now() - store.get("leftForChat", 0) < 3600e3) UI.showPaste(true);
+  if (!document.hidden && UI.screen === "home" && Plans.current) UI.week();   // a new day since: redrawn
   if (document.hidden || !Video.active) return;
   if (Voice.playing && Voice.el.paused) Voice.el.play().catch((e) => log("voice resume failed:", e.name));
   Workout.keepAwake();
@@ -805,6 +828,7 @@ const UI = {
     if (tabbed) this.tabNow = screen;
     for (const b of $("tabbar").querySelectorAll("button")) b.setAttribute("aria-current", b.dataset.tab === screen ? "page" : "false");
     window.scrollTo(0, 0);
+    if (screen === "home" && Plans.current) this.week();
     if (screen === "day") this.fitMuscleKey();   // it can only be measured while showing
   },
   tab(name) {
@@ -894,17 +918,21 @@ const UI = {
   // One plan's preview: browsing never changes your week; "Start this plan" does, after asking
   planView(id) {
     const e = this.planEntry(id), plan = e.plan, mine = Plans.current?.link === plan.link;
+    // each day's next date: your week as it stands, or as it would fall if you started today
+    const s = schedule(plan, mine ? History.all() : [], Date.now(), 14);
+    const when = (i) => { const u = s.upcoming.find((x) => x.i === i); return u ? this.when(u.date) : DAY_NAMES[plan.days[i].d]; };
     // each day opens its day screen (muscles, exercises to preview, even a try-out session)
-    const dayCard = (d, i) => `<button class="card plan-day" data-day="${i}"><span><span class="label">${DAY_NAMES[d.d]}</span><b>${esc(d.name)}</b>
+    const dayCard = (d, i) => `<button class="card plan-day" data-day="${i}"><span><span class="label">${when(i)}</span><b>${esc(d.name)}</b>
       <span class="muted">${esc(d.kind === "activity" ? this.daySummary(d) : d.items.map((x) => EX[x.key].name).join(" · "))}</span></span><span class="chev">›</span></button>`;
     $("plan-view-body").innerHTML = `<div class="plan-hero"><img class="plan-photo" src="${photoUrl(e)}" alt="">
         <div>${this.planDays(e.plan)}<h1 class="title">${esc(plan.title)}</h1></div></div>
       <p class="plan-meta view-meta"><span class="plan-level">${this.levelLabel(e)}</span>${esc(this.planFacts(e, false))}</p>
       <p class="card-text">${esc(e.about)}</p>
       ${plan.days.map(dayCard).join("")}
+      ${s.fixed || mine ? "" : '<p class="note">Your first workout is the day you start. Miss a day and the plan waits for you.</p>'}
       <p class="note"><button class="link" id="plan-adjust">Adjust it to suit you with AI</button>${
         e.own && !mine ? ' · <button class="link" id="plan-forget">Remove from Your plans</button>' : ""}</p>`;
-    $("plan-view-body").onclick = (ev) => { const b = ev.target.closest("button[data-day]"); if (b) this.openDay(plan.days[+b.dataset.day], "plan-view"); };
+    $("plan-view-body").onclick = (ev) => { const b = ev.target.closest("button[data-day]"); if (b) this.openDay(plan.days[+b.dataset.day], "plan-view", plan, when(+b.dataset.day)); };
     $("plan-adjust").onclick = () => this.create(true, plan.link);
     if ($("plan-forget")) $("plan-forget").onclick = () => { Plans.forget(plan.link); this.tab("plans"); };
     $("plan-start").textContent = mine ? "This is your week" : "Start this plan";
@@ -987,15 +1015,46 @@ const UI = {
     $("plan-title").textContent = plan.title;
     $("week-photo").src = photoUrl(this.entryOf(plan));
     $("plan-subtitle").textContent = plan.subtitle || this.planSummary(plan);
-    const today = new Date().getDay(), order = plan.days.map((day, i) => [day, i]).sort(([a], [b]) => ((a.d - today + 7) % 7) - ((b.d - today + 7) % 7));
-    $("days").innerHTML = order.map(([day, i]) => `
-      <button class="day-card${day.d === today ? " today" : ""}" data-i="${i}">
-        <span class="day-name label"><span>${DAY_NAMES[day.d]}</span>${day.d === today ? '<span class="today">Today</span>' : ""}</span>
-        <span class="day-focus">${esc(day.name)}</span>
-        <span class="goal">${esc(day.goal || this.daySummary(day))}</span>
-      </button>`).join("");
-    $("days").onclick = (e) => { const b = e.target.closest(".day-card"); if (b) this.openDay(plan.days[+b.dataset.i]); };
+    this.weekKey = null;                            // the days are drawn when My week shows (show)
     this.planCard();
+  },
+  // My week's days: what's next (today's session, or the next one after a rest day), this round so
+  // far, then the rest of the next seven days. Days follow when you train (schedule in plan.js).
+  week() {
+    const plan = Plans.current, now = Date.now(), log = History.all();
+    const key = JSON.stringify([plan.link, log.length, log[log.length - 1]?.at, new Date(now).toDateString()]);
+    if (key === this.weekKey) return;               // unchanged: keep what's drawn
+    this.weekKey = key;
+    const s = schedule(plan, log, now), [top, ...rest] = s.upcoming, what = (day) => day.goal || this.daySummary(day);
+    let html = "";
+    if (top) {
+      const today = daysBetween(now, top.date) === 0, back = today && s.back && top.day.kind !== "activity";
+      const trained = log.some((e) => !e.part && daysBetween(e.at, now) === 0);
+      const [kicker, when] = back ? ["Welcome back", "Today"] : today ? [DAY_NAMES[new Date(now).getDay()], "Today"] : ["Up next", this.when(top.date)];
+      const sub = back ? `Picking up where you left off · ${what(top.day)}` : today ? what(top.day) : `${trained ? "Done for today" : "Rest today"} · ${what(top.day)}`;
+      html += `<button class="day-card today" data-u="0"><span class="day-name label"><span>${kicker}</span><span class="today">${when}</span></span>
+        <span class="day-focus">${esc(top.day.name)}</span><span class="goal">${esc(sub)}</span></button>`;
+    }
+    if (s.done.length) {
+      const n = Math.min(new Set(s.done.map((e) => e.i)).size, s.size);
+      html += `<div class="round"><div class="label day-name"><span>${s.fixed ? "This week" : "This round"}</span><span>${n} of ${s.size}</span></div>
+        <div class="round-bar" aria-hidden="true">${Array.from({ length: s.size }, (_, k) => `<i${k < n ? ' class="on"' : ""}></i>`).join("")}</div>
+        ${s.done.map((e) => `<div class="round-row"><span><span class="tick" aria-hidden="true">✓</span>${esc(e.day.name)}</span><span class="muted">${this.when(e.at)}</span></div>`).join("")}</div>`;
+    }
+    html = `<div class="week-top">${html}</div>`;
+    if (rest.length) html += `<div class="label section-label">Coming up</div><div class="coming">${rest.map((u, k) => `<button class="coming-row" data-u="${k + 1}">
+        <span><b>${esc(u.day.name)}</b><small>${esc(what(u.day))}</small></span><span class="muted">${this.when(u.date)}</span><span class="chev" aria-hidden="true">›</span></button>`).join("")}</div>`;
+    const total = History.count(), note = [s.fixed ? "" : "Miss a day and your plan waits for you.", total ? `Workouts done: ${total}` : ""].filter(Boolean).join(" · ");
+    if (note) html += `<p class="note">${note}</p>`;
+    $("days").innerHTML = html;
+    $("days").onclick = (e) => { const b = e.target.closest("[data-u]"); if (b) { const u = s.upcoming[+b.dataset.u]; this.openDay(u.day, "home", plan, this.when(u.date)); } };
+  },
+  // "Today", "Tomorrow", "Yesterday", a weekday this coming week, "3 days ago" (a weekday could be
+  // either way: last Saturday beside next Saturday), else "8 Nov"
+  when(date, now = Date.now()) {
+    const n = daysBetween(now, date);
+    return n === 0 ? "Today" : n === 1 ? "Tomorrow" : n === -1 ? "Yesterday" : n > 1 && n < 7 ? DAY_NAMES[new Date(date).getDay()]
+      : n < 0 && n > -7 ? `${-n} days ago` : new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
   },
   planSummary(plan) {
     const count = (kind, word) => { const n = plan.days.filter((d) => d.kind === kind).length; return n ? `${n} ${word} day${n === 1 ? "" : "s"}` : ""; };
@@ -1152,11 +1211,11 @@ const UI = {
 
   /* ---------- day */
   // from: the screen its back button returns to (your week, or the plan being previewed)
-  openDay(day, from = "home") {
+  openDay(day, from = "home", plan = Plans.current, when = DAY_NAMES[day.d]) {
     this.dayFrom = from;
     $("day-back").textContent = from === "home" ? "‹ Days" : "‹ Plan";
-    Object.assign(Workout, { day, warm: true, cool: true });
-    $("day-kicker").textContent = DAY_NAMES[day.d];
+    Object.assign(Workout, { day, plan, warm: true, cool: true });
+    $("day-kicker").textContent = when;
     $("day-title").textContent = day.name;
     this.day();
     this.show("day");
@@ -1214,7 +1273,7 @@ const UI = {
       <div class="ex-list" id="${id}-list"${on ? "" : " hidden"}>${entries.map((e) => this.exRow(e)).join("")}</div>`;
   },
   day() {
-    const W = Workout, day = W.day, all = W.parts(day), p = W.parts(day, W.warm, W.cool), label = `${DAY_NAMES[day.d]} · ${day.name}`;
+    const W = Workout, day = W.day, all = W.parts(day), p = W.parts(day, W.warm, W.cool), label = `${DAY_NAMES[new Date().getDay()]} · ${day.name}`;
     this.rows = [];
     if (day.kind === "activity") {
       const act = ACTIVITIES[day.activity.key];

@@ -7,7 +7,7 @@ The intention is to make following a plan feel a little less intimidating. There
 **Try it:** https://workout.ashwinraghavan.com/
 
 <p>
-  <img src="docs/home.png" width="32%" alt="My week: the plan's photo, then the week's days, today first">
+  <img src="docs/home.png" width="32%" alt="My week: the plan's photo, what's next, then the days coming up">
   <img src="docs/plans.png" width="32%" alt="Plans: ready-made plans as photo cards, each with its days a week, level and kit">
   <img src="docs/day.png" width="32%" alt="A day: the muscles it works, then the warm-up (with its switch) and the exercises">
 </p>
@@ -31,6 +31,8 @@ And for the curious, this was entirely vibe coded with Claude. I had the idea in
 So don't feel like you need to understand every line of code before touching this. Point Claude, Codex, Cursor or whichever coding agent you use at the repo and have a go. Change the exercises, the plans, the design or whatever else you fancy. And share the good bits back.
 
 ## Using it: tips
+
+**Start any day.** Your first workout is the day you start a plan, and the rest follow with the rest days the plan has. Miss a day and the plan waits for you: My week shows what's next, what you've done this round, and what's coming up.
 
 **Make it an app on your phone.**
 - iPhone: open the site in Safari → Share (on iOS 26 it's in the ⋯ menu beside the address) → **Add to Home Screen** (under View More if it isn't listed; keep "Open as Web App" on).

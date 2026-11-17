@@ -14,11 +14,11 @@ Live: https://workout.ashwinraghavan.com/ (branch `main`). Staging: https://work
 | `styles.css` | Design tokens and layout; compact rules for landscape phone (`max-height: 520px`) and portrait phone |
 | `library.js` | The exercise library (`EX`), `WARMUP`, `COOLDOWN`, `ACTIVITIES` (walk, run, sport…), `variant()`, `MUSCLES` (figure muscle → name on screen), `muscleList()`, `GEAR` (equipment filter: each kind also shows what needs less), `AREAS` + `areasOf()` (body areas) |
 | `figures/` | `male.json`, `female.json`: the muscle map, traced from the owner's images by `design/trace/` (never hand-drawn; see `design/README.md`) |
-| `plan.js` | The plan link format: `DOSE` (the amounts a plan may use), `parsePlan()` (forgiving reader → plan, problems, fixes), `planLink()`, `dose()` (plan numbers over library defaults), `EXAMPLE_PLAN` (the owner's week as a link, plus its subtitle and day goals) |
+| `plan.js` | The plan link format: `DOSE` (the amounts a plan may use), `parsePlan()` (forgiving reader → plan, problems, fixes), `planLink()`, `dose()` (plan numbers over library defaults), `schedule()` (your days, laid out from when you last trained), `EXAMPLE_PLAN` (the owner's week as a link, plus its subtitle and day goals) |
 | `speech.js` | All narration wording: `SAY`, `SPOKEN_NAMES`, `speakable()`, `clipId()`, `allPhrases()` (every phrase any plan can produce) |
 | `programs.js` | `PROGRAMS`: the ready-made plans (plan links + title, goals, level, minutes, equipment, who it's for), designed from ACSM / Schoenfeld / WHO guidance; the owner's week is one of them |
 | `prompt.js` | `coachPrompt()` (the AI message, generated from the library), `AI_CHATS` (prefill links; Gemini is copy-and-open), `SITE` |
-| `app.js` | The app, one owner per concern: `Diag`, `Beep`, `Voice` (coach), `Video` (YouTube), `Sound` (who talks), `Narration` (what's said when), `Workout` (steps/timer), `Figure` (muscle map: badges, front/back figures, male/female), `Plans` (which plan is open), `UI`, `Diagnostics` (phone check) |
+| `app.js` | The app, one owner per concern: `Diag`, `Beep`, `Voice` (coach), `Video` (YouTube), `Sound` (who talks), `Narration` (what's said when), `History` (finished sessions, on the phone), `Workout` (steps/timer), `Figure` (muscle map: badges, front/back figures, male/female), `Plans` (which plan is open), `UI`, `Diagnostics` (phone check) |
 | `tools/load.cjs` | Loads the four data files in Node as the browser does (used by the tools and scripts) |
 | `audio/` | One `.m4a` per phrase, named by `clipId(text)`, plus `manifest.json` (id → seconds) |
 | `photos/` | The plan photos (Unsplash, 1000 px), saved by `tools/photos.mjs` from `photo` in `programs.js`; served by the site itself |
@@ -47,6 +47,7 @@ The full detail and the reasons are in `docs/decisions.md`, one section per feat
 - **Player hierarchy:** name > target > Focus > current cue > quiet safety line; Done biggest; must fit an iPhone in landscape (~852×320) and portrait; trim copy rather than squeeze (Player screen). Quick facts stay off the coaching screen (Quick facts).
 - **Coach pacing:** Focus last as "Remember, …", cues never restate it, later sets rotate (Coach pacing).
 - **Real muscle names, never simplified;** the muscle map's colours, stripes and placement are fixed (Muscle map).
+- **Your days follow when you train:** a plan's weekdays are its order and spacing; a missed session waits, never lost; no streaks or anything that points at a miss (My week).
 - **Navigation:** tabs on top-level screens only; tapping an exercise plays its preview at once; a plan's preview never changes your week; photo plan cards, no goal colours (Navigation, Plans and Exercises; My week).
 - **Plans come only from the library.** An AI picks exercises and amounts; it never adds content. Every amount in `DOSE` has a recorded clip (rep ranges 6–8, 8–10, 10–12, 12–15, 15–20). The parser fixes what it safely can and sends the rest to "This link needs a fix". Keep the link format backwards compatible (`v1`); a breaking change needs `v2` with `v1` still readable.
 - **A plan lives in its link;** the last plan is remembered on the device. Nothing about the person is stored or sent anywhere beyond anonymous counts (Analytics: live site only, never a plan, its title or anything typed).

@@ -603,6 +603,56 @@
     + "/fri:Batch-2:legpress.2x10,latpulldown.2x10-12,cablerow.2x10,chestpress.2x10,bbsquat.2x6-8,deadlift.2x5,benchpress.2x6-8,ohp.2x6-8,bbrow.2x8-10"
     + "/sat:Stretch:pigeon.2x30s,hamstring.1x15s";
 
+  // My week: the days follow when you train (schedule in plan.js), and the screen says where you are
+  function weekCheck() {
+    const fails = [], check = (ok, msg) => { if (!ok) fails.push(msg); };
+    const at = (d, h = 18) => new Date(2026, 10, d, h).getTime();       // November 2026: the 16th is a Monday
+    const names = (s) => s.upcoming.map((u) => `${DAY_NAMES[new Date(u.date).getDay()].slice(0, 3)} ${u.day.name}`).join(", ");
+    const ready = (pid) => parsePlan(PROGRAMS.find((p) => p.id === pid).link).plan;
+    const start = ready("start"), id = planId(start), L = (...e) => e.map(([i, d]) => ({ plan: id, i, at: at(d) }));
+    check(names(schedule(start, [], at(17, 9))) === "Tue Full Body A, Thu Full Body B, Sat Full Body C, Sun Walk", "a plan started on a Tuesday doesn't start that day, spaced as the plan is");
+    check(names(schedule(start, [], at(16, 9))) === "Mon Full Body A, Wed Full Body B, Fri Full Body C, Sat Walk", "a plan started on a Monday isn't its written week");
+    check(names(schedule(start, L([0, 17]), at(18, 9))).startsWith("Thu Full Body B"), "the next session isn't spaced from the last one as the plan spaces them");
+    check(names(schedule(start, L([0, 17]), at(17, 21))).startsWith("Thu Full Body B"), "a session done today is still offered today");
+    check(names(schedule(start, L([0, 17]), at(20, 9))).startsWith("Fri Full Body B, Sun Full Body C"), "a missed session didn't wait (due today, the rest moved along)");
+    const away = schedule(start, L([0, 7]), at(17, 9));
+    check(away.back && names(away).startsWith("Tue Full Body B"), "after a week away it doesn't pick up where you left off");
+    check(schedule(start, L([0, 17], [1, 19], [2, 21]), at(22, 9)).done.length === 3, "a finished round isn't kept until the next one starts");
+    check(schedule(start, L([0, 17], [1, 19], [2, 21], [0, 24]), at(25, 9)).done.length === 1, "a new round didn't start with its first session");
+    check(schedule(start, [{ ...L([0, 17])[0], plan: "other" }], at(18, 9)).done.length === 0, "another plan's session counted in this one");
+    const lose = ready("lose");
+    check(names(schedule(lose, [{ plan: planId(lose), i: 0, at: at(16) }], at(19, 9))).startsWith("Thu Strength B, Fri Brisk Walk, Sat Strength C"), "walks didn't keep their place after the session before them");
+    const own = examplePlan(), fixed = schedule(own, [{ plan: planId(own), i: 0, at: at(16) }], at(17, 9));
+    check(fixed.fixed && names(fixed).startsWith("Tue Lower Body A, Wed Active Recovery, Thu Football Match"), "a plan with a match day didn't keep its weekdays");
+    check(fixed.done.length === 1 && fixed.size === 6, "a fixed plan's round isn't the calendar week");
+
+    // the screen
+    const draw = (log) => { History.mem = log; UI.show("home"); return $("days"); };
+    const day = 864e5, now = Date.now();
+    Plans.use(start);
+    let el = draw([]), top = el.querySelector(".day-card.today");
+    check(top && /Today/.test(top.textContent) && top.textContent.includes("Full Body A"), "a new plan's first workout isn't today");
+    check(!el.querySelector(".round"), "an empty round is shown");
+    check(el.textContent.includes("Miss a day and your plan waits for you"), "My week doesn't say the plan waits for you");
+    el = draw([{ day: "t", at: now - day, mins: 30, plan: id, i: 0 }]); top = el.querySelector(".day-card.today");
+    check(/Up next/.test(top.textContent) && top.textContent.includes("Full Body B") && /Rest today/.test(top.textContent), "the day after a session doesn't say rest, then what's next");
+    check(/1 of 3/.test(el.querySelector(".round")?.textContent || "") && /Yesterday/.test(el.querySelector(".round").textContent), "this round doesn't show yesterday's session");
+    el = draw([{ day: "t", at: now - 10 * day, mins: 30, plan: id, i: 0 }]); top = el.querySelector(".day-card.today");
+    check(/Welcome back/.test(top.textContent) && top.textContent.includes("Full Body B"), "coming back after a gap doesn't welcome you back to the next session");
+    check(/Workouts done: 1/.test(el.textContent), "the workout count is missing");
+    // a session counts once its exercises are done: reaching the cool-down is enough
+    History.mem = [];
+    UI.openDay(start.days[0]); Workout.start({ warm: false, cool: true, label: "t" });
+    Workout.cur = Workout.steps.findIndex((st) => st.section === "cool"); Workout.render();
+    check(History.mem.length === 1 && History.mem[0].i === 0 && History.mem[0].plan === id, "a session left at the cool-down wasn't counted");
+    Workout.finish();
+    check(History.mem.length === 1, "a session was counted twice");
+    Workout.exit();
+    History.mem = [];
+    Plans.use(null);
+    return { name: "My week", steps: 0, lines: 0, fails };
+  }
+
   async function run({ days, previews = true, layout = true } = {}) {
     SELFTEST.done = false;
     Plans.use(null);                                            // the example plan (nothing saved in test mode)
@@ -615,6 +665,7 @@
     results.push(await safely("Exercise details", async () => detailsCheck()));
     results.push(await safely("Exercises tab", exercisesCheck));
     results.push(await safely("Plans tab", plansCheck));
+    results.push(await safely("My week", async () => weekCheck()));
     results.push(await safely("Player extras and files", extrasCheck));
     results.push(await safely("Plan links & AI message", async () => planCheck()));
     const sessions = async (plan, which) => {

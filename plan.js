@@ -189,6 +189,69 @@ function planLink(plan) {
   return ["v1", `t:${dashed(plan.title)}`, ...plan.days.map(day)].join("/");
 }
 
+/* ---------- Your week as it falls: a plan's sessions in order, laid out from when you last trained.
+   A plan's weekdays give its order and the gaps between sessions, not fixed days: your first
+   workout is the day you start, a missed one waits for you (it's due today, and the rest move
+   along), and training early is fine (the week follows what you did). Activities (walks, runs…)
+   keep their place after the session before them and are never ticked off. A plan with a sport or
+   a class keeps its weekdays (a match or a class is on a fixed day); its round is the calendar week.
+   log: finished sessions, oldest first, { at, plan: planId, i: index in plan.days, part? } */
+const FIXED_ACTIVITIES = ["sport", "class"];
+const dayStart = (t) => new Date(t).setHours(0, 0, 0, 0);
+const addDays = (t, n) => { const d = new Date(t); d.setDate(d.getDate() + n); return d.getTime(); };   // clock changes safe
+const daysBetween = (a, b) => Math.round((dayStart(b) - dayStart(a)) / 864e5);
+
+// A short, stable name for a plan (its link can be long), kept with each finished session
+function planId(plan) {
+  let h = 5381;
+  for (const c of plan.link) h = (h * 33 + c.charCodeAt(0)) >>> 0;
+  return h.toString(36);
+}
+
+// → { fixed, upcoming: [{ i, day, date }] (from today, `days` long), done: this round's sessions
+//    [{ i, day, at }], size: sessions in a round, back: first session after a week or more away }
+function schedule(plan, log, now = Date.now(), days = 7) {
+  const id = planId(plan), today = dayStart(now), horizon = addDays(today, days);
+  const isSession = (i) => plan.days[i] && plan.days[i].kind !== "activity";
+  const mine = log.filter((e) => e.plan === id && !e.part && isSession(e.i)).map((e) => ({ i: e.i, day: plan.days[e.i], at: e.at }));
+  const sessions = plan.days.map((_, i) => i).filter(isSession), n = sessions.length;
+  const fixed = !n || plan.days.some((d) => d.activity && FIXED_ACTIVITIES.includes(d.activity.key));
+  const last = mine[mine.length - 1], upcoming = [];
+  const add = (i, date) => { if (date >= today && date < horizon) upcoming.push({ i, day: plan.days[i], date }); };
+  let done;
+  if (fixed) {
+    done = mine.filter((e) => e.at >= addDays(today, -((new Date(today).getDay() + 6) % 7)));   // since Monday
+    for (let k = 0; k < days; k++) {
+      const date = addDays(today, k), wd = new Date(date).getDay();
+      plan.days.forEach((d, i) => { if (d.d === wd && !(k === 0 && done.some((e) => e.i === i && e.at >= today))) add(i, date); });
+    }
+  } else {
+    const pos = (i) => sessions.indexOf(i), wd = (p) => plan.days[sessions[p]].d;
+    const gap = (p) => (wd((p + 1) % n) - wd(p) + 7) % 7 || 7;
+    // each session's activities, as days after it (before the next session)
+    const after = sessions.map((_, p) => plan.days.map((d, i) => ({ i, offset: (d.d - wd(p) + 7) % 7 }))
+      .filter(({ i, offset }) => !isSession(i) && offset > 0 && offset < gap(p)));
+    // this round: from the last time you went back to (or past) an earlier session
+    let prev = -1;
+    done = [];
+    for (const e of mine) { if (pos(e.i) <= prev) done = []; done.push(e); prev = pos(e.i); }
+    let p = 0, date = today;
+    if (last) {
+      const lp = pos(last.i), lastDay = dayStart(last.at), due = addDays(lastDay, gap(lp));
+      p = (lp + 1) % n;
+      date = Math.max(today, due);
+      for (const a of after[lp]) if (addDays(lastDay, a.offset) < date) add(a.i, addDays(lastDay, a.offset));
+    }
+    for (; date < horizon; date = addDays(date, gap(p)), p = (p + 1) % n) {
+      add(sessions[p], date);
+      for (const a of after[p]) add(a.i, addDays(date, a.offset));
+    }
+    upcoming.sort((a, b) => a.date - b.date);
+  }
+  const back = !!last && daysBetween(last.at, now) >= 7;
+  return { fixed, upcoming, done, size: n, back };
+}
+
 // The example plan, with its extra text
 function examplePlan() {
   const { plan } = parsePlan(EXAMPLE_PLAN.link);
