@@ -71,6 +71,10 @@ h1, h2, h3, p { margin: 0; }
 .day-card .goal { color: var(--muted); font-size: 13px; }
 .day-card.today { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
 .day-card.today .today { color: var(--accent); }
+/* an activity day: its icon beside the name, where a workout day has the muscle map */
+.act-head { display: flex; align-items: center; gap: 12px; }
+.act-head > span:last-child { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.act-head > .day-ic { width: 48px; height: 48px; flex: none; }
 .day-card .day-muscles { background: none; border: 0; padding: 0; margin: 8px 0 0; }   /* the figure inside the card, not a card of its own */
 
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-top: 20px; }

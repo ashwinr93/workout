@@ -1052,11 +1052,12 @@ const UI = {
       const trained = log.some((e) => !e.part && daysBetween(e.at, now) === 0);
       const [kicker, when] = back ? ["Welcome back", "Today"] : today ? [DAY_NAMES[new Date(now).getDay()], "Today"] : ["Up next", this.when(top.date)];
       const sub = back ? `Picking up where you left off · ${what(top.day)}` : today ? what(top.day) : `${trained ? "Done for today" : "Rest today"} · ${what(top.day)}`;
-      // the muscle map as on the day screen (no swap icon: that lives with the day's details)
+      // the muscle map as on the day screen (no swap icon: that lives with the day's details); an activity has its icon
       const m = top.day.kind === "activity" ? null : Figure.session(top.day.items);
+      const head = `<span class="day-focus">${esc(top.day.name)}</span><span class="goal">${esc(sub)}</span>`;
       html += `<button class="day-card today" data-u="0"><span class="day-name label"><span>${kicker}</span><span class="today">${when}</span></span>
-        <span class="day-focus">${esc(top.day.name)}</span><span class="goal">${esc(sub)}</span>
-        ${m ? `<span class="day-muscles">${Figure.slot("full", m, muscleList(m.main))}${this.muscleGroups(m)}</span>` : ""}</button>`;
+        ${m ? `${head}<span class="day-muscles">${Figure.slot("full", m, muscleList(m.main))}${this.muscleGroups(m)}</span>`
+          : `<span class="act-head">${this.dayMark(top.day)}<span>${head}</span></span>`}</button>`;
     }
     if (s.done.length) {
       const n = Math.min(new Set(s.done.map((e) => e.i)).size, s.size);
@@ -1332,7 +1333,7 @@ const UI = {
     this.rows = [];
     if (day.kind === "activity") {
       const act = ACTIVITIES[day.activity.key];
-      $("day-body").innerHTML = `<div class="match-card"><b>${esc(this.daySummary(day))}</b><p class="muted" style="margin-top:6px">${esc(act.tip)} No lifting today: do the warm-up before you start and the cool-down stretches afterwards.</p></div>`
+      $("day-body").innerHTML = `<div class="match-card"><div class="act-head">${this.dayMark(day)}<b>${esc(this.daySummary(day))}</b></div><p class="muted" style="margin-top:6px">${esc(act.tip)} No lifting today: do the warm-up before you start and the cool-down stretches afterwards.</p></div>`
         + this.section("Warm-up before", all.warm) + this.section("Cool-down after", all.cool);
       $("start-bar").innerHTML = `<button class="big-btn" id="start-pre">Warm-up ▶</button><button class="big-btn" id="start-post">Cool-down ▶</button>`;
       $("start-pre").onclick = () => W.start({ warm: true, cool: false, label: `${label} · warm-up` });

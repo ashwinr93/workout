@@ -651,6 +651,12 @@
     el = draw([{ day: "t", at: now - 10 * day, mins: 30, plan: id, i: 0 }]); top = el.querySelector(".day-card.today");
     check(/Welcome back/.test(top.textContent) && top.textContent.includes("Full Body B"), "coming back after a gap doesn't welcome you back to the next session");
     check(/Workouts done: 1/.test(el.textContent), "the workout count is missing");
+    // an activity shows its icon wherever a workout day shows its muscles
+    const walk = start.days.findIndex((d) => d.kind === "activity");
+    el = draw([{ day: "t", at: now - day, mins: 30, plan: id, i: walk - 1 }]); top = el.querySelector(".day-card.today");
+    check(top.textContent.includes(start.days[walk].name) && top.querySelector(".act-head .day-ic svg"), "My week's next card has no icon for an activity");
+    UI.openDay(start.days[walk]);
+    check($("day-body").querySelector(".match-card .day-ic svg"), "an activity's day screen has no icon");
     // a session counts once its exercises are done: reaching the cool-down is enough
     History.mem = [];
     UI.openDay(start.days[0]); Workout.start({ warm: false, cool: true, label: "t" });
