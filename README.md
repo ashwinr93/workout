@@ -7,7 +7,7 @@ The intention is to make following a plan feel a little less intimidating. There
 **Try it:** https://workout.ashwinraghavan.com/
 
 <p>
-  <img src="docs/home.png" width="32%" alt="My week: the plan's photo, what's next, then the days coming up">
+  <img src="docs/home.png" width="32%" alt="My week: the plan's photo, what's next with the muscles it works, then the days coming up">
   <img src="docs/plans.png" width="32%" alt="Plans: ready-made plans as photo cards, each with its days a week, level and kit">
   <img src="docs/day.png" width="32%" alt="A day: the muscles it works, then the warm-up (with its switch) and the exercises">
 </p>
