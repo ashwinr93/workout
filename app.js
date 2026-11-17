@@ -829,7 +829,7 @@ const UI = {
     for (const b of $("tabbar").querySelectorAll("button")) b.setAttribute("aria-current", b.dataset.tab === screen ? "page" : "false");
     window.scrollTo(0, 0);
     if (screen === "home" && Plans.current) this.week();
-    if (screen === "day") this.fitMuscleKey();   // it can only be measured while showing
+    if (screen === "day" || screen === "home") this.fitMuscleKey();   // it can only be measured while showing
   },
   tab(name) {
     if (name === "exercises") this.exercises();
@@ -1039,8 +1039,11 @@ const UI = {
       const trained = log.some((e) => !e.part && daysBetween(e.at, now) === 0);
       const [kicker, when] = back ? ["Welcome back", "Today"] : today ? [DAY_NAMES[new Date(now).getDay()], "Today"] : ["Up next", this.when(top.date)];
       const sub = back ? `Picking up where you left off · ${what(top.day)}` : today ? what(top.day) : `${trained ? "Done for today" : "Rest today"} · ${what(top.day)}`;
+      // the muscle map as on the day screen (no swap icon: that lives with the day's details)
+      const m = top.day.kind === "activity" ? null : Figure.session(top.day.items);
       html += `<button class="day-card today" data-u="0"><span class="day-name label"><span>${kicker}</span><span class="today">${when}</span></span>
-        <span class="day-focus">${esc(top.day.name)}</span><span class="goal">${esc(sub)}</span></button>`;
+        <span class="day-focus">${esc(top.day.name)}</span><span class="goal">${esc(sub)}</span>
+        ${m ? `<span class="day-muscles">${Figure.slot("full", m, muscleList(m.main))}${this.muscleGroups(m)}</span>` : ""}</button>`;
     }
     if (s.done.length) {
       const n = Math.min(new Set(s.done.map((e) => e.i)).size, s.size);
@@ -1052,8 +1055,9 @@ const UI = {
     if (rest.length) {
       let rows = "", prev = top.date;
       rest.forEach((u, k) => {
+        const m = u.day.kind === "activity" ? null : Figure.session(u.day.items);
         rows += this.restRow(prev, u.date, true) + `<button class="coming-row" data-u="${k + 1}">
-          <span><b>${esc(u.day.name)}</b><small>${esc(what(u.day))}</small></span><span class="muted">${this.when(u.date)}</span><span class="chev" aria-hidden="true">›</span></button>`;
+          ${m ? Figure.slot("badge", m, muscleList(m.main)) : '<span class="no-fig" aria-hidden="true"></span>'}<span><b>${esc(u.day.name)}</b><small>${esc(what(u.day))}</small></span><span class="muted">${this.when(u.date)}</span><span class="chev" aria-hidden="true">›</span></button>`;
         prev = u.date;
       });
       html += `<div class="label section-label">Coming up</div><div class="coming">${rows + this.restRow(prev, addDays(dayStart(now), 7), true)}</div>`;
@@ -1061,6 +1065,8 @@ const UI = {
     const total = History.count(), note = [s.fixed ? "" : "Miss a day and your plan waits for you.", total ? `Workouts done: ${total}` : ""].filter(Boolean).join(" · ");
     if (note) html += `<p class="note">${note}</p>`;
     $("days").innerHTML = html;
+    Figure.paint($("days"));
+    this.fitMuscleKey();
     $("days").onclick = (e) => { const b = e.target.closest("[data-u]"); if (b) { const u = s.upcoming[+b.dataset.u]; this.openDay(u.day, "home", plan, this.when(u.date)); } };
   },
   // The days with nothing on them between two dates (neither included), as one row: in Coming up a
@@ -1071,7 +1077,7 @@ const UI = {
     const n = daysBetween(first, last) + 1, a = this.when(first), b = this.when(last);
     const days = n === 1 ? a : n === 2 ? `${a} and ${b}` : `${a} to ${b}`, what = `Rest day${n === 1 ? "" : "s"}`;
     return inList
-      ? `<div class="coming-row rest"><span><b>${what}</b><small>Time to recover</small></span><span class="muted">${days}</span><span class="chev" aria-hidden="true">›</span></div>`
+      ? `<div class="coming-row rest"><span class="no-fig" aria-hidden="true"></span><span><b>${what}</b><small>Time to recover</small></span><span class="muted">${days}</span><span class="chev" aria-hidden="true">›</span></div>`
       : `<div class="rest-row"><span>${days}</span><span>${what}</span></div>`;
   },
   // "Today", "Tomorrow", "Yesterday", a weekday this coming week, "3 days ago" (a weekday could be
@@ -1282,11 +1288,12 @@ const UI = {
     Figure.paint($("day-body").querySelector(".day-muscles"));
     this.fitMuscleKey();
   },
-  // The day card's key stays within the figures' height: a long list ends "and 3 more" (helping
-  // muscles give way first); the figures still show every muscle
+  // A figure card's key (the day screen's, My week's next workout) stays within the figures' height:
+  // a long list ends "and 3 more" (helping muscles give way first); the figures still show every muscle
   fitMuscleKey() {
-    const card = $("day-body").querySelector(".day-muscles");
-    if (!card || !card.offsetParent) return;
+    for (const card of document.querySelectorAll(".day-muscles")) if (card.offsetParent) this.fitKey(card);
+  },
+  fitKey(card) {
     const fig = card.querySelector(".fig.full"), key = card.querySelector(".muscle-groups");
     const groups = [...key.querySelectorAll(".names")].map((el) => ({ el, keys: el.dataset.keys.split(","), n: 0 }));
     const show = (g) => { g.el.textContent = muscleList(g.keys.slice(0, g.n)) + (g.n < g.keys.length ? ` and ${g.keys.length - g.n} more` : ""); };

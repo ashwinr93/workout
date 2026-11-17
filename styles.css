@@ -51,7 +51,9 @@ h1, h2, h3, p { margin: 0; }
 .coming { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
 .coming-row { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 16px; text-align: left; border-top: 1px solid var(--line); }
 .coming-row:first-child { border-top: 0; }
-.coming-row > span:first-child { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.coming-row > :is(.fig, .no-fig) + span { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.coming-row > .fig.badge, .no-fig { width: 40px; height: 40px; flex: none; }
+.no-fig { border-radius: 50%; border: 1.5px dashed var(--line); }   /* rest and activity days: nothing to map, still lined up */
 .coming-row b { font-weight: 650; }
 .coming-row small { color: var(--muted); font-size: 13px; }
 .coming-row .muted { font-size: 13px; white-space: nowrap; }
@@ -69,6 +71,7 @@ h1, h2, h3, p { margin: 0; }
 .day-card .goal { color: var(--muted); font-size: 13px; }
 .day-card.today { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
 .day-card.today .today { color: var(--accent); }
+.day-card .day-muscles { background: none; border: 0; padding: 0; margin: 8px 0 0; }   /* the figure inside the card, not a card of its own */
 
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-top: 20px; }
 .card ul { margin: 8px 0 0; padding-left: 18px; }

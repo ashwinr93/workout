@@ -636,6 +636,8 @@
     check(el.textContent.includes("Miss a day and your plan waits for you"), "My week doesn't say the plan waits for you");
     const restRow = el.querySelector(".coming .coming-row.rest")?.textContent || "";
     check(/Rest day/.test(restRow) && /Tomorrow/.test(restRow), "Coming up doesn't show the rest day between sessions");
+    check(el.querySelector(".day-card.today .day-muscles .fig.full svg") && el.querySelector(".day-card.today .muscle-groups .names"), "My week's next workout doesn't show its muscle map");
+    check([...el.querySelectorAll(".coming .coming-row")].every((r) => r.querySelector(r.classList.contains("rest") ? ".no-fig" : ".fig.badge svg, .no-fig")), "a day in Coming up has no muscle badge or placeholder");
     check(/^[A-Z][a-z]+(, [a-z]+)*( and [a-z]+)? · \d+ exercises$/.test(UI.daySummary(start.days[0])), `a day's line doesn't name the body areas it works: "${UI.daySummary(start.days[0])}"`);
     UI.planView("start");
     check([...$("plan-view-body").querySelectorAll(".rest-row")].length >= 2, "a plan's preview doesn't show its rest days");
