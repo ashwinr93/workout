@@ -935,7 +935,7 @@ const UI = {
     const next = (i) => s.upcoming.find((x) => x.i === i)?.date ?? null;
     const when = (i) => (next(i) == null ? DAY_NAMES[plan.days[i].d] : this.when(next(i)));
     // each day opens its day screen (muscles, exercises to preview, even a try-out session)
-    const dayCard = (d, i) => `<button class="card plan-day" data-day="${i}"><span><span class="label">${when(i)}</span><b>${esc(d.name)}</b>
+    const dayCard = (d, i) => `<button class="card plan-day" data-day="${i}">${this.dayMark(d)}<span><span class="label">${when(i)}</span><b>${esc(d.name)}</b>
       ${d.kind === "activity" ? "" : `<span class="areas">${esc(this.dayAreas(d))}</span>`}
       <span class="muted">${esc(d.kind === "activity" ? this.daySummary(d) : d.items.map((x) => EX[x.key].name).join(" · "))}</span></span><span class="chev">›</span></button>`;
     // in the order they'll come, with the rest days between them
@@ -951,6 +951,7 @@ const UI = {
       ${s.fixed || mine ? "" : '<p class="note">Your first workout is the day you start. Miss a day and the plan waits for you.</p>'}
       <p class="note"><button class="link" id="plan-adjust">Adjust it to suit you with AI</button>${
         e.own && !mine ? ' · <button class="link" id="plan-forget">Remove from Your plans</button>' : ""}</p>`;
+    Figure.paint($("plan-view-body"));
     $("plan-view-body").onclick = (ev) => { const b = ev.target.closest("button[data-day]"); if (b) this.openDay(plan.days[+b.dataset.day], "plan-view", plan, when(+b.dataset.day)); };
     $("plan-adjust").onclick = () => this.create(true, plan.link);
     if ($("plan-forget")) $("plan-forget").onclick = () => { Plans.forget(plan.link); this.tab("plans"); };
@@ -1067,9 +1068,8 @@ const UI = {
     if (rest.length) {
       let rows = "", prev = top.date;
       rest.forEach((u, k) => {
-        const m = u.day.kind === "activity" ? null : Figure.session(u.day.items);
         rows += this.restRow(prev, u.date, true) + `<button class="coming-row" data-u="${k + 1}">
-          ${m ? Figure.slot("badge", m, muscleList(m.main)) : DAY_ICONS[u.day.activity.key]}<span><b>${esc(u.day.name)}</b><small>${esc(what(u.day))}</small></span><span class="muted">${this.when(u.date)}</span><span class="chev" aria-hidden="true">›</span></button>`;
+          ${this.dayMark(u.day)}<span><b>${esc(u.day.name)}</b><small>${esc(what(u.day))}</small></span><span class="muted">${this.when(u.date)}</span><span class="chev" aria-hidden="true">›</span></button>`;
         prev = u.date;
       });
       html += `<div class="label section-label">Coming up</div><div class="coming">${rows + this.restRow(prev, addDays(dayStart(now), 7), true)}</div>`;
@@ -1081,8 +1081,8 @@ const UI = {
     this.fitMuscleKey();
     $("days").onclick = (e) => { const b = e.target.closest("[data-u]"); if (b) { const u = s.upcoming[+b.dataset.u]; this.openDay(u.day, "home", plan, this.when(u.date)); } };
   },
-  // The days with nothing on them between two dates (neither included), as one row: in Coming up a
-  // row like any other day's (nothing to tap); between a preview's day cards, a quiet dashed one
+  // The days with nothing on them between two dates (neither included), shown like any other day
+  // (a row in Coming up, a card in a preview) with nothing to tap
   restRow(after, before, inList = false) {
     const first = addDays(after, 1), last = addDays(before, -1);
     if (first > last) return "";
@@ -1090,7 +1090,7 @@ const UI = {
     const days = n === 1 ? a : n === 2 ? `${a} and ${b}` : `${a} to ${b}`, what = `Rest day${n === 1 ? "" : "s"}`;
     return inList
       ? `<div class="coming-row rest">${DAY_ICONS.rest}<span><b>${what}</b><small>Time to recover</small></span><span class="muted">${days}</span><span class="chev" aria-hidden="true">›</span></div>`
-      : `<div class="rest-row"><span>${days}</span><span>${what}</span></div>`;
+      : `<div class="card plan-day rest">${DAY_ICONS.rest}<span><span class="label">${days}</span><b>${what}</b><span class="muted">Time to recover</span></span><span class="chev" aria-hidden="true">›</span></div>`;
   },
   // "Today", "Tomorrow", "Yesterday", a weekday this coming week, "3 days ago" (a weekday could be
   // either way: last Saturday beside next Saturday), else "8 Nov"
@@ -1110,6 +1110,12 @@ const UI = {
     }
     const n = day.items.length, count = `${n} ${day.kind === "stretch" ? "stretch" : "exercise"}${n === 1 ? "" : day.kind === "stretch" ? "es" : "s"}`;
     return [this.dayAreas(day), count].filter(Boolean).join(" · ");     // "Chest, back, shoulders and arms · 6 exercises"
+  },
+  // A day at a glance, beside its name in a list: a badge of its main muscles, or its activity's icon
+  dayMark(day) {
+    if (day.kind === "activity") return DAY_ICONS[day.activity.key];
+    const m = Figure.session(day.items);
+    return Figure.slot("badge", m, muscleList(m.main));
   },
   // The body areas a day works, in the day's order (main lifts come first): "Chest, back, shoulders and arms"
   dayAreas(day) {

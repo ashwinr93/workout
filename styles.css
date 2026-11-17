@@ -59,7 +59,7 @@ h1, h2, h3, p { margin: 0; }
 .coming-row .muted { font-size: 13px; white-space: nowrap; }
 .coming-row .chev { color: var(--faint); font-size: 18px; }
 /* a day with nothing on it: quiet, and nothing to tap */
-.rest-row { display: flex; justify-content: space-between; gap: 12px; margin-top: 10px; padding: 9px 16px; border: 1px dashed var(--line); border-radius: var(--radius); color: var(--muted); font-size: 13px; }
+.plan-day.rest .chev { visibility: hidden; }        /* lined up with the days you can open */
 .coming-row.rest .chev { visibility: hidden; }        /* keeps the day lined up with the others */
 .plan-day .areas { display: block; font-size: 14px; color: var(--text); margin-bottom: 4px; }
 .day-card {
@@ -253,7 +253,8 @@ h1, h2, h3, p { margin: 0; }
 .create-tile .link-accent { align-self: flex-start; margin-top: 6px; }
 #plan-view-back { margin-bottom: 12px; }
 .plan-day { margin-top: 10px; width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; }
-.plan-day > span:first-child { flex: 1; min-width: 0; }
+.plan-day > :is(.fig, .day-ic) + span { flex: 1; min-width: 0; }
+.plan-day > .fig.badge, .plan-day > .day-ic { width: 44px; height: 44px; flex: none; }
 .plan-day .label { display: block; }
 .plan-day b { display: block; margin: 2px 0 4px; font-size: 16px; }
 .plan-day .muted { display: block; font-size: 14px; }

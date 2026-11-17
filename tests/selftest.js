@@ -641,9 +641,10 @@
     check(Object.keys(ACTIVITIES).every((k) => DAY_ICONS[k]), "an activity has no icon for Coming up");
     check(/^[A-Z][a-z]+(, [a-z]+)*( and [a-z]+)? · \d+ exercises$/.test(UI.daySummary(start.days[0])), `a day's line doesn't name the body areas it works: "${UI.daySummary(start.days[0])}"`);
     UI.planView("start");
-    check([...$("plan-view-body").querySelectorAll(".rest-row")].length >= 2, "a plan's preview doesn't show its rest days");
+    check([...$("plan-view-body").querySelectorAll(".plan-day.rest")].length >= 2, "a plan's preview doesn't show its rest days");
     check(/Today/.test($("plan-view-body").querySelector(".plan-day .label")?.textContent || ""), "a plan's preview doesn't start today");
     check(/^[A-Z][a-z]+(, [a-z]+)*( and [a-z]+)?$/.test($("plan-view-body").querySelector(".plan-day .areas")?.textContent || ""), "a plan's preview doesn't name the body areas each day works");
+    check([...$("plan-view-body").querySelectorAll(".plan-day")].every((c) => c.querySelector(".fig.badge svg, .day-ic svg")), "a day in a plan's preview has no muscle badge or icon");
     el = draw([{ day: "t", at: now - day, mins: 30, plan: id, i: 0 }]); top = el.querySelector(".day-card.today");
     check(/Up next/.test(top.textContent) && top.textContent.includes("Full Body B") && /Rest today/.test(top.textContent), "the day after a session doesn't say rest, then what's next");
     check(/1 of 3/.test(el.querySelector(".round")?.textContent || "") && /Yesterday/.test(el.querySelector(".round").textContent), "this round doesn't show yesterday's session");
